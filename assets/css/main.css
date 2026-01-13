@@ -1,9 +1,9 @@
 @import url(fontawesome-all.min.css);
 @import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:300italic,600italic,300,600");
 
-/* ================================
-   Root & Base Variables
-   ================================ */
+/* =========================================
+   ROOT & BASE VARIABLES
+   ========================================= */
 :root {
   --bg-color: #1b1f22;
   --text-color: #ffffff;
@@ -12,26 +12,29 @@
   --border-radius: 4px;
   --page-max-width: 56rem;
 
-  /* ⬇️ bumped bottom padding for all breakpoints */
+  /* Page padding by breakpoint */
   --page-padding-desktop: 4.5rem 2.5rem 3.5rem 2.5rem;
   --page-padding-tablet: 3.5rem 2rem 3rem 2rem;
   --page-padding-mobile: 3rem 1.5rem 3rem 1.5rem;
 
+  /* Auto-gutter for article/page window */
   --auto-gutter-mobile: 1rem;
   --auto-gutter-tablet: 1.5rem;
 
+  /* Button sizing */
   --button-height: 2.75rem;
   --button-font-size: 0.8rem;
   --button-padding-x: 1.25rem;
 
+  /* Nav tab sizing */
   --nav-tab-height: 3rem;
   --nav-tab-pad: 0.75rem;
   --nav-side-gutter: 1rem;
 }
 
-/* ================================
-   Reset
-   ================================ */
+/* =========================================
+   CSS RESET
+   ========================================= */
 
 html,
 body,
@@ -181,15 +184,14 @@ textarea {
   appearance: none;
 }
 
-/* ================================
-   Basic Layout
-   ================================ */
+/* =========================================
+   BASIC LAYOUT & VIEWPORT
+   ========================================= */
 
 html,
 body {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
 }
 
 @-ms-viewport {
@@ -230,6 +232,7 @@ body {
   background: var(--bg-color);
 }
 
+/* Disable animation during preload */
 body.is-preload *,
 body.is-preload *:before,
 body.is-preload *:after {
@@ -243,9 +246,9 @@ body.is-preload *:after {
   transition: none !important;
 }
 
-/* ================================
-   Typography
-   ================================ */
+/* =========================================
+   TYPOGRAPHY
+   ========================================= */
 
 body,
 input,
@@ -453,9 +456,9 @@ hr {
   opacity: 1;
 }
 
-/* ================================
-   Forms
-   ================================ */
+/* =========================================
+   FORMS (GLOBAL STYLING)
+   ========================================= */
 
 form {
   margin: 0 0 2rem 0;
@@ -668,7 +671,9 @@ input[type="radio"] + label:before {
   border-radius: 100%;
 }
 
-/* Contact form layout */
+/* =========================================
+   CONTACT FORM LAYOUT (CONTACT PAGE)
+   ========================================= */
 
 #contact form {
   max-width: 700px;
@@ -708,9 +713,9 @@ input[type="radio"] + label:before {
   }
 }
 
-/* ================================
-   Box
-   ================================ */
+/* =========================================
+   BOXES (GENERIC WRAPPED CONTENT)
+   ========================================= */
 
 .box {
   border-radius: var(--border-radius);
@@ -731,9 +736,9 @@ input[type="radio"] + label:before {
   padding: 0;
 }
 
-/* ================================
-   Icons
-   ================================ */
+/* =========================================
+   ICONS & SOCIAL LISTS
+   ========================================= */
 
 .icon {
   text-decoration: none;
@@ -814,9 +819,9 @@ ul.icons li a:active {
   }
 }
 
-/* ================================
-   Images
-   ================================ */
+/* =========================================
+   IMAGES (GENERIC + ABOUT LAYOUT)
+   ========================================= */
 
 .image {
   border-radius: var(--border-radius);
@@ -898,7 +903,7 @@ ul.icons li a:active {
   }
 }
 
-/* About image (Mel face) */
+/* About image (Mel face / About layout) */
 
 .about-wrapper {
   display: flex;
@@ -926,7 +931,7 @@ ul.icons li a:active {
 /* Right column (image) */
 .about-img {
   flex: 0 0 auto;
-  max-width: 200px; /* tweak this number to shrink/grow the photo */
+  max-width: 140px; /* tweak this number to shrink/grow the photo */
   width: 100%;
   height: auto;
   border-radius: var(--border-radius);
@@ -944,13 +949,13 @@ ul.icons li a:active {
   }
 
   .about-img {
-    max-width: 260px;
+    max-width: 180px;
   }
 }
 
-/* ================================
-   Lists
-   ================================ */
+/* =========================================
+   LISTS
+   ========================================= */
 
 ol {
   list-style: decimal;
@@ -1001,9 +1006,9 @@ dl dd {
   margin-left: 2rem;
 }
 
-/* ================================
-   Actions list (button rows)
-   ================================ */
+/* =========================================
+   ACTION BUTTON ROWS (UL.ACTIONS)
+   ========================================= */
 
 ul.actions {
   display: flex;
@@ -1029,7 +1034,8 @@ ul.actions li > * {
   max-width: none;
 }
 
-/* Optional variants if you use them */
+/* Optional variants */
+
 ul.actions.special {
   justify-content: center;
 }
@@ -1047,9 +1053,9 @@ ul.actions.stacked li:first-child {
   padding-top: 0;
 }
 
-/* ================================
-   Tables
-   ================================ */
+/* =========================================
+   TABLES
+   ========================================= */
 
 .table-wrapper {
   overflow-x: auto;
@@ -1116,9 +1122,9 @@ table.alt tfoot {
   border-top: 0;
 }
 
-/* ================================
-   Buttons (unified style)
-   ================================ */
+/* =========================================
+   BUTTONS (GLOBAL)
+   ========================================= */
 
 input[type="submit"],
 input[type="reset"],
@@ -1232,9 +1238,9 @@ input[type="button"] {
   line-height: 2.5rem;
 }
 
-/* ================================
-   Background (full-screen)
-   ================================ */
+/* =========================================
+   BACKGROUND (FULL-SCREEN IMAGE)
+   ========================================= */
 
 #bg {
   transform: scale(1);
@@ -1293,9 +1299,9 @@ body.is-preload #bg:before {
   background-color: #000000;
 }
 
-/* ================================
-   Wrapper
-   ================================ */
+/* =========================================
+   WRAPPER (GLOBAL PAGE CONTAINER)
+   ========================================= */
 
 #wrapper {
   display: flex;
@@ -1315,9 +1321,9 @@ body.is-preload #bg:before {
   display: block;
 }
 
-/* ================================
-   Header
-   ================================ */
+/* =========================================
+   HEADER + TOP NAV
+   ========================================= */
 
 #header {
   display: flex;
@@ -1399,6 +1405,8 @@ body.is-preload #bg:before {
   line-height: 2;
 }
 
+/* Top nav container */
+
 #header nav ul {
   display: flex;
   margin-bottom: 0;
@@ -1451,6 +1459,8 @@ body.is-preload #bg:before {
 #header nav.use-middle ul li.is-middle {
   border-left: 0;
 }
+
+/* Header transitions when article is visible */
 
 body.is-article-visible #header {
   transform: scale(0.95);
@@ -1507,6 +1517,8 @@ body.is-preload #header .content .inner {
     line-height: 1.875;
   }
 }
+
+/* Small screens: default vertical nav stack */
 
 @media screen and (max-width: 480px) {
   #header {
@@ -1582,6 +1594,7 @@ body.is-preload #header .content .inner {
     padding: 1rem 1rem;
   }
 
+  /* Mobile nav tabs: center labels within each slot */
   body:not(.is-article-visible) #header nav ul li a {
     display: flex;
     align-items: center;
@@ -1598,9 +1611,9 @@ body.is-preload #header .content .inner {
   }
 }
 
-/* ================================
-   Main (page window)
-   ================================ */
+/* =========================================
+   MAIN (PAGE WINDOW / ARTICLES)
+   ========================================= */
 
 #main {
   flex-grow: 1;
@@ -1626,12 +1639,15 @@ body.is-preload #header .content .inner {
   border-radius: var(--border-radius);
   opacity: 0;
   box-sizing: border-box;
+  min-height: 60vh; /* unified baseline height for ALL pages */
 }
 
 #main article.active {
   transform: translateY(0);
   opacity: 1;
 }
+
+/* Close button in article window */
 
 #main article .close {
   display: block;
@@ -1689,38 +1705,20 @@ body.is-preload #header .content .inner {
     padding: var(--page-padding-mobile);
   }
 }
+/* =========================================
+   GALLERY (WORK PAGE GRID)
+   ========================================= */
 
-/* ================================
-   Gallery (Work page)
-   ================================ */
-
-.gallery-wrapper {
+/* Only style gallery-wrapper when it's inside an article,
+   so the article box (padding, min-height, etc.) stays consistent */
+#main article .gallery-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  min-height: 100vh;
-  padding: 4rem 2rem;
   box-sizing: border-box;
-}
-
-@media screen and (max-width: 1680px) {
-  .gallery-wrapper {
-    padding: 5rem 2rem;
-  }
-}
-
-@media screen and (max-width: 736px) {
-  .gallery-wrapper {
-    padding: 2rem 1rem;
-  }
-}
-
-@media screen and (max-width: 480px) {
-  .gallery-wrapper {
-    padding: 1rem;
-  }
+  /* don't touch padding/margin/min-height here so it matches other pages */
 }
 
 .gallery {
@@ -1729,6 +1727,7 @@ body.is-preload #header .content .inner {
   gap: 2rem;
   width: 100%;
   max-width: 1200px;
+  margin-top: 1.5rem; /* space below "Work" heading */
 }
 
 .gallery-item {
@@ -1758,15 +1757,16 @@ body.is-preload #header .content .inner {
 }
 
 @media screen and (max-width: 500px) {
+  /* Force a 2x2-ish feel on phones */
   .gallery {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.25rem;
   }
 }
 
-/* ================================
-   Art Slider (artwork detail)
-   ================================ */
+/* =========================================
+   ART SLIDER (ARTWORK DETAIL VIEW)
+   ========================================= */
 
 .art-slider {
   max-width: 100%;
@@ -1776,17 +1776,17 @@ body.is-preload #header .content .inner {
   flex-direction: column;
 }
 
-/* hide radios */
+/* Hide radios controlling slides */
 .art-slider input {
   display: none;
 }
 
-/* slides */
+/* Slides wrapper */
 .art-slider .slides {
   position: relative;
 }
 
-/* BIG images: scale to viewport, full width */
+/* Big images: scale to viewport, full width */
 .art-slider .slides img {
   display: none;
   width: 100%;
@@ -1796,14 +1796,14 @@ body.is-preload #header .content .inner {
   border-radius: 10px;
 }
 
-/* show image based on checked radio */
+/* Show image based on checked radio */
 .art-slider input:nth-of-type(1):checked ~ .slides img:nth-child(1),
 .art-slider input:nth-of-type(2):checked ~ .slides img:nth-child(2),
 .art-slider input:nth-of-type(3):checked ~ .slides img:nth-child(3) {
   display: block;
 }
 
-/* arrows */
+/* Slider arrows */
 
 .art-slider .nav {
   display: none;
@@ -1828,7 +1828,7 @@ body.is-preload #header .content .inner {
   opacity: 0.6;
 }
 
-/* accessibility */
+/* Accessibility helper */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1837,16 +1837,16 @@ body.is-preload #header .content .inner {
   clip: rect(0, 0, 0, 0);
 }
 
-/* For very small screens, keep within viewport nicely */
+/* Small screens: constrain height */
 @media screen and (max-width: 500px) {
   .art-slider .slides img {
     max-height: calc(100vh - 8rem);
   }
 }
 
-/* ================================
-   Footer
-   ================================ */
+/* =========================================
+   FOOTER
+   ========================================= */
 
 #footer {
   transition: transform 0.325s ease-in-out, filter 0.325s ease-in-out,
@@ -1875,121 +1875,72 @@ body.is-preload #footer {
   opacity: 0;
 }
 
-/* ================================
-   Responsive Layout (Wrapper/Main)
-   ================================ */
+/* =========================================
+   CONTACT TAB: MOBILE VISUAL ALIGNMENT FIX
+   ========================================= */
 
-/* Tablet and below */
-@media screen and (max-width: 980px) {
+@media (max-width: 600px) {
+  #header nav ul li a[href="#contact"] {
+    display: flex !important;
+    align-items: flex-start !important; /* vertical alignment */
+    justify-content: flex-start !important; /* horizontal alignment */
+    text-align: left !important;
+
+    min-width: 0 !important;
+    padding-left: 0.75rem !important; /* adjust if you want a nudge */
+    padding-right: 0.75rem !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* =========================================
+   PHONE LAYOUT: WIDER & CENTERED PAGE WINDOWS
+   ========================================= */
+@media screen and (max-width: 600px) {
+  /* Same outer padding on ALL pages */
   #wrapper {
-    transform: none !important;
-    margin: 0 !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
   }
 
+  /* Center the card vertically in the viewport */
   #main {
+    justify-content: center;
     width: 100%;
     box-sizing: border-box;
   }
 
-  body.is-article-visible #main {
-    align-items: center;
-    justify-content: flex-start;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    box-sizing: border-box;
-    overflow-x: hidden;
-  }
-
-  #main article,
-  body.is-article-visible #main article,
-  #main article:target {
-    box-sizing: border-box;
-    margin-left: auto;
-    margin-right: auto;
-    width: calc(100% - (var(--auto-gutter-tablet) * 2));
-    max-width: var(--page-max-width);
-    border-radius: var(--border-radius);
-  }
-
-  body.is-article-visible .gallery,
-  body.is-article-visible .art-slider,
-  body.is-article-visible #contact form,
-  body.is-article-visible .page-window,
-  body.is-article-visible #main-content {
-    box-sizing: border-box;
-    margin-left: auto;
-    margin-right: auto;
-    width: calc(100% - (var(--auto-gutter-tablet) * 2));
-  }
-}
-
-/* Small tablet / large phone */
-@media screen and (max-width: 736px) and (min-width: 501px) {
-  #main article,
-  body.is-article-visible #main article,
-  #main article:target {
-    width: calc(100% - (var(--auto-gutter-mobile) * 2));
-    border-radius: var(--border-radius);
-  }
-
-  body.is-article-visible .gallery,
-  body.is-article-visible .art-slider,
-  body.is-article-visible #contact form,
-  body.is-article-visible .page-window,
-  body.is-article-visible #main-content {
-    width: calc(100% - (var(--auto-gutter-mobile) * 2));
-  }
-}
-
-/* Phone fine-tuning */
-@media screen and (max-width: 500px) {
-  body.is-article-visible #main {
-    padding-left: var(--auto-gutter-mobile);
-    padding-right: var(--auto-gutter-mobile);
-  }
-
-  #main article,
-  body.is-article-visible #main article,
-  #main article:target {
+  /* Every article = EXACT same card height on mobile */
+  #main article {
     width: 100%;
     max-width: 100%;
-    height: auto;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: visible;
-  }
-
-  body.is-article-visible #wrapper {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  #bg {
-    height: 100svh;
-  }
-
-  #wrapper {
-    min-height: 100svh;
-    transform: none;
-    margin: 0;
-  }
-
-  form > .fields > .field {
-    width: 100%;
+    height: calc(100vh - 4rem); /* 4rem = top+bottom wrapper padding */
+    min-height: calc(100vh - 4rem); /* force card to this height */
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem;
     box-sizing: border-box;
+    overflow-y: auto; /* scroll INSIDE if content is taller */
   }
+}
 
-  ul.icons li a {
-    width: 2.1rem;
-    height: 2.1rem;
-    line-height: 2.1rem;
-  }
+/* =========================================
+   ALIGN ARTICLE CARD PERFECTLY WHEN OPEN
+   ========================================= */
 
-  .image.main,
-  .image.fit {
-    width: 100%;
-    margin: 1rem 0;
-  }
+/* When an article is visible, let the card take center stage */
+body.is-article-visible #wrapper {
+  justify-content: center; /* center #main vertically in the wrapper */
+}
+
+/* Collapse header & footer so they don't push the page down */
+body.is-article-visible #header,
+body.is-article-visible #footer {
+  margin: 0;
+  padding: 0;
+  height: 0;
+  overflow: hidden;
+  border: 0;
 }
