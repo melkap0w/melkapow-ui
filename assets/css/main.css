@@ -4,6 +4,11 @@
 /* =========================================
    ROOT & BASE VARIABLES
    ========================================= */
+
+html {
+  color-scheme: light;
+}
+
 :root {
   --bg-color: #1b1f22;
   --text-color: #ffffff;
@@ -1682,6 +1687,38 @@ body.is-preload #header .content .inner {
   opacity: 1;
 }
 
+/* Fix giant bg image in Intro */
+#intro .image.main img {
+  width: auto !important; /* stop forced stretching */
+  max-width: 100%; /* allow responsive scaling */
+  height: auto;
+  max-height: 350px; /* adjust to taste */
+  margin: 0 auto;
+  display: block;
+  object-fit: contain;
+}
+
+/* Fix About Me photo sizing */
+.about-layout .about-img {
+  width: auto !important; /* override 100% forced width */
+  max-width: 300px; /* set a reasonable desktop size */
+  height: auto;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+/* Optional: tweak responsiveness */
+@media (max-width: 600px) {
+  #intro .image.main img {
+    max-height: 250px;
+  }
+
+  .about-layout .about-img {
+    max-width: 200px;
+    margin: 0 auto;
+  }
+}
+
 /* Close button in article window */
 
 #main article .close {
@@ -1802,6 +1839,9 @@ body.is-preload #header .content .inner {
 /* =========================================
    ART SLIDER (ARTWORK DETAIL VIEW)
    ========================================= */
+/* =========================
+   ART SLIDER (4 SLIDES)
+   ========================= */
 
 .art-slider {
   max-width: 100%;
@@ -1831,24 +1871,26 @@ body.is-preload #header .content .inner {
   border-radius: 10px;
 }
 
-/* Show image based on checked radio */
+/* Show image based on checked radio (1–4) */
 .art-slider input:nth-of-type(1):checked ~ .slides img:nth-child(1),
 .art-slider input:nth-of-type(2):checked ~ .slides img:nth-child(2),
-.art-slider input:nth-of-type(3):checked ~ .slides img:nth-child(3) {
+.art-slider input:nth-of-type(3):checked ~ .slides img:nth-child(3),
+.art-slider input:nth-of-type(4):checked ~ .slides img:nth-child(4) {
   display: block;
 }
 
 /* Slider arrows */
-
 .art-slider .nav {
   display: none;
   justify-content: space-between;
   margin-top: 0.75rem;
 }
 
+/* Show matching nav for the active slide (1–4) */
 .art-slider input:nth-of-type(1):checked ~ .nav-1,
 .art-slider input:nth-of-type(2):checked ~ .nav-2,
-.art-slider input:nth-of-type(3):checked ~ .nav-3 {
+.art-slider input:nth-of-type(3):checked ~ .nav-3,
+.art-slider input:nth-of-type(4):checked ~ .nav-4 {
   display: flex;
 }
 
