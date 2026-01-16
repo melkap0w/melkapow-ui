@@ -1850,19 +1850,23 @@ body.is-preload #bg:before {
   display: none;
 }
 
-/* Slides wrapper */
+/* --- ART SLIDER: consistent frame size (no crop) --- */
 .art-slider .slides {
+  width: 100%;
+  aspect-ratio: 4 / 3; /* match your gallery thumbs */
   position: relative;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-/* Big images: scale to viewport, full width */
+/* Fill the frame, but keep full image visible */
 .art-slider .slides img {
-  display: none;
   width: 100%;
-  height: auto;
-  max-height: 65vh;
-  object-fit: contain;
-  border-radius: 10px;
+  height: 100%;
+  max-height: none; /* override your 65vh */
+  object-fit: contain; /* no crop */
+  display: none;
+  border-radius: 0; /* frame handles rounding */
 }
 
 /* Show image based on checked radio (1–4) */
