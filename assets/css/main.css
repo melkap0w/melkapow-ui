@@ -64,13 +64,6 @@ a.icon {
   backdrop-filter: blur(var(--ui-blur));
 }
 
-/* hover/active states ONLY for icons */
-› ul.icons li a:hover,
-.icons li a:hover,
-a.icon:hover {
-  background: var(--ui-fill-hover);
-}
-
 ul.icons li a:active,
 .icons li a:active,
 a.icon:active {
@@ -1468,8 +1461,11 @@ body.is-preload #bg:before {
   line-height: 2;
 }
 
-/* Top nav container */
+/* =========================================
+   HEADER NAV (BASE)
+   ========================================= */
 
+/* Top nav container */
 #header nav ul {
   display: flex;
   margin-bottom: 0;
@@ -1498,8 +1494,10 @@ body.is-preload #bg:before {
   letter-spacing: 0.2rem;
   font-size: 0.8rem;
   border-bottom: 0;
+
   background-color: rgba(0, 0, 0, 0.5);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 
@@ -1511,6 +1509,7 @@ body.is-preload #bg:before {
   background-color: rgba(0, 0, 0, 0.25);
 }
 
+/* Middle divider (if you use it) */
 #header nav.use-middle:after {
   content: "";
   display: block;
@@ -1526,104 +1525,28 @@ body.is-preload #bg:before {
   border-left: 0;
 }
 
-/* Header transitions when article is visible */
-
-body.is-article-visible #header {
-  transform: scale(0.95);
-  filter: blur(0.1rem);
-  opacity: 0;
-}
-
-body.is-preload #header {
-  filter: blur(0.125rem);
-}
-
-body.is-preload #header > * {
-  opacity: 0;
-}
-
-body.is-preload #header .content .inner {
-  max-height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  opacity: 0;
-}
-
-@media screen and (max-width: 980px) {
-  #header .content p br {
-    display: none;
-  }
-}
-
-@media screen and (max-width: 736px) {
-  #header > * {
-    margin-top: 2rem;
-  }
-
-  #header > *:before {
-    top: calc(-2rem - 1px);
-    height: calc(2rem + 1px);
-  }
-
-  #header .logo {
-    width: 4.75rem;
-    height: 4.75rem;
-    line-height: 4.75rem;
-  }
-
-  #header .logo .icon:before {
-    font-size: 1.75rem;
-  }
-
-  #header .content .inner {
-    padding: 2.5rem 1rem;
-  }
-
-  #header .content p {
-    line-height: 1.875;
-  }
-}
-
-/* Small screens: default vertical nav stack */
-
-@media screen and (max-width: 480px) {
-  #header {
-    padding: 1.5rem 0;
-  }
-
-  #header .content .inner {
-    padding: 2.5rem 0;
-  }
-
-  #header nav ul {
-    flex-direction: column;
-    min-width: 10rem;
-    max-width: 100%;
-  }
-
-  #header nav ul li {
-    border-left: 0;
-    border-top: solid 1px var(--text-color);
+/* =========================================
+   MOBILE NAV (ONE RULESET ONLY)
+   - horizontal on phones
+   - padding glass matches tabs
+   - keeps your sizing vars
+   ========================================= */
+@media screen and (max-width: 500px) {
+  /* Keep header spacing tweaks you wanted on phone */
+  body:not(.is-article-visible) #header {
+    padding: 0;
+    text-align: center;
   }
 
   #header nav ul li:first-child {
-    border-top: 0;
+    border-left: 0 !important;
   }
 
-  #header nav ul li a {
-    height: 3rem;
-    line-height: 3rem;
-    min-width: 0;
-    width: 100%;
+  body:not(.is-article-visible) #header .content .inner {
+    padding: 1rem 1rem;
   }
 
-  #header nav.use-middle:after {
-    display: none;
-  }
-}
-
-/* Keep top nav horizontal on very small screens (app-like) */
-@media all and (max-width: 500px) {
+  /* Force horizontal nav (no more vertical stack rules) */
   #header nav ul {
     flex-direction: row;
     flex-wrap: nowrap;
@@ -1632,48 +1555,79 @@ body.is-preload #header .content .inner {
     margin: 0 auto;
     padding: 0 var(--nav-side-gutter);
     box-sizing: border-box;
+
+    position: relative;
+    background: transparent;
+  }
+
+  /* Glass pill behind the whole UL (including side padding) */
+  #header nav ul::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(0, 0, 0, 0.5);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+    z-index: 0;
   }
 
   #header nav ul li {
-    border-left: solid 1px var(--text-color);
-    border-top: 0;
+    border-top: 0 !important; /* kill vertical separators */
+    border-left: solid 1px var(--text-color) !important; /* keep dividers */
     flex: 1 1 0;
     min-width: 0;
     display: flex;
     box-sizing: border-box;
+    position: relative;
+    z-index: 1; /* above the glass */
   }
 
   #header nav ul li:first-child {
     border-left: 0;
   }
 
-  #header nav ul li + li {
-    box-shadow: inset 1px 0 0 var(--text-color);
-  }
-
-  body:not(.is-article-visible) #header {
-    padding: 0;
-    text-align: center;
-  }
-
-  body:not(.is-article-visible) #header .content .inner {
-    padding: 1rem 1rem;
-  }
-
-  /* Mobile nav tabs: center labels within each slot */
+  /* Keep your mobile label sizing exactly as you already had */
   body:not(.is-article-visible) #header nav ul li a {
     display: flex;
     align-items: center;
     justify-content: center;
+
     min-width: 0;
     flex: 1 1 auto;
     height: var(--nav-tab-height);
+    line-height: var(--nav-tab-height);
+
     font-size: clamp(0.68rem, 2.8vw, 0.72rem);
     letter-spacing: 0.18rem;
     padding: 0 var(--nav-tab-pad);
     box-sizing: border-box;
     white-space: nowrap;
     text-align: center;
+
+    /* Let the UL glass show through so padding matches */
+    background-color: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Keep hover/active look */
+  #header nav ul li a:hover {
+    background-color: rgba(0, 0, 0, 0.35);
+  }
+
+  #header nav ul li a:active {
+    background-color: rgba(0, 0, 0, 0.25);
+  }
+
+  /* Middle divider off on mobile (like your original 480 rule) */
+  #header nav.use-middle:after {
+    display: none;
   }
 }
 
@@ -1724,10 +1678,6 @@ body.is-preload #header .content .inner {
   object-fit: contain;
 }*/
 
-/* Intro banner: remove 4:3 aspect box + overlay */
-#intro .image.main {
-  margin: 1.5rem 0 2rem; /* optional: adjust spacing around image */
-}
 /* Intro banner: remove 4:3 aspect box + overlay */
 #intro .image.main {
   margin: 1.5rem 0 2rem; /* optional: adjust spacing around image */
