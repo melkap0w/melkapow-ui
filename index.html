@@ -9,6 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light">
     <meta name="supported-color-schemes" content="light">
+
     <!-- Font Awesome CDN -->
     <link
       rel="stylesheet"
@@ -16,9 +17,38 @@
     />
 
     <!-- Main styles -->
-    <link rel="stylesheet" href="assets/css/main.css?v=20250308-17" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20250308-10" />
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+
+    <!-- Override global h1 styles for the logo font -->
+    <style>
+      /* This assumes you define @font-face 'DeloresAmores' in main.css */
+      .logo-font {
+        font-family: 'DeloresAmores', 'Source Sans Pro', sans-serif;
+        font-size: 3rem;
+        font-weight: normal;      /* cancel global h1 bold */
+        text-transform: none;     /* cancel global uppercase */
+        letter-spacing: 0;        /* no extra spacing */
+        line-height: 1;           /* tighter like the sample */
+        text-shadow: none;        /* keep strokes clean */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      @media screen and (min-width: 768px) {
+        .logo-font {
+          font-size: 3.5rem;
+        }
+      }
+
+      @media screen and (max-width: 480px) {
+        .logo-font {
+          font-size: 2.6rem;
+        }
+      }
+    </style>
   </head>
+
   <body class="is-preload">
     <!-- Wrapper -->
     <div id="wrapper">
@@ -26,8 +56,8 @@
       <header id="header">
         <div class="content">
           <div class="inner">
-            <h1>Melkapow</h1>
-            <p>Awesome sauce in the house!</p>
+            <h1 class="logo-font">MELKAPOW</h1>
+            <p>Raw unfiltered art</p>
           </div>
         </div>
         <nav>
@@ -50,7 +80,8 @@
           </span>
           <p>Mel add some intro here.</p>
           <p>
-            Mel why arent you studying?  <a href="#work"> <u>Check out the work! </u></a>
+            Mel why arent you studying?
+            <a href="#work"><u>Check out the work! </u></a>
           </p>
         </article>
 
@@ -472,9 +503,7 @@
     <script src="assets/js/browser.min.js"></script>
     <script src="assets/js/breakpoints.min.js"></script>
     <script src="assets/js/util.js"></script>
-	<script src="assets/js/gallery_close.js"></script>
+    <script src="assets/js/gallery_close.js"></script>
     <script src="assets/js/main.js"></script>
-
-
   </body>
 </html>

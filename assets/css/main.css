@@ -1,6 +1,15 @@
 @import url(fontawesome-all.min.css);
 @import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:300italic,600italic,300,600");
 
+/* Custom logo font */
+@font-face {
+  font-family: "DeloresAmores";
+  src: url("../webfonts/vtksdeloresamores-mlvxv-webfont.woff2") format("woff2"),
+    url("../webfonts/vtksdeloresamores-mlvxv-webfont.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* =========================================
    ROOT & BASE VARIABLES
    ========================================= */
@@ -695,6 +704,13 @@ input[type="radio"] + label:before {
   flex: 1 1 100%;
 }
 
+/* Make Name + Email inputs narrower inside their half columns */
+#contact form .field.half input[type="text"],
+#contact form .field.half input[type="email"] {
+  width: 60%;
+  display: block;
+}
+
 #contact form .field.half {
   flex: 1 1 calc(50% - 0.5rem);
 }
@@ -908,58 +924,8 @@ ul.icons li a:active {
   }
 }
 
-/* About image (Mel face / About layout) */
-
-.about-wrapper {
-  display: flex;
-  align-items: flex-start;
-  gap: 2rem;
-}
-
-.about-wrapper p {
-  flex: 1;
-}
-
 /* About layout: text left, image right */
 
-.about-layout-inner {
-  display: flex;
-  align-items: flex-start;
-  gap: 2rem;
-}
-
-/* Left column (text) */
-.about-text {
-  flex: 1 1 auto;
-}
-
-/* Right column (image) */
-.about-img {
-  flex: 0 0 auto;
-  max-width: 140px; /* tweak this number to shrink/grow the photo */
-  width: 100%;
-  height: auto;
-  border-radius: var(--border-radius);
-}
-
-/* About me -  Stack nicely on mobile
-@media screen and (max-width: 736px) {
-  .about-layout-inner {
-    flex-direction: column-reverse;   text under, image on top 
-    align-items: center;
-  }
-
-  .about-text {
-    width: 100%;
-  }
-
-  .about-img {
-    max-width: 180px;
-  }
-}
- */
-
-/* About layout: text left, image right */
 .about-layout-inner {
   display: flex;
   align-items: flex-start;
@@ -972,7 +938,7 @@ ul.icons li a:active {
 
 .about-img {
   flex: 0 0 auto;
-  max-width: 140px; /* desktop/tablet size */
+  max-width: 140px;
   width: 100%;
   height: auto;
   border-radius: var(--border-radius);
@@ -989,7 +955,7 @@ ul.icons li a:active {
   }
 
   .about-img {
-    max-width: 110px; /* smaller on phones so text still has room */
+    max-width: 110px;
   }
 }
 
@@ -1057,7 +1023,7 @@ ul.actions {
   margin: 1.5rem 0 0.5rem;
   padding: 0;
   width: 100%;
-  justify-content: space-between; /* left and right buttons */
+  justify-content: space-between;
   align-items: center;
   gap: 1rem;
   flex-wrap: nowrap;
@@ -1066,15 +1032,13 @@ ul.actions {
 ul.actions li {
   padding: 0;
   vertical-align: middle;
-  flex: 0 0 auto; /* keep each button natural size */
+  flex: 0 0 auto;
 }
 
 ul.actions li > * {
   width: auto;
   max-width: none;
 }
-
-/* Optional variants */
 
 ul.actions.special {
   justify-content: center;
@@ -1292,6 +1256,7 @@ input[type="button"] {
   width: 100%;
   height: 100vh;
   z-index: 1;
+  background-color: #000000;
 }
 
 #bg:before,
@@ -1310,8 +1275,8 @@ input[type="button"] {
   transition-delay: 0.75s;
   background-image: linear-gradient(
       to top,
-      rgba(19, 21, 25, 0.5),
-      rgba(19, 21, 25, 0.5)
+      rgba(19, 21, 25, 0.25),
+      rgba(19, 21, 25, 0.25)
     ),
     url("../../__IMAGE_REMOVED__");
   background-size: auto, 256px 256px;
@@ -1321,11 +1286,11 @@ input[type="button"] {
 }
 
 #bg:after {
-  transform: scale(1.125);
+  transform: scale(1.12);
   transition: transform 0.325s ease-in-out, filter 0.325s ease-in-out;
   background-image: url("../../__IMAGE_REMOVED__");
   background-position: center;
-  background-size: cover;
+  background-size: contain;
   background-repeat: no-repeat;
   z-index: 1;
 }
@@ -1372,12 +1337,23 @@ body.is-preload #bg:before {
   transition: transform 0.325s ease-in-out, filter 0.325s ease-in-out,
     opacity 0.325s ease-in-out;
   background-image: radial-gradient(
-    rgba(0, 0, 0, 0.25) 25%,
-    rgba(0, 0, 0, 0) 55%
+    rgba(0, 0, 0, 0.55) 30%,
+    rgba(0, 0, 0, 0) 65%
   );
   max-width: 100%;
   text-align: center;
   margin-top: 20rem;
+}
+
+#header .content .inner {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  border-radius: 4px;
+}
+
+#header h1,
+#header .content p {
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
 }
 
 #header > * {
@@ -1411,6 +1387,16 @@ body.is-preload #bg:before {
   line-height: 5.5rem;
   border: solid 1px var(--text-color);
   border-radius: 100%;
+}
+
+/* Custom brush font for logo/title (base, HTML inline overrides fine-tune) */
+.logo-font {
+  font-family: "DeloresAmores", "Source Sans Pro", sans-serif;
+  font-size: 3rem;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1;
 }
 
 #header .logo .icon:before {
@@ -1475,10 +1461,12 @@ body.is-preload #bg:before {
   letter-spacing: 0.2rem;
   font-size: 0.8rem;
   border-bottom: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
 }
 
 #header nav ul li a:hover {
-  background-color: rgba(255, 255, 255, 0.075);
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
 #header nav ul li a:active {
@@ -1675,11 +1663,11 @@ body.is-preload #header .content .inner {
   width: var(--page-max-width);
   max-width: 100%;
   margin: 0 auto;
-  background-color: rgba(27, 31, 34, 0.85);
+  background-color: rgba(10, 12, 14, 0.9);
   border-radius: var(--border-radius);
   opacity: 0;
   box-sizing: border-box;
-  min-height: 60vh; /* unified baseline height for ALL pages */
+  min-height: 60vh;
 }
 
 #main article.active {
@@ -1687,27 +1675,51 @@ body.is-preload #header .content .inner {
   opacity: 1;
 }
 
-/* Fix giant bg image in Intro */
+/* Fix giant bg image in Intro 
 #intro .image.main img {
-  width: auto !important; /* stop forced stretching */
-  max-width: 100%; /* allow responsive scaling */
+  width: auto !important;
+  max-width: 100%;
   height: auto;
-  max-height: 350px; /* adjust to taste */
+  max-height: 350px;
   margin: 0 auto;
   display: block;
   object-fit: contain;
+}*/
+
+/* Intro banner: remove 4:3 aspect box + overlay */
+#intro .image.main {
+  margin: 1.5rem 0 2rem; /* optional: adjust spacing around image */
+}
+/* Intro banner: remove 4:3 aspect box + overlay */
+#intro .image.main {
+  margin: 1.5rem 0 2rem; /* optional: adjust spacing around image */
 }
 
-/* Fix About Me photo sizing */
+/* kill the dark overlay box for this one image */
+#intro .image.main::before {
+  content: none !important;
+}
+
+/* let the intro banner use its real banner height */
+#intro .image.main img {
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  object-fit: contain; /* or 'cover' if you want it to crop instead of fit */
+  display: block;
+}
+
+/* Fix About Me photo sizing specifically in about-layout */
 .about-layout .about-img {
-  width: auto !important; /* override 100% forced width */
-  max-width: 300px; /* set a reasonable desktop size */
+  width: auto !important;
+  max-width: 300px;
   height: auto;
   border-radius: 10px;
   object-fit: cover;
 }
 
-/* Optional: tweak responsiveness */
+/* Optional: tweak responsiveness for intro/about */
 @media (max-width: 600px) {
   #intro .image.main img {
     max-height: 250px;
@@ -1777,12 +1789,11 @@ body.is-preload #header .content .inner {
     padding: var(--page-padding-mobile);
   }
 }
+
 /* =========================================
    GALLERY (WORK PAGE GRID)
    ========================================= */
 
-/* Only style gallery-wrapper when it's inside an article,
-   so the article box (padding, min-height, etc.) stays consistent */
 #main article .gallery-wrapper {
   display: flex;
   flex-direction: column;
@@ -1790,7 +1801,6 @@ body.is-preload #header .content .inner {
   justify-content: flex-start;
   width: 100%;
   box-sizing: border-box;
-  /* don't touch padding/margin/min-height here so it matches other pages */
 }
 
 .gallery {
@@ -1799,7 +1809,7 @@ body.is-preload #header .content .inner {
   gap: 2rem;
   width: 100%;
   max-width: 1200px;
-  margin-top: 1.5rem; /* space below "Work" heading */
+  margin-top: 1.5rem;
 }
 
 .gallery-item {
@@ -1829,7 +1839,6 @@ body.is-preload #header .content .inner {
 }
 
 @media screen and (max-width: 500px) {
-  /* Force a 2x2-ish feel on phones */
   .gallery {
     grid-template-columns: repeat(2, 1fr);
     gap: 1.25rem;
@@ -1839,9 +1848,6 @@ body.is-preload #header .content .inner {
 /* =========================================
    ART SLIDER (ARTWORK DETAIL VIEW)
    ========================================= */
-/* =========================
-   ART SLIDER (4 SLIDES)
-   ========================= */
 
 .art-slider {
   max-width: 100%;
@@ -1959,12 +1965,11 @@ body.is-preload #footer {
 @media (max-width: 600px) {
   #header nav ul li a[href="#contact"] {
     display: flex !important;
-    align-items: flex-start !important; /* vertical alignment */
-    justify-content: flex-start !important; /* horizontal alignment */
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
     text-align: left !important;
-
     min-width: 0 !important;
-    padding-left: 0.75rem !important; /* adjust if you want a nudge */
+    padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
     box-sizing: border-box !important;
     white-space: nowrap !important;
@@ -1975,7 +1980,6 @@ body.is-preload #footer {
    PHONE LAYOUT: WIDER & CENTERED PAGE WINDOWS
    ========================================= */
 @media screen and (max-width: 600px) {
-  /* Same outer padding on ALL pages */
   #wrapper {
     padding-left: 0;
     padding-right: 0;
@@ -1983,36 +1987,28 @@ body.is-preload #footer {
     padding-bottom: 2rem;
   }
 
-  /* Center the card vertically in the viewport */
   #main {
     justify-content: center;
     width: 100%;
     box-sizing: border-box;
   }
 
-  /* Every article = EXACT same card height on mobile */
   #main article {
     width: 100%;
     max-width: 100%;
-    height: calc(100vh - 4rem); /* 4rem = top+bottom wrapper padding */
-    min-height: calc(100vh - 4rem); /* force card to this height */
+    height: calc(100vh - 4rem);
+    min-height: calc(100vh - 4rem);
     margin: 0 auto;
     padding: 2.5rem 1.25rem;
     box-sizing: border-box;
-    overflow-y: auto; /* scroll INSIDE if content is taller */
+    overflow-y: auto;
   }
 }
 
 /* =========================================
-   ALIGN ARTICLE CARD PERFECTLY WHEN OPEN
-   ========================================= */
-/* =========================================
    FINAL FORCE: FORM FIELDS + BUTTONS
-   Make sure borders & rings stay white
-   even under aggressive dark-mode stuff.
    ========================================= */
 
-/* Text inputs, selects, textareas */
 input[type="text"],
 input[type="password"],
 input[type="email"],
@@ -2022,11 +2018,10 @@ input[type="search"],
 textarea,
 select {
   border-color: #ffffff !important;
-  box-shadow: 0 0 0 1px #ffffff !important; /* faint white outline */
+  box-shadow: 0 0 0 1px #ffffff !important;
   color: #ffffff !important;
 }
 
-/* Buttons and .button links */
 button,
 input[type="submit"],
 input[type="reset"],
@@ -2037,12 +2032,12 @@ input[type="button"],
   color: #ffffff !important;
 }
 
-/* When an article is visible, let the card take center stage */
+/* Center main card when article open */
 body.is-article-visible #wrapper {
-  justify-content: center; /* center #main vertically in the wrapper */
+  justify-content: center;
 }
 
-/* Collapse header & footer so they don't push the page down */
+/* Collapse header & footer when article open */
 body.is-article-visible #header,
 body.is-article-visible #footer {
   margin: 0;
@@ -2050,4 +2045,13 @@ body.is-article-visible #footer {
   height: 0;
   overflow: hidden;
   border: 0;
+}
+
+/* Mobile background zoom tweak */
+@media screen and (max-width: 600px) {
+  #bg:after {
+    transform: scale(1.25) !important;
+    background-size: cover;
+    background-position: left 10%;
+  }
 }
