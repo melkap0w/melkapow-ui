@@ -709,6 +709,12 @@ input[type="radio"] + label:before {
 #contact form .field.half input[type="email"] {
   width: 60%;
   display: block;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+#contact form textarea {
+  width: 100%;
 }
 
 #contact form .field.half {
@@ -1274,11 +1280,10 @@ input[type="button"] {
   transition: background-color 2.5s ease-in-out;
   transition-delay: 0.75s;
   background-image: linear-gradient(
-      to top,
-      rgba(19, 21, 25, 0.25),
-      rgba(19, 21, 25, 0.25)
-    ),
-    url("../../__IMAGE_REMOVED__");
+    to top,
+    rgba(19, 21, 25, 0.12),
+    rgba(19, 21, 25, 0.12)
+  );
   background-size: auto, 256px 256px;
   background-position: center, center;
   background-repeat: no-repeat, repeat;
@@ -1293,11 +1298,12 @@ input[type="button"] {
   background-size: contain;
   background-repeat: no-repeat;
   z-index: 1;
+  filter: brightness(1.25) contrast(1.05);
 }
 
 body.is-article-visible #bg:after {
   transform: scale(1.0825);
-  filter: blur(0.2rem);
+  filter: blur(0.23rem) brightness(0.75) contrast(0.95);
 }
 
 body.is-preload #bg:before {
@@ -1461,16 +1467,17 @@ body.is-preload #bg:before {
   letter-spacing: 0.2rem;
   font-size: 0.8rem;
   border-bottom: 0;
-  background-color: rgba(0, 0, 0, 0.55);
+  background-color: rgba(0, 0, 0, 0.5);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
 }
 
 #header nav ul li a:hover {
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(0, 0, 0, 0.35);
 }
 
 #header nav ul li a:active {
-  background-color: rgba(255, 255, 255, 0.175);
+  background-color: rgba(0, 0, 0, 0.25);
 }
 
 #header nav.use-middle:after {
@@ -1872,7 +1879,7 @@ body.is-preload #header .content .inner {
   display: none;
   width: 100%;
   height: auto;
-  max-height: calc(100vh - 10rem);
+  max-height: 65vh;
   object-fit: contain;
   border-radius: 10px;
 }

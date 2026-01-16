@@ -1,4 +1,4 @@
-<!DOCTYPE HTML> 
+<!DOCTYPE HTML>
 <!--
   Melkapow FTW
 -->
@@ -17,7 +17,7 @@
     />
 
     <!-- Main styles -->
-    <link rel="stylesheet" href="assets/css/main.css?v=20250308-10" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20250308-121" />
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 
     <!-- Override global h1 styles for the logo font -->
@@ -36,17 +36,22 @@
       }
 
       @media screen and (min-width: 768px) {
-        .logo-font {
-          font-size: 3.5rem;
-        }
+        .logo-font { font-size: 3.5rem; }
       }
 
       @media screen and (max-width: 480px) {
-        .logo-font {
-          font-size: 2.6rem;
-        }
+        .logo-font { font-size: 2.6rem; }
       }
     </style>
+
+    <!-- ✅ Preload the Work thumbnails (reduces "first click Work" delay) -->
+    <!-- If you later create smaller thumb files, update these to those thumb paths. -->
+    <link rel="preload" as="image" href="__IMAGE_REMOVED__" />
+    <link rel="preload" as="image" href="__IMAGE_REMOVED__" />
+    <link rel="preload" as="image" href="__IMAGE_REMOVED__" />
+    <link rel="preload" as="image" href="__IMAGE_REMOVED__" />
+    <link rel="preload" as="image" href="__IMAGE_REMOVED__" />
+    <link rel="preload" as="image" href="__IMAGE_REMOVED__" />
   </head>
 
   <body class="is-preload">
@@ -76,7 +81,11 @@
         <article id="intro">
           <h2 class="major">Intro</h2>
           <span class="image main">
-            <img src="__IMAGE_REMOVED__" alt="Cosmic background artwork" />
+            <img
+              src="__IMAGE_REMOVED__"
+              alt="Cosmic background artwork"
+              decoding="async"
+            />
           </span>
           <p>Mel add some intro here.</p>
           <p>
@@ -92,37 +101,67 @@
           <div class="gallery">
             <!-- 1. Eye -->
             <a href="#art-eye" class="gallery-item">
-              <img src="__IMAGE_REMOVED__" alt="Eye" />
+              <img
+                src="__IMAGE_REMOVED__"
+                alt="Deep within"
+                loading="lazy"
+                decoding="async"
+              />
               <span class="caption">Deep within</span>
             </a>
 
             <!-- 2. Birth of life -->
             <a href="#art-birthoflife" class="gallery-item">
-              <img src="__IMAGE_REMOVED__" alt="Birth of life" />
+              <img
+                src="__IMAGE_REMOVED__"
+                alt="Birth of life"
+                loading="lazy"
+                decoding="async"
+              />
               <span class="caption">Birth of life</span>
             </a>
 
             <!-- 3. Home -->
             <a href="#art-home" class="gallery-item">
-              <img src="__IMAGE_REMOVED__" alt="Home" />
+              <img
+                src="__IMAGE_REMOVED__"
+                alt="Home"
+                loading="lazy"
+                decoding="async"
+              />
               <span class="caption">Home</span>
             </a>
 
             <!-- 4. Lost in translation -->
             <a href="#art-lostintranslation" class="gallery-item">
-              <img src="__IMAGE_REMOVED__" alt="Lost in translation" />
+              <img
+                src="__IMAGE_REMOVED__"
+                alt="Lost in translation"
+                loading="lazy"
+                decoding="async"
+              />
               <span class="caption">Lost in translation</span>
             </a>
 
             <!-- 5. Weaving -->
             <a href="#art-weaving" class="gallery-item">
-              <img src="__IMAGE_REMOVED__" alt="Weaving" />
+              <img
+                src="__IMAGE_REMOVED__"
+                alt="Weaving"
+                loading="lazy"
+                decoding="async"
+              />
               <span class="caption">Weaving</span>
             </a>
 
             <!-- 6. Whirlpool -->
             <a href="#art-whirlpool" class="gallery-item">
-              <img src="__IMAGE_REMOVED__" alt="Whirlpool" />
+              <img
+                src="__IMAGE_REMOVED__"
+                alt="Whirlpool"
+                loading="lazy"
+                decoding="async"
+              />
               <span class="caption">Whirlpool</span>
             </a>
           </div>
@@ -130,7 +169,7 @@
 
         <!-- Artwork Detail - Eye -->
         <article id="art-eye" class="from-gallery">
-          <h2 class="major">Eye</h2>
+          <h2 class="major">Deep within</h2>
 
           <div class="art-slider">
             <!-- radios -->
@@ -141,10 +180,10 @@
 
             <!-- slides -->
             <div class="slides">
-              <img src="__IMAGE_REMOVED__" alt="Eye" />
-              <img src="__IMAGE_REMOVED__" alt="Eye detail 1" />
-              <img src="__IMAGE_REMOVED__" alt="Eye detail 2" />
-              <img src="__IMAGE_REMOVED__" alt="Eye detail 3" />
+              <img src="__IMAGE_REMOVED__" alt="Eye" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Eye detail 1" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Eye detail 2" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Eye detail 3" decoding="async" loading="lazy" />
             </div>
 
             <!-- arrows -->
@@ -188,10 +227,10 @@
             <input type="radio" name="birth-slider" id="birth-4" />
 
             <div class="slides">
-              <img src="__IMAGE_REMOVED__" alt="Birth of life" />
-              <img src="__IMAGE_REMOVED__" alt="Birth of life detail 1" />
-              <img src="__IMAGE_REMOVED__" alt="Birth of life detail 2" />
-              <img src="__IMAGE_REMOVED__" alt="Birth of life detail 3" />
+              <img src="__IMAGE_REMOVED__" alt="Birth of life" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Birth of life detail 1" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Birth of life detail 2" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Birth of life detail 3" decoding="async" loading="lazy" />
             </div>
 
             <div class="nav nav-1">
@@ -234,10 +273,10 @@
             <input type="radio" name="home-slider" id="home-4" />
 
             <div class="slides">
-              <img src="__IMAGE_REMOVED__" alt="Home" />
-              <img src="__IMAGE_REMOVED__" alt="Home detail 1" />
-              <img src="__IMAGE_REMOVED__" alt="Home detail 2" />
-              <img src="__IMAGE_REMOVED__" alt="Home detail 3" />
+              <img src="__IMAGE_REMOVED__" alt="Home" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Home detail 1" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Home detail 2" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Home detail 3" decoding="async" loading="lazy" />
             </div>
 
             <div class="nav nav-1">
@@ -280,10 +319,10 @@
             <input type="radio" name="lost-slider" id="lost-4" />
 
             <div class="slides">
-              <img src="__IMAGE_REMOVED__" alt="Lost main" />
-              <img src="__IMAGE_REMOVED__" alt="Lost detail 1" />
-              <img src="__IMAGE_REMOVED__" alt="Lost detail 2" />
-              <img src="__IMAGE_REMOVED__" alt="Lost detail 3" />
+              <img src="__IMAGE_REMOVED__" alt="Lost main" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Lost detail 1" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Lost detail 2" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Lost detail 3" decoding="async" loading="lazy" />
             </div>
 
             <div class="nav nav-1">
@@ -328,10 +367,10 @@
             <input type="radio" name="weaving-slider" id="weaving-4" />
 
             <div class="slides">
-              <img src="__IMAGE_REMOVED__" alt="Weaving" />
-              <img src="__IMAGE_REMOVED__" alt="Weaving detail 1" />
-              <img src="__IMAGE_REMOVED__" alt="Weaving detail 2" />
-              <img src="__IMAGE_REMOVED__" alt="Weaving detail 3" />
+              <img src="__IMAGE_REMOVED__" alt="Weaving" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Weaving detail 1" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Weaving detail 2" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Weaving detail 3" decoding="async" loading="lazy" />
             </div>
 
             <div class="nav nav-1">
@@ -374,10 +413,10 @@
             <input type="radio" name="whirlpool-slider" id="whirlpool-4" />
 
             <div class="slides">
-              <img src="__IMAGE_REMOVED__" alt="Whirlpool" />
-              <img src="__IMAGE_REMOVED__" alt="Whirlpool detail 1" />
-              <img src="__IMAGE_REMOVED__" alt="Whirlpool detail 2" />
-              <img src="__IMAGE_REMOVED__" alt="Whirlpool detail 3" />
+              <img src="__IMAGE_REMOVED__" alt="Whirlpool" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Whirlpool detail 1" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Whirlpool detail 2" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Whirlpool detail 3" decoding="async" loading="lazy" />
             </div>
 
             <div class="nav nav-1">
@@ -416,11 +455,17 @@
           <div class="about-layout-inner">
             <div class="about-text">
               <p>
-                Self-taught data engineer, self-taught artist. 
+                Self-taught data engineer, self-taught artist.
               </p>
             </div>
 
-            <img src="__IMAGE_REMOVED__" alt="Mel" class="about-img" />
+            <img
+              src="__IMAGE_REMOVED__"
+              alt="Mel"
+              class="about-img"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
         </article>
 
@@ -498,12 +543,14 @@
     </div>
 
     <div id="bg"></div>
-
+    
     <script src="assets/js/jquery.min.js"></script>
     <script src="assets/js/browser.min.js"></script>
     <script src="assets/js/breakpoints.min.js"></script>
     <script src="assets/js/util.js"></script>
     <script src="assets/js/gallery_close.js"></script>
     <script src="assets/js/main.js"></script>
+    <script src="assets/js/contactform.js"></script>
+
   </body>
 </html>
