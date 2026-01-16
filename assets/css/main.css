@@ -46,6 +46,37 @@ html {
   --nav-side-gutter: 1rem;
 }
 
+/* ICONS ONLY: "glass fill" variables scoped to icon areas */
+ul.icons,
+.icons {
+  --ui-fill: rgba(0, 0, 0, 0.5);
+  --ui-fill-hover: rgba(0, 0, 0, 0.35);
+  --ui-fill-active: rgba(0, 0, 0, 0.25);
+  --ui-blur: 2px;
+}
+
+/* Apply the fill ONLY to the social icon links */
+ul.icons li a,
+.icons li a,
+a.icon {
+  background: var(--ui-fill);
+  -webkit-backdrop-filter: blur(var(--ui-blur));
+  backdrop-filter: blur(var(--ui-blur));
+}
+
+/* hover/active states ONLY for icons */
+› ul.icons li a:hover,
+.icons li a:hover,
+a.icon:hover {
+  background: var(--ui-fill-hover);
+}
+
+ul.icons li a:active,
+.icons li a:active,
+a.icon:active {
+  background: var(--ui-fill-active);
+}
+
 /* =========================================
    CSS RESET
    ========================================= */
