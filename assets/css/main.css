@@ -1400,7 +1400,6 @@ body.is-preload #bg:before {
   );
   max-width: 100%;
   text-align: center;
-  margin-top: 20rem;
 }
 
 #header .content .inner {
@@ -1966,9 +1965,11 @@ body.is-preload #bg:before {
 #footer .copyright {
   letter-spacing: 0.2rem;
   font-size: 0.6rem;
-  opacity: 0.75;
   margin-bottom: 0;
   text-transform: uppercase;
+  color: #ffffff; /* same white */
+  opacity: 1; /* no dimming */
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.9); /* matches header glow */
 }
 
 body.is-preload #footer {
@@ -2072,5 +2073,29 @@ body.is-article-visible #footer {
     transform: scale(1.25) !important;
     background-size: cover;
     background-position: left 10%;
+  }
+}
+@media screen and (max-width: 600px) {
+  /* HOME state only */
+  body:not(.is-article-visible) {
+    height: 100dvh;
+    overflow: hidden; /* no scrollbar */
+  }
+
+  body:not(.is-article-visible) #wrapper {
+    height: 100dvh;
+    min-height: 100dvh;
+    padding: 1.25rem 1rem;
+    padding-top: 30vh;
+    justify-content: center;
+
+    /* ✅ moves EVERYTHING (header + icons + copyright) down */
+    transform: translateY(clamp(6vh, 10vh, 14vh));
+    will-change: transform;
+  }
+
+  /* Make sure old huge push-down doesn't fight this on mobile */
+  body:not(.is-article-visible) #header {
+    margin-top: 0 !important;
   }
 }
