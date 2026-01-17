@@ -1387,6 +1387,12 @@ body.is-preload #bg:before {
 /* =========================================
    HEADER + TOP NAV
    ========================================= */
+/* DESKTOP HOME ONLY */
+@media screen and (min-width: 601px) {
+  body:not(.is-article-visible) #header {
+    margin-top: 20rem;
+  }
+}
 
 #header {
   display: flex;
@@ -1949,6 +1955,30 @@ body.is-preload #bg:before {
   }
 }
 
+/* DESKTOP: make detail-view images smaller + standard size */
+@media screen and (min-width: 737px) {
+  /* cap the whole slider block so it doesn't fill the entire article width */
+  .art-slider {
+    max-width: 720px; /* <-- change this (680–820px) to taste */
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* keep a consistent frame size */
+  .art-slider .slides {
+    width: 100%;
+    aspect-ratio: 4 / 3; /* standard */
+    max-height: 520px; /* prevents "giant" on desktop */
+  }
+
+  /* keep images contained, never cropped */
+  .art-slider .slides img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
 /* =========================================
    FOOTER
    ========================================= */
@@ -2086,7 +2116,7 @@ body.is-article-visible #footer {
     height: 100dvh;
     min-height: 100dvh;
     padding: 1.25rem 1rem;
-    padding-top: 30vh;
+    padding-top: 27vh;
     justify-content: center;
 
     /* ✅ moves EVERYTHING (header + icons + copyright) down */
