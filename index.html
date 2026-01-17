@@ -7,8 +7,13 @@
     <title>Melkapow</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light">
-    <meta name="supported-color-schemes" content="light">
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+
+    <!-- Performance: warm up connections -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
     <!-- Font Awesome CDN -->
     <link
@@ -17,41 +22,37 @@
     />
 
     <!-- Main styles -->
-    <link rel="stylesheet" href="assets/css/main.css?v=20250308-1" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20250308-120" />
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 
     <!-- Override global h1 styles for the logo font -->
     <style>
-      /* This assumes you define @font-face 'DeloresAmores' in main.css */
       .logo-font {
-        font-family: 'DeloresAmores', 'Source Sans Pro', sans-serif;
+        font-family: "DeloresAmores", "Source Sans Pro", sans-serif;
         font-size: 3rem;
-        font-weight: normal;      /* cancel global h1 bold */
-        text-transform: none;     /* cancel global uppercase */
-        letter-spacing: 0;        /* no extra spacing */
-        line-height: 1;           /* tighter like the sample */
-        text-shadow: none;        /* keep strokes clean */
+        font-weight: normal;
+        text-transform: none;
+        letter-spacing: 0;
+        line-height: 1;
+        text-shadow: none;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
 
       @media screen and (min-width: 768px) {
-        .logo-font { font-size: 3.5rem; }
+        .logo-font {
+          font-size: 3.5rem;
+        }
       }
 
       @media screen and (max-width: 480px) {
-        .logo-font { font-size: 2.6rem; }
+        .logo-font {
+          font-size: 2.6rem;
+        }
       }
     </style>
 
-    <!-- ✅ Preload the Work thumbnails (reduces "first click Work" delay) -->
-    <!-- If you later create smaller thumb files, update these to those thumb paths. -->
-    <link rel="preload" as="image" href="__IMAGE_REMOVED__" />
-    <link rel="preload" as="image" href="__IMAGE_REMOVED__" />
-    <link rel="preload" as="image" href="__IMAGE_REMOVED__" />
-    <link rel="preload" as="image" href="__IMAGE_REMOVED__" />
-    <link rel="preload" as="image" href="__IMAGE_REMOVED__" />
-    <link rel="preload" as="image" href="__IMAGE_REMOVED__" />
+    <!-- NOTE: Removed preload of multi-MB gallery thumbnails -->
   </head>
 
   <body class="is-preload">
@@ -85,13 +86,20 @@
               src="__IMAGE_REMOVED__"
               alt="Cosmic background artwork"
               decoding="async"
+              loading="eager"
+              fetchpriority="high"
             />
           </span>
-          <p>Art has become lost in the world of our fast paced lives. When will you slow down and let it speak to you? </p>
           <p>
-            Dive deep inward into a world that is unseen. I bring art to life unconsciously without a direction. I allow the emotions to stream and guide what becomes.  
-             
-            <p></p><a href="#work"><u>Check out the work! </u> </p></a>
+            Art has become lost in the world of our fast paced lives. When will you slow down and let it
+            speak to you?
+          </p>
+          <p>
+            Dive deep inward into a world that is unseen. I bring art to life unconsciously without a
+            direction. I allow the emotions to stream and guide what becomes.
+          </p>
+          <p>
+            <a href="#work"><u>Check out the work!</u></a>
           </p>
         </article>
 
@@ -102,67 +110,37 @@
           <div class="gallery">
             <!-- 1. Eye -->
             <a href="#art-eye" class="gallery-item">
-              <img
-                src="__IMAGE_REMOVED__"
-                alt="Deep within"
-                loading="lazy"
-                decoding="async"
-              />
+              <img src="__IMAGE_REMOVED__" alt="Deep within" loading="lazy" decoding="async" />
               <span class="caption">Deep within</span>
             </a>
 
             <!-- 2. Birth of life -->
             <a href="#art-birthoflife" class="gallery-item">
-              <img
-                src="__IMAGE_REMOVED__"
-                alt="Birth of life"
-                loading="lazy"
-                decoding="async"
-              />
+              <img src="__IMAGE_REMOVED__" alt="Birth of life" loading="lazy" decoding="async" />
               <span class="caption">Birth of life</span>
             </a>
 
             <!-- 3. Home -->
             <a href="#art-home" class="gallery-item">
-              <img
-                src="__IMAGE_REMOVED__"
-                alt="Home"
-                loading="lazy"
-                decoding="async"
-              />
+              <img src="__IMAGE_REMOVED__" alt="Home" loading="lazy" decoding="async" />
               <span class="caption">Home</span>
             </a>
 
             <!-- 4. Lost in translation -->
             <a href="#art-lostintranslation" class="gallery-item">
-              <img
-                src="__IMAGE_REMOVED__"
-                alt="Lost in translation"
-                loading="lazy"
-                decoding="async"
-              />
+              <img src="__IMAGE_REMOVED__" alt="Lost in translation" loading="lazy" decoding="async" />
               <span class="caption">Lost in translation</span>
             </a>
 
             <!-- 5. Weaving -->
             <a href="#art-weaving" class="gallery-item">
-              <img
-                src="__IMAGE_REMOVED__"
-                alt="Weaving"
-                loading="lazy"
-                decoding="async"
-              />
+              <img src="__IMAGE_REMOVED__" alt="Weaving" loading="lazy" decoding="async" />
               <span class="caption">Weaving</span>
             </a>
 
             <!-- 6. Whirlpool -->
             <a href="#art-whirlpool" class="gallery-item">
-              <img
-                src="__IMAGE_REMOVED__"
-                alt="Whirlpool"
-                loading="lazy"
-                decoding="async"
-              />
+              <img src="__IMAGE_REMOVED__" alt="Whirlpool" loading="lazy" decoding="async" />
               <span class="caption">Whirlpool</span>
             </a>
           </div>
@@ -173,36 +151,30 @@
           <h2 class="major">Deep within</h2>
 
           <div class="art-slider">
-            <!-- radios -->
             <input type="radio" name="eye-slider" id="eye-1" checked />
             <input type="radio" name="eye-slider" id="eye-2" />
             <input type="radio" name="eye-slider" id="eye-3" />
             <input type="radio" name="eye-slider" id="eye-4" />
 
-            <!-- slides -->
             <div class="slides">
-              <img src="__IMAGE_REMOVED__" alt="Eye" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Eye detail 1" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Eye detail 2" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Eye detail 3" decoding="async" loading="eager" />
+              <img src="__IMAGE_REMOVED__" alt="Eye" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Eye detail 1" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Eye detail 2" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Eye detail 3" decoding="async" loading="lazy" />
             </div>
 
-            <!-- arrows -->
             <div class="nav nav-1">
               <label for="eye-4">&#10094;</label>
               <label for="eye-2">&#10095;</label>
             </div>
-
             <div class="nav nav-2">
               <label for="eye-1">&#10094;</label>
               <label for="eye-3">&#10095;</label>
             </div>
-
             <div class="nav nav-3">
               <label for="eye-2">&#10094;</label>
               <label for="eye-4">&#10095;</label>
             </div>
-
             <div class="nav nav-4">
               <label for="eye-3">&#10094;</label>
               <label for="eye-1">&#10095;</label>
@@ -228,27 +200,24 @@
             <input type="radio" name="birth-slider" id="birth-4" />
 
             <div class="slides">
-              <img src="__IMAGE_REMOVED__" alt="Birth of life" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Birth of life detail 1" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Birth of life detail 2" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Birth of life detail 3" decoding="async" loading="eager" />
+              <img src="__IMAGE_REMOVED__" alt="Birth of life" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Birth of life detail 1" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Birth of life detail 2" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Birth of life detail 3" decoding="async" loading="lazy" />
             </div>
 
             <div class="nav nav-1">
               <label for="birth-4">&#10094;</label>
               <label for="birth-2">&#10095;</label>
             </div>
-
             <div class="nav nav-2">
               <label for="birth-1">&#10094;</label>
               <label for="birth-3">&#10095;</label>
             </div>
-
             <div class="nav nav-3">
               <label for="birth-2">&#10094;</label>
               <label for="birth-4">&#10095;</label>
             </div>
-
             <div class="nav nav-4">
               <label for="birth-3">&#10094;</label>
               <label for="birth-1">&#10095;</label>
@@ -274,27 +243,24 @@
             <input type="radio" name="home-slider" id="home-4" />
 
             <div class="slides">
-              <img src="__IMAGE_REMOVED__" alt="Home" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Home detail 1" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Home detail 2" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Home detail 3" decoding="async" loading="eager" />
+              <img src="__IMAGE_REMOVED__" alt="Home" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Home detail 1" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Home detail 2" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Home detail 3" decoding="async" loading="lazy" />
             </div>
 
             <div class="nav nav-1">
               <label for="home-4">&#10094;</label>
               <label for="home-2">&#10095;</label>
             </div>
-
             <div class="nav nav-2">
               <label for="home-1">&#10094;</label>
               <label for="home-3">&#10095;</label>
             </div>
-
             <div class="nav nav-3">
               <label for="home-2">&#10094;</label>
               <label for="home-4">&#10095;</label>
             </div>
-
             <div class="nav nav-4">
               <label for="home-3">&#10094;</label>
               <label for="home-1">&#10095;</label>
@@ -320,36 +286,31 @@
             <input type="radio" name="lost-slider" id="lost-4" />
 
             <div class="slides">
-              <img src="__IMAGE_REMOVED__" alt="Lost main" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Lost detail 1" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Lost detail 2" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Lost detail 3" decoding="async" loading="eager" />
+              <img src="__IMAGE_REMOVED__" alt="Lost main" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Lost detail 1" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Lost detail 2" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Lost detail 3" decoding="async" loading="lazy" />
             </div>
 
             <div class="nav nav-1">
               <label for="lost-4">&#10094;</label>
               <label for="lost-2">&#10095;</label>
             </div>
-
             <div class="nav nav-2">
               <label for="lost-1">&#10094;</label>
               <label for="lost-3">&#10095;</label>
             </div>
-
             <div class="nav nav-3">
               <label for="lost-2">&#10094;</label>
               <label for="lost-4">&#10095;</label>
             </div>
-
             <div class="nav nav-4">
               <label for="lost-3">&#10094;</label>
               <label for="lost-1">&#10095;</label>
             </div>
           </div>
 
-          <p class="mt-2rem">
-            Trapped between layers of dimensions.
-          </p>
+          <p class="mt-2rem">Trapped between layers of dimensions.</p>
 
           <ul class="actions">
             <li><a href="#" class="button primary">Buy me soon! lol</a></li>
@@ -368,27 +329,24 @@
             <input type="radio" name="weaving-slider" id="weaving-4" />
 
             <div class="slides">
-              <img src="__IMAGE_REMOVED__" alt="Weaving" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Weaving detail 1" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Weaving detail 2" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Weaving detail 3" decoding="async" loading="eager" />
+              <img src="__IMAGE_REMOVED__" alt="Weaving" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Weaving detail 1" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Weaving detail 2" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Weaving detail 3" decoding="async" loading="lazy" />
             </div>
 
             <div class="nav nav-1">
               <label for="weaving-4">&#10094;</label>
               <label for="weaving-2">&#10095;</label>
             </div>
-
             <div class="nav nav-2">
               <label for="weaving-1">&#10094;</label>
               <label for="weaving-3">&#10095;</label>
             </div>
-
             <div class="nav nav-3">
               <label for="weaving-2">&#10094;</label>
               <label for="weaving-4">&#10095;</label>
             </div>
-
             <div class="nav nav-4">
               <label for="weaving-3">&#10094;</label>
               <label for="weaving-1">&#10095;</label>
@@ -414,27 +372,24 @@
             <input type="radio" name="whirlpool-slider" id="whirlpool-4" />
 
             <div class="slides">
-              <img src="__IMAGE_REMOVED__" alt="Whirlpool" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Whirlpool detail 1" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Whirlpool detail 2" decoding="async" loading="eager" />
-              <img src="__IMAGE_REMOVED__" alt="Whirlpool detail 3" decoding="async" loading="eager" />
+              <img src="__IMAGE_REMOVED__" alt="Whirlpool" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Whirlpool detail 1" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Whirlpool detail 2" decoding="async" loading="lazy" />
+              <img src="__IMAGE_REMOVED__" alt="Whirlpool detail 3" decoding="async" loading="lazy" />
             </div>
 
             <div class="nav nav-1">
               <label for="whirlpool-4">&#10094;</label>
               <label for="whirlpool-2">&#10095;</label>
             </div>
-
             <div class="nav nav-2">
               <label for="whirlpool-1">&#10094;</label>
               <label for="whirlpool-3">&#10095;</label>
             </div>
-
             <div class="nav nav-3">
               <label for="whirlpool-2">&#10094;</label>
               <label for="whirlpool-4">&#10095;</label>
             </div>
-
             <div class="nav nav-4">
               <label for="whirlpool-3">&#10094;</label>
               <label for="whirlpool-1">&#10095;</label>
@@ -455,18 +410,10 @@
 
           <div class="about-layout-inner">
             <div class="about-text">
-              <p>
-                Self-taught data engineer, self-taught artist.
-              </p>
+              <p>Self-taught data engineer, self-taught artist.</p>
             </div>
 
-            <img
-              src="__IMAGE_REMOVED__"
-              alt="Mel"
-              class="about-img"
-              loading="lazy"
-              decoding="async"
-            />
+            <img src="__IMAGE_REMOVED__" alt="Mel" class="about-img" loading="lazy" decoding="async" />
           </div>
         </article>
 
@@ -488,19 +435,12 @@
 
               <div class="field">
                 <label for="message">Message</label>
-                <textarea
-                  name="message"
-                  id="message"
-                  rows="4"
-                  placeholder="Your message…"
-                ></textarea>
+                <textarea name="message" id="message" rows="4" placeholder="Your message…"></textarea>
               </div>
             </div>
 
             <ul class="actions">
-              <li>
-                <input type="submit" value="Send Message" class="primary" />
-              </li>
+              <li><input type="submit" value="Send Message" class="primary" /></li>
               <li><input type="reset" value="Reset" /></li>
             </ul>
           </form>
@@ -511,30 +451,22 @@
       <footer id="footer">
         <ul class="icons">
           <li>
-            <a
-              href="https://example.com"
-              class="icon brands fa-linkedin"
+            <a href="https://example.com" class="icon brands fa-linkedin"
               ><span class="label">LinkedIn</span></a
             >
           </li>
           <li>
-            <a
-              href="https://example.com"
-              class="icon brands fa-facebook-f"
+            <a href="https://example.com" class="icon brands fa-facebook-f"
               ><span class="label">Facebook</span></a
             >
           </li>
           <li>
-            <a
-              href="https://example.com"
-              class="icon brands fa-instagram"
+            <a href="https://example.com" class="icon brands fa-instagram"
               ><span class="label">Instagram</span></a
             >
           </li>
           <li>
-            <a
-              href="https://github.com/example"
-              class="icon brands fa-github"
+            <a href="https://github.com/example" class="icon brands fa-github"
               ><span class="label">GitHub</span></a
             >
           </li>
@@ -544,14 +476,17 @@
     </div>
 
     <div id="bg"></div>
-    
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/browser.min.js"></script>
-    <script src="assets/js/breakpoints.min.js"></script>
-    <script src="assets/js/util.js"></script>
-    <script src="assets/js/gallery_close.js"></script>
-    <script src="assets/js/main.js"></script>
-    <script src="assets/js/contactform.js"></script>
+
+    <!-- Defer JS so first click to #work isn't blocked by JS parse/exec -->
+    <script src="assets/js/jquery.min.js" defer></script>
+    <script src="assets/js/browser.min.js" defer></script>
+    <script src="assets/js/breakpoints.min.js" defer></script>
+    <script src="assets/js/util.js" defer></script>
+
+    <!-- Your custom scripts -->
+    <script src="assets/js/gallery_close.js" defer></script>
+    <script src="assets/js/main.js" defer></script>
+    <script src="assets/js/contactform.js" defer></script>
 
   </body>
 </html>

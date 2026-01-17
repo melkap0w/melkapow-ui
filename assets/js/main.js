@@ -1,11 +1,6 @@
-/*
-	Dimension by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
-*/
+/* JS shell code */
 
 (function($) {
-
 	var	$window = $(window),
 		$body = $('body'),
 		$wrapper = $('#wrapper'),
@@ -24,11 +19,10 @@
 		xxsmall:  [ null,      '360px'  ]
 	});
 
-	// Play initial animations on page load.
-	$window.on('load', function() {
-		window.setTimeout(function() {
-			$body.removeClass('is-preload');
-		}, 100);
+
+// Play initial animations on page load (don't wait for images).
+	$(function() {
+	$body.removeClass('is-preload');
 	});
 
 	// Fix: Flexbox min-height bug on IE.
