@@ -1867,6 +1867,7 @@ body.is-preload #bg:before {
   object-fit: contain; /* no crop */
   display: none;
   border-radius: 0; /* frame handles rounding */
+  content-visibility: auto;
 }
 
 /* Show image based on checked radio (1–4) */
