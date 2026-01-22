@@ -1,5 +1,7 @@
 // assets/js/gallery-close.js
 (function () {
+
+  
   window.addEventListener('load', function () {
     var main = document.querySelector('#main');
     if (!main) return;
