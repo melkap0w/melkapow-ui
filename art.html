@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <title>Melkapow</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <meta name="robots" content="noindex" />
+
+    <noscript>
+      <meta http-equiv="refresh" content="0; url=index.html#work" />
+    </noscript>
+    <script>
+      (function () {
+        var url = new URL(window.location.href);
+        var id = url.searchParams.get("id");
+        if (id) window.location.replace("index.html#art-" + id);
+        else window.location.replace("index.html#work");
+      })();
+    </script>
+
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <link rel="stylesheet" href="assets/css/main.css?v=20250308-10" />
+    <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+
+    <style>
+      .logo-font {
+        font-family: "DeloresAmores", "Source Sans Pro", sans-serif;
+        font-size: 3rem;
+        font-weight: normal;
+        text-transform: none;
+        letter-spacing: 0;
+        line-height: 1;
+      }
+      @media screen and (min-width: 768px) { .logo-font { font-size: 3.5rem; } }
+      @media screen and (max-width: 480px) { .logo-font { font-size: 2.6rem; } }
+
+      /* Slider base (works with your existing design; tweak if needed) */
+      .art-slider { position: relative; width: 100%; }
+      .art-slider .slides {
+        display: flex;
+        overflow: hidden;
+        border-radius: 8px;
+      }
+      .art-slider .slides-track {
+        display: flex;
+        width: 100%;
+        transition: transform 240ms ease;
+      }
+      .art-slider .slide {
+        min-width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .art-slider img {
+        width: 100%;
+        height: auto;
+        max-height: 70vh;   /* consistent sizing */
+        object-fit: contain;
+      }
+      .art-slider .navbtn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 0;
+        background: rgba(0,0,0,0.35);
+        color: #fff;
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+      }
+      .art-slider .navbtn.prev { left: 10px; }
+      .art-slider .navbtn.next { right: 10px; }
+
+      .art-dots {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 12px;
+      }
+      .art-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.6);
+        background: transparent;
+        cursor: pointer;
+      }
+      .art-dot.is-active { background: rgba(255,255,255,0.85); }
+    </style>
+  </head>
+
+  <body class="is-preload is-article-visible">
+
+    <div id="wrapper">
+      <header id="header">
+        <div class="content">
+          <div class="inner">
+            <h1 class="logo-font">MELKAPOW</h1>
+            <p>Raw unfiltered art</p>
+          </div>
+        </div>
+        <nav>
+          <ul>
+            <li><a href="index.html#intro">Intro</a></li>
+            <li><a href="index.html#work">Work</a></li>
+            <li><a href="index.html#about">About</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
+          </ul>
+        </nav>
+      </header>
+
+      <div id="main">
+        <article id="art" class="from-gallery active">
+          <h2 class="major" id="artTitle">Artwork</h2>
+
+          <div class="art-slider" id="artSlider">
+            <div class="slides">
+              <div class="slides-track" id="slidesTrack"></div>
+            </div>
+
+            <button class="navbtn prev" type="button" id="btnPrev" aria-label="Previous slide">
+              &#10094;
+            </button>
+            <button class="navbtn next" type="button" id="btnNext" aria-label="Next slide">
+              &#10095;
+            </button>
+          </div>
+
+          <div class="art-dots" id="artDots" aria-label="Slide dots"></div>
+
+          <p class="mt-2rem" id="artCaption"></p>
+
+          <ul class="actions">
+            <li><a href="#" class="button primary">Buy me soon! lol</a></li>
+            <li><a href="index.html#work" class="button">Back to Gallery</a></li>
+          </ul>
+        </article>
+      </div>
+
+      <footer id="footer">
+        <ul class="icons">
+          <li>
+            <a href="https://example.com" class="icon brands fa-linkedin"><span class="label">LinkedIn</span></a>
+          </li>
+          <li>
+            <a href="https://example.com" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a>
+          </li>
+          <li>
+            <a href="https://example.com" class="icon brands fa-instagram"><span class="label">Instagram</span></a>
+          </li>
+          <li>
+            <a href="https://github.com/example" class="icon brands fa-github"><span class="label">GitHub</span></a>
+          </li>
+        </ul>
+        <p class="copyright">&copy;2026 Melkapow</p>
+      </footer>
+    </div>
+
+    <div id="bg"></div>
+
+    <script src="assets/js/jquery.min.js" defer></script>
+    <script src="assets/js/browser.min.js" defer></script>
+    <script src="assets/js/breakpoints.min.js" defer></script>
+    <script src="assets/js/util.js" defer></script>
+
+    <script src="assets/js/art_data.js" defer></script>
+    <script src="assets/js/art_page.js" defer></script>
+  </body>
+</html>
