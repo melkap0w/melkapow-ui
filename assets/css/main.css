@@ -4,7 +4,8 @@
 /* Custom logo font */
 @font-face {
   font-family: "DeloresAmores";
-  src: url("../webfonts/vtksdeloresamores-mlvxv-webfont.woff2") format("woff2"),
+  src:
+    url("../webfonts/vtksdeloresamores-mlvxv-webfont.woff2") format("woff2"),
     url("../webfonts/vtksdeloresamores-mlvxv-webfont.woff") format("woff");
   font-weight: normal;
   font-style: normal;
@@ -315,13 +316,21 @@ textarea {
 }
 
 a {
-  -moz-transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out,
+  -moz-transition:
+    color 0.2s ease-in-out,
+    background-color 0.2s ease-in-out,
     border-bottom-color 0.2s ease-in-out;
-  -webkit-transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out,
+  -webkit-transition:
+    color 0.2s ease-in-out,
+    background-color 0.2s ease-in-out,
     border-bottom-color 0.2s ease-in-out;
-  -ms-transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out,
+  -ms-transition:
+    color 0.2s ease-in-out,
+    background-color 0.2s ease-in-out,
     border-bottom-color 0.2s ease-in-out;
-  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out,
+  transition:
+    color 0.2s ease-in-out,
+    background-color 0.2s ease-in-out,
     border-bottom-color 0.2s ease-in-out;
   border-bottom: dotted 1px rgba(255, 255, 255, 0.5);
   text-decoration: none;
@@ -578,13 +587,21 @@ input[type="email"],
 input[type="tel"],
 select,
 textarea {
-  -moz-transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out,
+  -moz-transition:
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out,
     background-color 0.2s ease-in-out;
-  -webkit-transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out,
+  -webkit-transition:
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out,
     background-color 0.2s ease-in-out;
-  -ms-transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out,
+  -ms-transition:
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out,
     background-color 0.2s ease-in-out;
-  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out,
+  transition:
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out,
     background-color 0.2s ease-in-out;
   background-color: transparent;
   border-radius: var(--border-radius);
@@ -691,7 +708,9 @@ input[type="radio"] + label:before {
   line-height: 1;
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
-  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out,
+  transition:
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out,
     background-color 0.2s ease-in-out;
   border-radius: 4px;
   border: solid 1px var(--text-color);
@@ -868,7 +887,9 @@ ul.icons li a {
   line-height: 2.25rem;
   border-radius: 100%;
   box-shadow: inset 0 0 0 1px var(--text-color);
-  transition: background-color 0.2s ease-in-out, transform 0.35s ease-in-out;
+  transition:
+    background-color 0.2s ease-in-out,
+    transform 0.35s ease-in-out;
 }
 
 ul.icons li a:hover {
@@ -1194,7 +1215,9 @@ input[type="button"],
 button,
 .button {
   appearance: none;
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  transition:
+    background-color 0.2s ease-in-out,
+    color 0.2s ease-in-out;
   background-color: transparent;
   border-radius: var(--border-radius);
   border: 0;
@@ -1336,7 +1359,9 @@ input[type="button"] {
     rgba(19, 21, 25, 0.12),
     rgba(19, 21, 25, 0.12)
   );
-  background-size: auto, 256px 256px;
+  background-size:
+    auto,
+    256px 256px;
   background-position: center, center;
   background-repeat: no-repeat, repeat;
   z-index: 2;
@@ -1344,7 +1369,9 @@ input[type="button"] {
 
 #bg:after {
   transform: scale(1.12);
-  transition: transform 0.325s ease-in-out, filter 0.325s ease-in-out;
+  transition:
+    transform 0.325s ease-in-out,
+    filter 0.325s ease-in-out;
   background-image: url("../../__IMAGE_REMOVED__");
   background-position: center;
   background-size: contain;
@@ -1398,7 +1425,9 @@ body.is-preload #bg:before {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: transform 0.325s ease-in-out, filter 0.325s ease-in-out,
+  transition:
+    transform 0.325s ease-in-out,
+    filter 0.325s ease-in-out,
     opacity 0.325s ease-in-out;
   background-image: radial-gradient(
     rgba(0, 0, 0, 0.55) 30%,
@@ -1475,7 +1504,9 @@ body.is-preload #bg:before {
 }
 
 #header .content .inner {
-  transition: max-height 0.75s ease, padding 0.75s ease,
+  transition:
+    max-height 0.75s ease,
+    padding 0.75s ease,
     opacity 0.325s ease-in-out;
   transition-delay: 0.25s;
   padding: 1rem 1rem;
@@ -1682,7 +1713,9 @@ body.is-preload #bg:before {
 
 #main article {
   transform: translateY(0.25rem);
-  transition: opacity 0.325s ease-in-out, transform 0.325s ease-in-out;
+  transition:
+    opacity 0.325s ease-in-out,
+    transform 0.325s ease-in-out;
   padding: var(--page-padding-desktop);
   position: relative;
   width: var(--page-max-width);
@@ -1842,7 +1875,9 @@ body.is-preload #bg:before {
 .gallery-item img {
   width: 100%;
   border-radius: 8px;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
   aspect-ratio: 4 / 3;
   object-fit: cover;
   display: block;
@@ -1939,6 +1974,16 @@ body.is-preload #bg:before {
   opacity: 0.6;
 }
 
+/* Caption under art image */
+#main article.from-gallery .art-caption {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.25rem;
+  line-height: 1.6;
+}
+
 /* Accessibility helper */
 .sr-only {
   position: absolute;
@@ -1968,7 +2013,7 @@ body.is-preload #bg:before {
   .art-slider .slides {
     width: 100%;
     aspect-ratio: 4 / 3; /* standard */
-    max-height: 520px; /* prevents "giant" on desktop */
+    max-height: 460px; /* slightly smaller on desktop */
   }
 
   /* keep images contained, never cropped */
@@ -1984,7 +2029,9 @@ body.is-preload #bg:before {
    ========================================= */
 
 #footer {
-  transition: transform 0.325s ease-in-out, filter 0.325s ease-in-out,
+  transition:
+    transform 0.325s ease-in-out,
+    filter 0.325s ease-in-out,
     opacity 0.325s ease-in-out;
   width: 100%;
   max-width: 100%;

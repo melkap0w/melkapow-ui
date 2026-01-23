@@ -86,7 +86,7 @@
 
     if (art.caption) {
       var caption = document.createElement("p");
-      caption.className = "mt-2rem";
+      caption.className = "mt-2rem art-caption";
       caption.textContent = art.caption;
       article.appendChild(caption);
     }
@@ -137,4 +137,3 @@
     buildArtArticles();
   }
 })();
-

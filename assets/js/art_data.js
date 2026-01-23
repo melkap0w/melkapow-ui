@@ -35,10 +35,10 @@ window.MELKAPOW_ART = [
     alt: "Home",
     caption: "I've been looking for you my whole life.",
     slides: [
-      { src: "__IMAGE_REMOVED__", alt: "Home" },
-      { src: "__IMAGE_REMOVED__", alt: "Home detail 1" },
-      { src: "__IMAGE_REMOVED__", alt: "Home detail 2" },
-      { src: "__IMAGE_REMOVED__", alt: "Home detail 3" }
+      { src: "__IMAGE_REMOVED__", alt: "Home" } //,
+      //{ src: "__IMAGE_REMOVED__", alt: "Home detail 1" },
+      //{ src: "__IMAGE_REMOVED__", alt: "Home detail 2" },
+      //{ src: "__IMAGE_REMOVED__", alt: "Home detail 3" }
     ]
   },
   {
@@ -51,7 +51,7 @@ window.MELKAPOW_ART = [
       { src: "__IMAGE_REMOVED__", alt: "Lost main" },
       { src: "__IMAGE_REMOVED__", alt: "Lost detail 1" },
       { src: "__IMAGE_REMOVED__", alt: "Lost detail 2" },
-      { src: "__IMAGE_REMOVED__", alt: "Lost detail 3" }
+      // { src: "__IMAGE_REMOVED__", alt: "Lost detail 3" }
     ]
   },
   {
@@ -79,7 +79,7 @@ window.MELKAPOW_ART = [
       { src: "__IMAGE_REMOVED__", alt: "Whirlpool" },
       { src: "__IMAGE_REMOVED__", alt: "Whirlpool detail 1" },
       { src: "__IMAGE_REMOVED__", alt: "Whirlpool detail 2" },
-      { src: "__IMAGE_REMOVED__", alt: "Whirlpool detail 3" }
+      //{ src: "__IMAGE_REMOVED__", alt: "Whirlpool detail 3" }
     ]
   }
 ];
