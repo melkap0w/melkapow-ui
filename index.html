@@ -166,13 +166,99 @@
               ></div>
             </div>
 
-            <ul class="actions">
-              <li><input type="submit" value="Send Message" class="primary" /></li>
-              <li><input type="reset" value="Reset" /></li>
-            </ul>
+	            <ul class="actions">
+	              <li><input type="reset" value="Reset" /></li>
+	              <li><input type="submit" value="Send Message" class="primary" /></li>
+	            </ul>
 
             <p id="contactStatus" class="align-center" aria-live="polite"></p>
           </form>
+        </article>
+
+        <!-- Cart -->
+        <article id="cart">
+          <h2 class="major">Cart</h2>
+
+          <p id="cartEmpty" class="align-center" hidden>Your cart is empty.</p>
+
+          <div id="cartItems"></div>
+
+          <p class="align-center cart-total-line">
+            Total: <span id="cartTotal">$0.00</span>
+          </p>
+
+          <p class="align-center cart-legal">
+            By placing an order, you agree to the <a href="#terms">Terms &amp; Conditions</a>.
+          </p>
+
+          <ul class="actions">
+            <li><a href="#work" class="button">Continue Shopping</a></li>
+            <li>
+              <a href="#" class="button primary disabled" aria-disabled="true">Checkout (soon)</a>
+            </li>
+          </ul>
+        </article>
+
+        <!-- Terms -->
+        <article id="terms">
+          <h2 class="major">Terms &amp; Conditions</h2>
+
+          <h3>Return Policy</h3>
+          <p>
+            All sales are final. We do not issue refunds, accept cancellations, or allow exchanges.
+            On a case by case basis under extenuating circumstances, at our discretion, if we determine a refund is warranted,
+            a 5% fee will be deducted from the refund. All shipping fees and international duty/tax are non-refundable.
+          </p>
+          <p>
+            If a refund is granted, credit cards will be refunded in USD at the exchange rate effective at the time of the refund.
+            The cardholder assumes all responsibility for any fluctuations in exchange rate and/or fees levied by their bank.
+          </p>
+          <p>
+            To provide the best customer service, any concerns regarding orders must be received in writing within 30 days of placing the order
+            or within 15 days of delivery of the order.
+          </p>
+
+          <h3>Purchase For Personal Use Only</h3>
+          <p>
+            Buyers may purchase products only for personal use and not for resale. By placing your order, you certify that you are purchasing
+            products for personal use only and not for resale. We reserve the right to refuse orders for any reason without explanation.
+          </p>
+
+          <h3>Shipping</h3>
+          <p>
+            We do not ship to P.O. Boxes or freight forwarders. Please allow up to 7 business days for order verification and processing,
+            and an additional 10 business days for delivery. These are estimated timeframes and are not guaranteed.
+          </p>
+          <p>
+            Domestic orders may ship via carriers such as UPS Ground or FedEx. International orders may ship via carriers such as DHL, FedEx, or TNT.
+            Shipping fees are calculated at checkout and may include additional fees based on order weight and/or handling.
+          </p>
+          <p>
+            We are not responsible for any lost, stolen, or damaged shipments. Customers are responsible for paying additional shipping and handling fees
+            to have the order re-shipped, if available. The buyer assumes all responsibilities of claims made with the shipping carrier.
+          </p>
+
+          <h3>International Duty And Tax</h3>
+          <p>
+            International customers may incur additional charges at the time of checkout and/or delivery. Any import duty and taxes are the buyer’s responsibility
+            and may be required prior to delivery depending on the destination country.
+          </p>
+
+          <h3>Sales Tax</h3>
+          <p>
+            Sales tax may be charged as required by law based on your shipping destination. Any applicable taxes will be calculated and shown at checkout.
+          </p>
+
+          <h3>Copyright</h3>
+          <p>
+            All content is protected by copyright laws. Images, text, design, and other materials (collectively “Content”) are protected by U.S. and international
+            copyright laws and may be covered by other restrictions as well. Any unauthorized use of protected materials may violate intellectual property laws and
+            these Terms and Conditions.
+          </p>
+          <p>
+            Anyone wishing to use any Content for any purpose other than fair use as defined by law must request and receive prior written permission.
+            The purchase of any product does not provide the purchaser with any copyright interest or other intellectual property right in the product.
+          </p>
         </article>
       </div>
 
@@ -206,6 +292,11 @@
 
     <div id="bg"></div>
 
+    <a href="#cart" id="cartFab" class="cart-fab" aria-label="Cart" hidden>
+      <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+      <span class="cart-badge" id="cartBadge" aria-hidden="true"></span>
+    </a>
+
     <!-- load main functionality -->
     <script src="assets/js/jquery.min.js" defer></script>
     <script src="assets/js/browser.min.js" defer></script>
@@ -214,6 +305,7 @@
 
     <!-- custom scripts -->
     <script src="assets/js/art_data.js" defer></script>
+    <script src="assets/js/cart.js" defer></script>
     <script src="assets/js/art_build.js" defer></script>
     <script src="assets/js/gallery_build.js" defer></script>
     <script src="assets/js/gallery_close.js" defer></script>

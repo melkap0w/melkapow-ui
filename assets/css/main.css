@@ -1696,6 +1696,205 @@ body.is-preload #bg:before {
 }
 
 /* =========================================
+   CART (FLOATING ICON + PAGE)
+   ========================================= */
+
+.cart-fab[hidden] {
+  display: none;
+}
+
+/* Only show the floating cart icon on the home view (no article open). */
+body.is-article-visible #cartFab {
+  display: none !important;
+}
+
+.cart-fab {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 10000;
+
+  width: 3rem;
+  height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: solid 1px var(--text-color);
+  border-radius: var(--border-radius);
+  text-decoration: none;
+
+  background-color: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.cart-fab:hover {
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+.cart-fab:active {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+.cart-fab i {
+  color: var(--text-color);
+  font-size: 1.1rem;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -0.55rem;
+  right: -0.55rem;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--text-color);
+  color: var(--bg-color);
+  border-radius: 999px;
+
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@media screen and (max-width: 736px) {
+  .cart-fab {
+    top: 0.85rem;
+    right: 0.85rem;
+  }
+}
+
+.cart-total-line {
+  margin-top: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2rem;
+  font-size: 0.9rem;
+}
+
+.cart-legal {
+  margin-top: -1rem;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.cart-legal a {
+  text-decoration: underline;
+  border-bottom: 0;
+}
+
+/* Mobile: render cart items as stacked boxes (JS switches layout). */
+@media screen and (max-width: 736px) {
+  /* Keep cart action buttons on-screen on mobile. */
+  #main article#cart ul.actions {
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  #main article#cart ul.actions li {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  #main article#cart ul.actions li > * {
+    width: 100%;
+    height: 100%;
+  }
+
+  #main article#cart ul.actions .button {
+    font-size: 0.65rem;
+    letter-spacing: 0.1rem;
+    padding: 0.7rem 0.6rem;
+    height: auto;
+    min-height: 2.5rem;
+    line-height: 1.1;
+    white-space: normal;
+  }
+
+  .cart-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .cart-item {
+    margin-bottom: 0;
+  }
+
+  .cart-item-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .cart-item-title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .cart-item-meta {
+    margin: 0.65rem 0 1rem 0;
+    font-size: 0.75rem;
+    opacity: 0.85;
+    text-transform: none;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .cart-item-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .cart-item-qty {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .cart-item-qty-label {
+    text-transform: uppercase;
+    letter-spacing: 0.2rem;
+    font-size: 0.7rem;
+    opacity: 0.9;
+  }
+
+  .cart-item-qty-value {
+    text-transform: uppercase;
+    letter-spacing: 0.2rem;
+    font-size: 0.7rem;
+    opacity: 0.9;
+    white-space: nowrap;
+  }
+
+  .cart-item-price {
+    text-transform: uppercase;
+    letter-spacing: 0.2rem;
+    font-size: 0.7rem;
+    opacity: 0.9;
+    white-space: nowrap;
+  }
+
+  .cart-remove-x {
+    width: 2.0625rem; /* match .button.small height */
+    padding: 0;
+  }
+}
+
+/* =========================================
    MAIN (PAGE WINDOW / ARTICLES)
    ========================================= */
 
@@ -1984,6 +2183,70 @@ body.is-preload #bg:before {
   line-height: 1.6;
 }
 
+/* Purchase options under art details */
+#main article.from-gallery .purchase-box {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#main article.from-gallery .purchase-box h3 {
+  text-align: center;
+}
+
+#main article.from-gallery .purchase-form {
+  margin: 0 0 1.25rem 0;
+}
+
+#main article.from-gallery .purchase-box .purchase-form .fields {
+  width: 100%;
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+#main article.from-gallery .purchase-box .purchase-form .field {
+  flex: 1 1 100%;
+  padding: 0;
+  width: auto;
+}
+
+#main article.from-gallery .purchase-box .purchase-select,
+#main article.from-gallery .purchase-box .purchase-qty {
+  width: 100%;
+  max-width: 32rem;
+}
+
+@media screen and (min-width: 737px) {
+  #main article.from-gallery .purchase-box .purchase-select,
+  #main article.from-gallery .purchase-box .purchase-qty {
+    max-width: 16rem;
+  }
+}
+
+@media screen and (max-width: 736px) {
+  #main article.from-gallery .purchase-box .purchase-qty {
+    max-width: 10rem;
+  }
+}
+
+#main article.from-gallery .purchase-form:last-of-type {
+  margin-bottom: 0;
+}
+
+#main article.from-gallery .purchase-box .purchase-form ul.actions {
+  justify-content: flex-end;
+}
+
+#main article.from-gallery .purchase-status {
+  margin-top: 1rem;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
 /* Accessibility helper */
 .sr-only {
   position: absolute;
@@ -2042,11 +2305,25 @@ body.is-preload #bg:before {
 #footer .copyright {
   letter-spacing: 0.2rem;
   font-size: 0.6rem;
-  margin-bottom: 0;
+  margin: 1.25rem auto 0 auto; /* lower slightly + centered */
   text-transform: uppercase;
   color: #ffffff; /* same white */
   opacity: 1; /* no dimming */
   text-shadow: 0 0 8px rgba(0, 0, 0, 0.9); /* matches header glow */
+
+  /* glass background like header nav tabs */
+  display: block;
+  width: max-content;
+  padding: 0.45rem 0.85rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  border-radius: var(--border-radius);
+}
+
+#footer .copyright a {
+  border-bottom: 0;
 }
 
 body.is-preload #footer {

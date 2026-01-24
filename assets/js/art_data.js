@@ -1,6 +1,35 @@
 // assets/js/art_data.js
 // Add new artwork by adding ONE object here. Everything else auto-builds.
 
+// Default shop options (edit these anytime).
+// Prices are stored in cents to avoid floating point issues (USD).
+//
+// Structure:
+// - finishes[]: shown in the "Finish" dropdown
+// - each finish has sizes[]: shown in the "Size" dropdown after finish selection
+window.MELKAPOW_PRODUCTS_DEFAULT = {
+  finishes: [
+    {
+      id: "fine-art-paper",
+      label: "Fine Art Paper",
+      sizes: [
+        { id: "5x7", label: '5" x 7"', priceCents: 2500 },
+        { id: "8x10", label: '8" x 10"', priceCents: 3500 },
+        { id: "11x14", label: '11" x 14"', priceCents: 5000 }
+      ]
+    },
+    {
+      id: "stretched-canvas",
+      label: "Stretched Canvas",
+      sizes: [
+        { id: "8x10", label: '8" x 10"', priceCents: 12000 },
+        { id: "12x16", label: '12" x 16"', priceCents: 18000 },
+        { id: "18x24", label: '18" x 24"', priceCents: 26000 }
+      ]
+    }
+  ]
+};
+
 window.MELKAPOW_ART = [
   {
     id: "eye",
