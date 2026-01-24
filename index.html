@@ -22,7 +22,7 @@
     />
 
     <!-- Main styles -->
-    <link rel="stylesheet" href="assets/css/main.css?v=20250308-97" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20250308-12" />
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 
     <!-- Override global h1 styles for the logo font -->
@@ -157,14 +157,13 @@
             <!-- Turnstile captcha (set your sitekey) -->
             <div class="field">
               <div
-                class="cf-turnstile"
-                data-sitekey="YOUR_TURNSTILE_SITE_KEY"
-                data-callback="melkapowTurnstileOk"
-                data-error-callback="melkapowTurnstileError"
-                data-expired-callback="melkapowTurnstileExpired"
-                data-retry="never"
-              ></div>
-            </div>
+	                class="cf-turnstile"
+	                data-sitekey="YOUR_TURNSTILE_SITE_KEY"
+	                data-callback="melkapowTurnstileOk"
+	                data-error-callback="melkapowTurnstileError"
+	                data-expired-callback="melkapowTurnstileExpired"
+	              ></div>
+	            </div>
 
 	            <ul class="actions">
 	              <li><input type="reset" value="Reset" /></li>
@@ -305,7 +304,7 @@
 
     <!-- custom scripts -->
     <script src="assets/js/art_data.js" defer></script>
-    <script src="assets/js/cart.js" defer></script>
+    <script src="assets/js/cart.js?v=20250308-97" defer></script>
 	    <script src="assets/js/art_build.js" defer></script>
 	    <script src="assets/js/gallery_build.js" defer></script>
 	    <script src="assets/js/gallery_close.js" defer></script>
@@ -317,11 +316,12 @@
 	        if (!isLocal) window.MELKAPOW_API_BASE = "https://example.com";
 	      })();
 	    </script>
-	    <script src="assets/js/contactform.js" defer></script>
+		    <script src="assets/js/contactform.js?v=20250308-101" defer></script>
 	    <!-- DO NOT load art.js on index.html -->
 
     <!-- Captcha -->
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <!-- Keep this non-async so our callbacks in contactform.js are defined before Turnstile initializes. -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
 
   </body>
 </html>

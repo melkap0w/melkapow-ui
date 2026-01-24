@@ -585,6 +585,7 @@ input[type="text"],
 input[type="password"],
 input[type="email"],
 input[type="tel"],
+input[type="number"],
 select,
 textarea {
   -moz-transition:
@@ -619,6 +620,7 @@ input[type="text"]:invalid,
 input[type="password"]:invalid,
 input[type="email"]:invalid,
 input[type="tel"]:invalid,
+input[type="number"]:invalid,
 select:invalid,
 textarea:invalid {
   box-shadow: none;
@@ -628,6 +630,7 @@ input[type="text"]:focus,
 input[type="password"]:focus,
 input[type="email"]:focus,
 input[type="tel"]:focus,
+input[type="number"]:focus,
 select:focus,
 textarea:focus {
   background: rgba(255, 255, 255, 0.075);
@@ -661,6 +664,7 @@ select::-ms-expand {
 input[type="text"],
 input[type="password"],
 input[type="email"],
+input[type="number"],
 select {
   height: 2.75rem;
 }
@@ -781,6 +785,17 @@ input[type="radio"] + label:before {
 
 #contact form .actions {
   margin-top: 1.25rem;
+}
+
+/* Turnstile widget: keep clickable above any overlays */
+#contact .cf-turnstile {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+#contact .cf-turnstile iframe {
+  pointer-events: auto;
 }
 
 @media screen and (max-width: 500px) {
@@ -1794,18 +1809,26 @@ body.is-article-visible #cartFab {
 @media screen and (max-width: 736px) {
   /* Keep cart action buttons on-screen on mobile. */
   #main article#cart ul.actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
     align-items: stretch;
   }
 
   #main article#cart ul.actions li {
-    flex: 1 1 0;
+    flex: initial;
     min-width: 0;
+  }
+
+  #main article#cart ul.actions li + li {
+    margin-left: 0;
   }
 
   #main article#cart ul.actions li > * {
     width: 100%;
-    height: 100%;
+    height: auto;
+    box-sizing: border-box;
+    min-width: 0;
   }
 
   #main article#cart ul.actions .button {
@@ -2034,6 +2057,13 @@ body.is-article-visible #cartFab {
     width: 2.25rem;
     height: 2.25rem;
     background-size: 14px 14px;
+  }
+
+  /* iOS/mobile Safari can fail to click inside cross-origin iframes (Turnstile) when an ancestor is transformed. */
+  #main article#contact,
+  #main article#contact.active {
+    transform: none !important;
+    will-change: auto !important;
   }
 }
 
@@ -2377,6 +2407,13 @@ body.is-preload #footer {
     overflow-y: auto;
     will-change: opacity, transform;
   }
+
+  /* Turnstile can be unclickable inside nested scroll containers on some mobile browsers.
+     Let Contact page scroll naturally instead of using the inner overflow. */
+  #main article#contact {
+    max-height: none;
+    overflow-y: visible;
+  }
 }
 
 /* =========================================
@@ -2389,6 +2426,7 @@ input[type="email"],
 input[type="tel"],
 input[type="url"],
 input[type="search"],
+input[type="number"],
 textarea,
 select {
   border-color: #ffffff !important;

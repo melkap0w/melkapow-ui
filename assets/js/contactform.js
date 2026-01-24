@@ -9,6 +9,53 @@
     lastError: null
   };
 
+  var turnstileWatchdogId = null;
+  var turnstileWidgetId = null;
+  var turnstileFrameObserver = null;
+  var patchedTurnstileFrames = typeof WeakSet === "function" ? new WeakSet() : null;
+
+  function isEmbedded() {
+    try {
+      return window.self !== window.top;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  function clearTurnstileWatchdog() {
+    if (!turnstileWatchdogId) return;
+    clearTimeout(turnstileWatchdogId);
+    turnstileWatchdogId = null;
+  }
+
+  function scheduleTurnstileWatchdog(form) {
+    clearTurnstileWatchdog();
+    if (!form) return;
+
+    turnstileWatchdogId = setTimeout(function () {
+      if (window.location.hash !== "#contact") return;
+      if (!isTurnstileConfigured(form)) return;
+
+      var tokenEl = form.querySelector('input[name="cf-turnstile-response"]');
+      var token = tokenEl ? String(tokenEl.value || "").trim() : "";
+      if (turnstileState.ok || token) return;
+
+      if (!turnstileState.hadError && !turnstileState.errorShown) {
+        if (isEmbedded()) {
+          setStatus(
+            "Captcha may not work inside an embedded/preview frame. Open this site in a normal browser tab and try again."
+          );
+        } else {
+          setStatus(
+            "Captcha is taking too long to verify. If it stays stuck, try refreshing the page or disabling blockers/privacy protections for this site."
+          );
+        }
+      }
+
+      rerenderTurnstile(form);
+    }, 12000);
+  }
+
   function resetTurnstileState() {
     turnstileState.ok = false;
     turnstileState.hadError = false;
@@ -16,26 +63,225 @@
     turnstileState.lastError = null;
   }
 
+  function getTurnstileContainer(form) {
+    if (!form) return null;
+    return form.querySelector(".cf-turnstile");
+  }
+
+  function clearTurnstileToken(form) {
+    if (!form) return;
+    var inputs = form.querySelectorAll('input[name="cf-turnstile-response"]');
+    if (!inputs || !inputs.length) return;
+    inputs.forEach(function (input) {
+      try {
+        input.value = "";
+      } catch (_) {
+        // ignore
+      }
+    });
+  }
+
+  function disconnectTurnstileFrameObserver() {
+    if (!turnstileFrameObserver) return;
+    try {
+      turnstileFrameObserver.disconnect();
+    } catch (_) {
+      // ignore
+    }
+    turnstileFrameObserver = null;
+  }
+
+  function ensureSandboxAllowsScripts(iframe) {
+    if (!iframe || iframe.nodeType !== 1) return;
+
+    if (patchedTurnstileFrames) {
+      if (patchedTurnstileFrames.has(iframe)) return;
+      patchedTurnstileFrames.add(iframe);
+    } else if (iframe.__melkapowSandboxPatched) {
+      return;
+    } else {
+      iframe.__melkapowSandboxPatched = true;
+    }
+
+    var sandbox = iframe.getAttribute("sandbox");
+    if (sandbox == null) return;
+
+    var flags = String(sandbox)
+      .split(/\s+/)
+      .map(function (s) { return s.trim(); })
+      .filter(Boolean);
+
+    if (flags.indexOf("allow-scripts") !== -1) return;
+    flags.push("allow-scripts");
+
+    try {
+      iframe.setAttribute("sandbox", flags.join(" "));
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  function observeTurnstileFrames(container) {
+    disconnectTurnstileFrameObserver();
+    if (!container || typeof MutationObserver === "undefined") return;
+
+    // Patch any frames already present.
+    var existing = container.querySelectorAll("iframe[sandbox]");
+    if (existing && existing.length) {
+      for (var i = 0; i < existing.length; i += 1) {
+        ensureSandboxAllowsScripts(existing[i]);
+      }
+    }
+
+    turnstileFrameObserver = new MutationObserver(function (mutations) {
+      mutations.forEach(function (m) {
+        if (!m.addedNodes || !m.addedNodes.length) return;
+        for (var i = 0; i < m.addedNodes.length; i += 1) {
+          var node = m.addedNodes[i];
+          if (!node || node.nodeType !== 1) return;
+
+          if (node.tagName === "IFRAME") {
+            ensureSandboxAllowsScripts(node);
+            return;
+          }
+
+          if (node.querySelectorAll) {
+            var frames = node.querySelectorAll("iframe[sandbox]");
+            if (frames && frames.length) {
+              for (var j = 0; j < frames.length; j += 1) {
+                ensureSandboxAllowsScripts(frames[j]);
+              }
+            }
+          }
+        }
+      });
+    });
+
+    try {
+      turnstileFrameObserver.observe(container, { childList: true, subtree: true });
+    } catch (_) {
+      disconnectTurnstileFrameObserver();
+    }
+  }
+
+  function removeTurnstileWidget(form) {
+    var container = getTurnstileContainer(form);
+
+    disconnectTurnstileFrameObserver();
+
+    if (window.turnstile && typeof window.turnstile.remove === "function" && turnstileWidgetId) {
+      try {
+        window.turnstile.remove(turnstileWidgetId);
+      } catch (_) {
+        // ignore
+      }
+    }
+
+    turnstileWidgetId = null;
+
+    if (container) {
+      // In case the previous render left DOM behind (or user has cached old auto-render).
+      container.innerHTML = "";
+    }
+
+    clearTurnstileToken(form);
+  }
+
+  function renderTurnstile(form) {
+    if (!form) return false;
+    if (!window.turnstile || typeof window.turnstile.render !== "function") return false;
+
+    var container = getTurnstileContainer(form);
+    if (!container) return false;
+
+    // Only render once the container is visible (Turnstile can break if rendered while hidden).
+    if (!container.getClientRects || container.getClientRects().length === 0) return false;
+
+    var sitekey = String(container.getAttribute("data-sitekey") || "").trim();
+    if (!sitekey || sitekey === "YOUR_TURNSTILE_SITE_KEY") return false;
+
+    // Always render fresh when opening the Contact page.
+    removeTurnstileWidget(form);
+
+    try {
+      turnstileWidgetId = window.turnstile.render(container, {
+        sitekey: sitekey,
+        callback: window.melkapowTurnstileOk,
+        "error-callback": window.melkapowTurnstileError,
+        "expired-callback": window.melkapowTurnstileExpired
+      });
+      observeTurnstileFrames(container);
+      return true;
+    } catch (_) {
+      turnstileWidgetId = null;
+      return false;
+    }
+  }
+
+  function rerenderTurnstile(form) {
+    if (!form) return;
+
+    // If Contact isn't active, keep the widget removed (avoids background retries).
+    if (window.location.hash !== "#contact") {
+      removeTurnstileWidget(form);
+      return;
+    }
+
+    var tries = 0;
+    var maxTries = 20;
+
+    function attempt() {
+      if (window.location.hash !== "#contact") return;
+
+      var rendered = renderTurnstile(form);
+      if (rendered) return;
+
+      tries += 1;
+      if (tries >= maxTries) return;
+      setTimeout(attempt, 250);
+    }
+
+    setTimeout(attempt, 200);
+  }
+
   window.melkapowTurnstileOk = function () {
     turnstileState.ok = true;
     turnstileState.hadError = false;
     turnstileState.lastError = null;
     turnstileState.errorShown = false;
+    clearTurnstileWatchdog();
+    setStatus("");
   };
 
   window.melkapowTurnstileError = function (code) {
     turnstileState.ok = false;
     turnstileState.hadError = true;
-    turnstileState.lastError = code || "error";
+    var codeText = code ? String(code) : "";
+    turnstileState.lastError = codeText || "error";
 
     if (!turnstileState.errorShown) {
       turnstileState.errorShown = true;
-      setStatus("Captcha isn't configured for this domain (" + location.hostname + "). Check your Turnstile allowed hostnames.");
+      var suffix = codeText ? " (" + codeText + ")" : "";
+      setStatus(
+        "Captcha error" +
+          suffix +
+          ". If this is an invalid domain issue, add " +
+          location.hostname +
+          " to your Turnstile allowed hostnames."
+      );
+
+      if (window.location.hash === "#contact") {
+        setTimeout(function () {
+          if (window.location.hash !== "#contact") return;
+          rerenderTurnstile(document.getElementById("contactForm"));
+        }, 800);
+      }
     }
   };
 
   window.melkapowTurnstileExpired = function () {
     turnstileState.ok = false;
+    clearTurnstileWatchdog();
   };
 
   function getApiBase() {
@@ -67,37 +313,41 @@
   function resetTurnstile() {
     if (window.turnstile && typeof window.turnstile.reset === "function") {
       try {
-        window.turnstile.reset();
+        if (turnstileWidgetId) window.turnstile.reset(turnstileWidgetId);
+        else window.turnstile.reset();
       } catch (_) {
         // ignore
       }
     }
   }
 
-  function retryTurnstileWhenContactOpens() {
-    // Only retry while #contact is active (avoids background retries).
+  function ensureTurnstileWhenContactOpens() {
+    // Only work while #contact is active (avoids background retries).
     if (window.location.hash !== "#contact") return;
 
+    var form = document.getElementById("contactForm");
+    if (!form) return;
+
     resetTurnstileState();
+    clearTurnstileWatchdog();
     setStatus("");
 
-    // The template animates articles in/out; wait a beat so the widget isn't reset while hidden.
+    // Wait for the template to actually show the article (it's display:none until opened).
     var tries = 0;
+    var maxTries = 30;
 
     function attempt() {
       if (window.location.hash !== "#contact") return;
 
-      if (window.turnstile && typeof window.turnstile.reset === "function") {
-        resetTurnstile();
-        return;
-      }
+      var rendered = renderTurnstile(form);
+      if (rendered) return;
 
       tries += 1;
-      if (tries >= 4) return;
-      setTimeout(attempt, 350);
+      if (tries >= maxTries) return;
+      setTimeout(attempt, 250);
     }
 
-    setTimeout(attempt, 350);
+    setTimeout(attempt, 400);
   }
 
   function initContactSubmit() {
@@ -133,14 +383,28 @@
       }
 
       if (isTurnstileConfigured(form) && !token) {
+        // Ensure we have a rendered widget (the Contact article starts hidden),
+        // and recover if a previous reset left it stuck/unclickable.
+        rerenderTurnstile(form);
+
+        if (window.turnstile && typeof window.turnstile.reset === "function") {
+          // If Turnstile is stuck verifying/unclickable, nudging a reset here usually fixes it.
+          resetTurnstile();
+          scheduleTurnstileWatchdog(form);
+        }
+
         if (typeof window.turnstile === "undefined") {
-          setStatus("Captcha couldn't load on this page. Check your Turnstile sitekey/domain.");
+          setStatus(
+            isEmbedded()
+              ? "Captcha can't load inside an embedded/preview frame. Open this site in a normal browser tab and try again."
+              : "Captcha couldn't load on this page. Check your Turnstile sitekey/domain."
+          );
         } else if (turnstileState.hadError && !turnstileState.errorShown) {
           turnstileState.errorShown = true;
           setStatus("Captcha isn't configured for this domain (" + location.hostname + "). Check your Turnstile allowed hostnames.");
         } else {
-          setStatus("Please complete the captcha.");
-        }
+            setStatus("Please complete the captcha.");
+          }
         return;
       }
 
@@ -176,8 +440,17 @@
         })
         .then(function () {
           setStatus("Message sent. Thank you!");
-          form.reset();
-          resetTurnstile();
+          var messageEl = form.querySelector("#message");
+          if (messageEl) messageEl.value = "";
+
+          var websiteEl = form.querySelector("#website");
+          if (websiteEl) websiteEl.value = "";
+
+          resetTurnstileState();
+          clearTurnstileWatchdog();
+          setTimeout(function () {
+            rerenderTurnstile(form);
+          }, 250);
         })
         .catch(function (err) {
           var msg = err && err.message ? String(err.message) : "";
@@ -197,6 +470,15 @@
             }
             return;
           }
+
+          if (msg.toLowerCase().includes("captcha")) {
+            resetTurnstileState();
+            clearTurnstileWatchdog();
+            setTimeout(function () {
+              rerenderTurnstile(form);
+            }, 250);
+          }
+
           setStatus(msg || "Send failed.");
         })
         .finally(function () {
@@ -205,6 +487,16 @@
             submitBtn.value = originalLabel || "Send Message";
           }
         });
+    });
+
+    form.addEventListener("reset", function () {
+      setTimeout(function () {
+        resetTurnstileState();
+        clearTurnstileWatchdog();
+        if (window.location.hash === "#contact") rerenderTurnstile(form);
+        else removeTurnstileWidget(form);
+        setStatus("");
+      }, 0);
     });
   }
 
@@ -215,6 +507,8 @@
 
     var form = document.querySelector("#contact form");
     if (!form) return;
+
+    clearTurnstileWatchdog();
 
     // tiny delay so it doesn't fight the template hide animation
     setTimeout(function () {
@@ -230,7 +524,7 @@
     resetContactIfLeaving(lastHash, nextHash);
     lastHash = nextHash;
 
-    if (nextHash === "#contact") retryTurnstileWhenContactOpens();
+    if (nextHash === "#contact") ensureTurnstileWhenContactOpens();
   });
 
   // Also reset on load if contact isn't active (keeps it clean if user had stale inputs cached)
@@ -238,9 +532,12 @@
     var currentHash = window.location.hash || "";
     if (currentHash !== "#contact") {
       var form = document.querySelector("#contact form");
-      if (form) form.reset();
+      if (form) {
+        removeTurnstileWidget(form);
+        form.reset();
+      }
     } else {
-      retryTurnstileWhenContactOpens();
+      ensureTurnstileWhenContactOpens();
     }
   });
 

@@ -5,6 +5,85 @@
   var STORAGE_KEY = "melkapow_cart_v1";
   var MAX_QTY = 99;
 
+  // Cart should clear when the tab/browser session ends, so prefer sessionStorage.
+  // Falls back to localStorage if sessionStorage isn't available.
+  var storage = null;
+  var usingSessionStorage = false;
+
+  (function initStorage() {
+    try {
+      var testKey = "__melkapow_cart_test__";
+      window.sessionStorage.setItem(testKey, "1");
+      window.sessionStorage.removeItem(testKey);
+      storage = window.sessionStorage;
+      usingSessionStorage = true;
+      return;
+    } catch (_) {
+      // ignore
+    }
+
+    try {
+      var testKey2 = "__melkapow_cart_test__";
+      window.localStorage.setItem(testKey2, "1");
+      window.localStorage.removeItem(testKey2);
+      storage = window.localStorage;
+      usingSessionStorage = false;
+    } catch (_) {
+      storage = null;
+      usingSessionStorage = false;
+    }
+  })();
+
+  function storageGet(key) {
+    if (!storage) return null;
+    try {
+      return storage.getItem(key);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function storageSet(key, value) {
+    if (!storage) return;
+    try {
+      storage.setItem(key, value);
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  function storageRemove(key) {
+    if (!storage) return;
+    try {
+      storage.removeItem(key);
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  // One-time migration: if an older cart exists in localStorage, move it into sessionStorage and delete it.
+  // This keeps the current session smooth, but future visits start empty.
+  (function migrateLegacyCart() {
+    if (!usingSessionStorage) return;
+    if (storageGet(STORAGE_KEY)) return;
+
+    var legacyRaw = null;
+    try {
+      legacyRaw = window.localStorage.getItem(STORAGE_KEY);
+    } catch (_) {
+      legacyRaw = null;
+    }
+
+    if (!legacyRaw) return;
+
+    storageSet(STORAGE_KEY, legacyRaw);
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch (_) {
+      // ignore
+    }
+  })();
+
   function safeJsonParse(text) {
     try {
       return JSON.parse(text);
@@ -28,12 +107,7 @@
   }
 
   function loadCart() {
-    var raw = null;
-    try {
-      raw = window.localStorage.getItem(STORAGE_KEY);
-    } catch (_) {
-      raw = null;
-    }
+    var raw = storageGet(STORAGE_KEY);
 
     var parsed = raw ? safeJsonParse(raw) : null;
     var items = parsed && Array.isArray(parsed.items) ? parsed.items : [];
@@ -93,11 +167,7 @@
   }
 
   function saveCart(cart) {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
-    } catch (_) {
-      // ignore
-    }
+    storageSet(STORAGE_KEY, JSON.stringify(cart));
   }
 
   function getCount(cart) {
@@ -454,9 +524,12 @@
     if (window.location.hash === "#cart") renderCartPage();
   });
 
-  window.addEventListener("storage", function (e) {
-    if (e && e.key === STORAGE_KEY) refreshFab();
-  });
+  // Only needed when using localStorage (cross-tab updates).
+  if (!usingSessionStorage) {
+    window.addEventListener("storage", function (e) {
+      if (e && e.key === STORAGE_KEY) refreshFab();
+    });
+  }
 
   window.addEventListener("hashchange", function () {
     refreshFab();

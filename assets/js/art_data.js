@@ -110,5 +110,18 @@ window.MELKAPOW_ART = [
       { src: "__IMAGE_REMOVED__", alt: "Whirlpool detail 2" },
       //{ src: "__IMAGE_REMOVED__", alt: "Whirlpool detail 3" }
     ]
+  },
+  {
+    id: "awaken",
+    title: "Awaken",
+    thumb: "__IMAGE_REMOVED__",
+    alt: "Awaken",
+    caption: "",
+    slides: [
+      { src: "__IMAGE_REMOVED__", alt: "Awaken" },
+      { src: "__IMAGE_REMOVED__", alt: "Awaken detail 1" },
+      { src: "__IMAGE_REMOVED__", alt: "Awaken detail 2" }
+      // { src: "__IMAGE_REMOVED__", alt: "Awaken detail 3" }
+    ]
   }
 ];
