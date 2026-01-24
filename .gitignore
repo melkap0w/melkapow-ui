@@ -1,2 +1,15 @@
 src/data_extract
 src/product_sales
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Local secrets (never commit)
+.env
+.env.*
+!.env.example
+
+app/.env
+app/.env.*
+!app/.env.example

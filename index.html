@@ -22,7 +22,7 @@
     />
 
     <!-- Main styles -->
-    <link rel="stylesheet" href="assets/css/main.css?v=20250308-99" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20250308-97" />
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 
     <!-- Override global h1 styles for the logo font -->
@@ -96,7 +96,7 @@
               speak to you? -->
           </p>
           <p> 
-            Dive deep inward into a world that is uncaptured. Notice what may flow and what resists, what raw depth brings forward expressed in simple colors. 
+            Dive deep inward into a world that is unseen. Notice what may flow and what resists, what raw depth brings forward expressed in simple colors. 
             <!---Dive deep inward into a world that is unseen. I bring art to life unconsciously without a
             direction. I allow the emotions to stream and guide what becomes.
             -->
@@ -130,28 +130,48 @@
         <article id="contact">
           <h2 class="major">Contact</h2>
 
-          <form action="https://formspree.io/f/mkogdddd" method="POST">
+          <form id="contactForm" action="#" method="POST">
             <div class="fields">
               <div class="field half">
                 <label for="name">Name</label>
-                <input type="text" name="name" id="name" />
+                <input type="text" name="name" id="name" required />
               </div>
 
               <div class="field half">
                 <label for="email">Email</label>
-                <input type="email" name="email" id="email" />
+                <input type="email" name="email" id="email" required />
               </div>
 
               <div class="field">
                 <label for="message">Message</label>
-                <textarea name="message" id="message" rows="4" placeholder="Your message…"></textarea>
+                <textarea name="message" id="message" rows="4" placeholder="Your message…" required></textarea>
               </div>
+            </div>
+
+            <!-- Honeypot (should stay empty) -->
+            <div class="field" style="position: absolute; left: -9999px; top: -9999px">
+              <label for="website">Website</label>
+              <input type="text" name="website" id="website" tabindex="-1" autocomplete="off" />
+            </div>
+
+            <!-- Turnstile captcha (set your sitekey) -->
+            <div class="field">
+              <div
+                class="cf-turnstile"
+                data-sitekey="YOUR_TURNSTILE_SITE_KEY"
+                data-callback="melkapowTurnstileOk"
+                data-error-callback="melkapowTurnstileError"
+                data-expired-callback="melkapowTurnstileExpired"
+                data-retry="never"
+              ></div>
             </div>
 
             <ul class="actions">
               <li><input type="submit" value="Send Message" class="primary" /></li>
               <li><input type="reset" value="Reset" /></li>
             </ul>
+
+            <p id="contactStatus" class="align-center" aria-live="polite"></p>
           </form>
         </article>
       </div>
@@ -201,6 +221,8 @@
     <script src="assets/js/contactform.js" defer></script>
     <!-- DO NOT load art.js on index.html -->
 
+    <!-- Captcha -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
   </body>
 </html>
