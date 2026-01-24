@@ -306,12 +306,19 @@
     <!-- custom scripts -->
     <script src="assets/js/art_data.js" defer></script>
     <script src="assets/js/cart.js" defer></script>
-    <script src="assets/js/art_build.js" defer></script>
-    <script src="assets/js/gallery_build.js" defer></script>
-    <script src="assets/js/gallery_close.js" defer></script>
-    <script src="assets/js/main.js" defer></script>
-    <script src="assets/js/contactform.js" defer></script>
-    <!-- DO NOT load art.js on index.html -->
+	    <script src="assets/js/art_build.js" defer></script>
+	    <script src="assets/js/gallery_build.js" defer></script>
+	    <script src="assets/js/gallery_close.js" defer></script>
+	    <script src="assets/js/main.js" defer></script>
+	    <script>
+	      (function () {
+	        var host = location.hostname;
+	        var isLocal = host === "localhost" || host === "127.0.0.1";
+	        if (!isLocal) window.MELKAPOW_API_BASE = "https://example.com";
+	      })();
+	    </script>
+	    <script src="assets/js/contactform.js" defer></script>
+	    <!-- DO NOT load art.js on index.html -->
 
     <!-- Captcha -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>

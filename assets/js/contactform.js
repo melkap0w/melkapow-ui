@@ -9,6 +9,13 @@
     lastError: null
   };
 
+  function resetTurnstileState() {
+    turnstileState.ok = false;
+    turnstileState.hadError = false;
+    turnstileState.errorShown = false;
+    turnstileState.lastError = null;
+  }
+
   window.melkapowTurnstileOk = function () {
     turnstileState.ok = true;
     turnstileState.hadError = false;
@@ -65,6 +72,32 @@
         // ignore
       }
     }
+  }
+
+  function retryTurnstileWhenContactOpens() {
+    // Only retry while #contact is active (avoids background retries).
+    if (window.location.hash !== "#contact") return;
+
+    resetTurnstileState();
+    setStatus("");
+
+    // The template animates articles in/out; wait a beat so the widget isn't reset while hidden.
+    var tries = 0;
+
+    function attempt() {
+      if (window.location.hash !== "#contact") return;
+
+      if (window.turnstile && typeof window.turnstile.reset === "function") {
+        resetTurnstile();
+        return;
+      }
+
+      tries += 1;
+      if (tries >= 4) return;
+      setTimeout(attempt, 350);
+    }
+
+    setTimeout(attempt, 350);
   }
 
   function initContactSubmit() {
@@ -196,6 +229,8 @@
     var nextHash = window.location.hash || "";
     resetContactIfLeaving(lastHash, nextHash);
     lastHash = nextHash;
+
+    if (nextHash === "#contact") retryTurnstileWhenContactOpens();
   });
 
   // Also reset on load if contact isn't active (keeps it clean if user had stale inputs cached)
@@ -204,6 +239,8 @@
     if (currentHash !== "#contact") {
       var form = document.querySelector("#contact form");
       if (form) form.reset();
+    } else {
+      retryTurnstileWhenContactOpens();
     }
   });
 
