@@ -126,7 +126,7 @@
     if (!container || typeof MutationObserver === "undefined") return;
 
     // Patch any frames already present.
-    var existing = container.querySelectorAll("iframe[sandbox]");
+    var existing = container.querySelectorAll("iframe");
     if (existing && existing.length) {
       for (var i = 0; i < existing.length; i += 1) {
         ensureSandboxAllowsScripts(existing[i]);
@@ -135,6 +135,11 @@
 
     turnstileFrameObserver = new MutationObserver(function (mutations) {
       mutations.forEach(function (m) {
+        if (m.type === "attributes" && m.target && m.target.tagName === "IFRAME") {
+          ensureSandboxAllowsScripts(m.target);
+          return;
+        }
+
         if (!m.addedNodes || !m.addedNodes.length) return;
         for (var i = 0; i < m.addedNodes.length; i += 1) {
           var node = m.addedNodes[i];
@@ -146,7 +151,7 @@
           }
 
           if (node.querySelectorAll) {
-            var frames = node.querySelectorAll("iframe[sandbox]");
+            var frames = node.querySelectorAll("iframe");
             if (frames && frames.length) {
               for (var j = 0; j < frames.length; j += 1) {
                 ensureSandboxAllowsScripts(frames[j]);
@@ -158,7 +163,12 @@
     });
 
     try {
-      turnstileFrameObserver.observe(container, { childList: true, subtree: true });
+      turnstileFrameObserver.observe(container, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["sandbox"]
+      });
     } catch (_) {
       disconnectTurnstileFrameObserver();
     }
@@ -415,6 +425,14 @@
         submitBtn.value = "Sending...";
       }
 
+      var controller = typeof AbortController === "function" ? new AbortController() : null;
+      var timeoutId = null;
+      if (controller) {
+        timeoutId = setTimeout(function () {
+          try { controller.abort(); } catch (_) { /* ignore */ }
+        }, 20000);
+      }
+
       fetch(apiBase + "/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -424,7 +442,8 @@
           message: message,
           website: website || null,
           turnstile_token: token || null
-        })
+        }),
+        signal: controller ? controller.signal : undefined
       })
         .then(function (res) {
           return res
@@ -454,8 +473,18 @@
         })
         .catch(function (err) {
           var msg = err && err.message ? String(err.message) : "";
+          if (err && err.name === "AbortError") {
+            setStatus("Request timed out. Please try again.");
+            return;
+          }
           if (msg.toLowerCase().includes("failed to fetch")) {
-            if (apiBase.indexOf("http://127.0.0.1") === 0 || apiBase.indexOf("http://localhost") === 0) {
+            var isLoopbackApi =
+              apiBase.indexOf("http://127.0.0.1") === 0 ||
+              apiBase.indexOf("http://localhost") === 0;
+
+            var isLanApi = /^https?:\/\/(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(apiBase);
+
+            if (isLoopbackApi) {
               setStatus(
                 "Can't reach the contact server at " +
                   apiBase +
@@ -464,6 +493,12 @@
                   "/api/health loads in a tab but this still fails, it's usually a CORS/origin mismatch (your site is " +
                   location.origin +
                   ")."
+              );
+            } else if (isLanApi) {
+              setStatus(
+                "Can't reach the contact server at " +
+                  apiBase +
+                  ". If you're testing on a phone, start the API with `--host 0.0.0.0` and confirm port 8000 is reachable on this network."
               );
             } else {
               setStatus("Network error. Please try again in a moment.");
@@ -477,11 +512,19 @@
             setTimeout(function () {
               rerenderTurnstile(form);
             }, 250);
+          } else if (token && isTurnstileConfigured(form)) {
+            // Turnstile tokens are single-use; refresh after any submission attempt that used one.
+            resetTurnstileState();
+            clearTurnstileWatchdog();
+            setTimeout(function () {
+              rerenderTurnstile(form);
+            }, 250);
           }
 
           setStatus(msg || "Send failed.");
         })
         .finally(function () {
+          if (timeoutId) clearTimeout(timeoutId);
           if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.value = originalLabel || "Send Message";

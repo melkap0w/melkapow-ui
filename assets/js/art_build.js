@@ -310,6 +310,11 @@
       });
 
       setPurchaseStatus(status, "Added to cart.");
+
+      // Reset controls back to defaults for the next add.
+      finishSelect.value = "";
+      qty.value = "1";
+      setSizeOptions(null);
     });
 
     box.appendChild(form);

@@ -106,6 +106,61 @@
     return "$" + dollars;
   }
 
+  function findArtById(artId) {
+    var id = String(artId || "");
+    if (!id) return null;
+
+    var list = window.MELKAPOW_ART;
+    if (!Array.isArray(list)) return null;
+
+    for (var i = 0; i < list.length; i++) {
+      var art = list[i];
+      if (!art) continue;
+      if (String(art.id) === id) return art;
+    }
+
+    return null;
+  }
+
+  function getCartThumbSources(item) {
+    var it = item || {};
+    var art = findArtById(it.artId);
+
+    var fallback = String(it.thumb || (art && art.thumb) || "").trim();
+    var primary = "";
+
+    if (art && Array.isArray(art.slides) && art.slides.length) {
+      var preferred = art.slides.length > 1 ? art.slides[1] : art.slides[0];
+      if (preferred && preferred.src) primary = String(preferred.src || "").trim();
+    }
+
+    if (!primary) primary = fallback;
+    if (!fallback) fallback = primary;
+
+    return { primary: primary, fallback: fallback };
+  }
+
+  function createCartThumbImg(item) {
+    var src = getCartThumbSources(item);
+    if (!src.primary && !src.fallback) return null;
+
+    var img = document.createElement("img");
+    img.className = "cart-thumb";
+    img.src = src.primary || src.fallback;
+    img.alt = String((item && (item.title || item.artId)) || "Artwork");
+    img.loading = "lazy";
+    img.decoding = "async";
+
+    if (src.primary && src.fallback && src.primary !== src.fallback) {
+      img.addEventListener("error", function onError() {
+        img.removeEventListener("error", onError);
+        img.src = src.fallback;
+      });
+    }
+
+    return img;
+  }
+
   function loadCart() {
     var raw = storageGet(STORAGE_KEY);
 
@@ -330,6 +385,12 @@
         var top = document.createElement("div");
         top.className = "cart-item-top";
 
+        var headingWrap = document.createElement("div");
+        headingWrap.className = "cart-item-heading";
+
+        var thumb = createCartThumbImg(it);
+        if (thumb) headingWrap.appendChild(thumb);
+
         var title = document.createElement("h4");
         title.className = "cart-item-title";
         title.textContent = it.title || it.artId;
@@ -341,7 +402,9 @@
         removeBtn.setAttribute("data-key", it.key);
         removeBtn.setAttribute("aria-label", "Remove from cart");
 
-        top.appendChild(title);
+        headingWrap.appendChild(title);
+
+        top.appendChild(headingWrap);
         top.appendChild(removeBtn);
         itemBox.appendChild(top);
 
@@ -408,7 +471,18 @@
         var tr = document.createElement("tr");
 
         var tdTitle = document.createElement("td");
-        tdTitle.textContent = it2.title || it2.artId;
+        var titleWrap = document.createElement("div");
+        titleWrap.className = "cart-item-cell";
+
+        var thumb2 = createCartThumbImg(it2);
+        if (thumb2) titleWrap.appendChild(thumb2);
+
+        var titleText = document.createElement("span");
+        titleText.className = "cart-item-name";
+        titleText.textContent = it2.title || it2.artId;
+        titleWrap.appendChild(titleText);
+
+        tdTitle.appendChild(titleWrap);
 
         var tdFinish = document.createElement("td");
         tdFinish.textContent = it2.finishLabel || it2.finishId || "";
