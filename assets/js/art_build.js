@@ -12,6 +12,85 @@
     return "$" + (n / 100).toFixed(2);
   }
 
+  var shopCatalogPromise = null;
+  var shopCatalogStatus = "idle"; // "idle" | "loading" | "ready" | "failed"
+
+  function getApiBase() {
+    var base = window.MELKAPOW_API_BASE;
+    if (typeof base === "string" && base.trim()) return base.replace(/\/+$/, "");
+
+    var host = location.hostname;
+    if (host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host === "::1" || host === "[::1]" || host === "0:0:0:0:0:0:0:1") {
+      return "http://127.0.0.1:8000";
+    }
+
+    // Allow LAN testing (phone on same Wi‑Fi)
+    var isPrivateIp = /^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})$/.test(host);
+    if (isPrivateIp) return location.protocol + "//" + host + ":8000";
+
+    return "";
+  }
+
+  function isShopEnabled() {
+    var apiBase = getApiBase();
+    return !!(apiBase && typeof fetch === "function");
+  }
+
+  function loadShopCatalog(timeoutMs) {
+    var existing = window.MELKAPOW_PRODUCTS_BY_ART_ID;
+    if (existing && typeof existing === "object") {
+      shopCatalogStatus = "ready";
+      return Promise.resolve(existing);
+    }
+    if (shopCatalogPromise) return shopCatalogPromise;
+
+    var apiBase = getApiBase();
+    if (!apiBase || typeof fetch !== "function") return Promise.resolve(null);
+    shopCatalogStatus = "loading";
+
+    var controller = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = null;
+    if (controller) {
+      timer = setTimeout(function () {
+        try { controller.abort(); } catch (_) { /* ignore */ }
+      }, Math.max(500, parseInt(timeoutMs, 10) || 1500));
+    }
+
+    shopCatalogPromise = fetch(apiBase + "/api/shop/catalog", {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+      signal: controller ? controller.signal : undefined
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error("shop-catalog-unavailable");
+        return res.json().catch(function () { return null; });
+      })
+      .then(function (data) {
+        if (!data || typeof data !== "object") {
+          shopCatalogStatus = "failed";
+          return null;
+        }
+        var products = data.products;
+        if (!products || typeof products !== "object") {
+          shopCatalogStatus = "failed";
+          return null;
+        }
+        window.MELKAPOW_PRODUCTS_BY_ART_ID = products;
+        shopCatalogStatus = "ready";
+        return products;
+      })
+      .catch(function () {
+        shopCatalogStatus = "failed";
+        return null;
+      })
+      .finally(function () {
+        if (timer) clearTimeout(timer);
+        shopCatalogPromise = null;
+      });
+
+    return shopCatalogPromise;
+  }
+
   function removeGeneratedArticles(mainEl) {
     var existing = mainEl.querySelectorAll('article[data-generated="art"]');
     for (var i = existing.length - 1; i >= 0; i--) {
@@ -43,10 +122,143 @@
       });
     }
 
+    sortSizesAscending(sizes);
     return sizes;
   }
 
+  var SIZE_RE = /(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/i;
+
+  function parseSizeDims(value) {
+    var text = String(value || "");
+    if (!text) return null;
+    var m = SIZE_RE.exec(text);
+    if (!m) return null;
+
+    var a = parseFloat(m[1]);
+    var b = parseFloat(m[2]);
+    if (!isFinite(a) || !isFinite(b)) return null;
+
+    var small = Math.min(a, b);
+    var large = Math.max(a, b);
+    return { area: small * large, large: large, small: small };
+  }
+
+  function sortSizesAscending(sizes) {
+    if (!Array.isArray(sizes) || sizes.length < 2) return;
+
+    sizes.sort(function (a, b) {
+      var da = parseSizeDims(a && (a.id || a.label)) || parseSizeDims(a && a.label);
+      var db = parseSizeDims(b && (b.id || b.label)) || parseSizeDims(b && b.label);
+
+      if (!da && !db) {
+        var la = String((a && (a.label || a.id)) || "");
+        var lb = String((b && (b.label || b.id)) || "");
+        return la.localeCompare(lb);
+      }
+      if (!da) return 1;
+      if (!db) return -1;
+
+      if (da.area !== db.area) return da.area < db.area ? -1 : 1;
+      if (da.large !== db.large) return da.large < db.large ? -1 : 1;
+      if (da.small !== db.small) return da.small < db.small ? -1 : 1;
+
+      var sa = String((a && (a.label || a.id)) || "");
+      var sb = String((b && (b.label || b.id)) || "");
+      return sa.localeCompare(sb);
+    });
+  }
+
+  function slugify(value) {
+    var val = String(value || "").trim().toLowerCase();
+    val = val.replace(/[^a-z0-9]+/g, "-");
+    val = val.replace(/^-+/, "").replace(/-+$/, "");
+    return val;
+  }
+
+  function basenameWithoutExt(path) {
+    var raw = String(path || "");
+    if (!raw) return "";
+    var clean = raw.split("?")[0].split("#")[0];
+    var parts = clean.split("/");
+    var last = parts.length ? parts[parts.length - 1] : clean;
+    return last.replace(/\.[a-z0-9]+$/i, "");
+  }
+
+  function basename(path) {
+    var raw = String(path || "");
+    if (!raw) return "";
+    var clean = raw.split("?")[0].split("#")[0];
+    var parts = clean.split("/");
+    return parts.length ? parts[parts.length - 1] : clean;
+  }
+
+  function getShopProductForArt(shopMap, art) {
+    if (!shopMap || typeof shopMap !== "object" || !art) return null;
+
+    var candidates = [];
+    if (art.id) candidates.push(slugify(art.id));
+    if (art.title) candidates.push(slugify(art.title));
+    if (art.galleryTitle) candidates.push(slugify(art.galleryTitle));
+    if (art.thumb) candidates.push(slugify(basenameWithoutExt(art.thumb)));
+    if (art.thumb) candidates.push(slugify(basename(art.thumb)));
+
+    for (var i = 0; i < candidates.length; i++) {
+      var id = candidates[i];
+      if (!id) continue;
+      if (Object.prototype.hasOwnProperty.call(shopMap, id)) return shopMap[id];
+    }
+
+    return null;
+  }
+
   function getCatalogForArt(art) {
+    var shopMap = window.MELKAPOW_PRODUCTS_BY_ART_ID;
+    var usingShop = shopCatalogStatus === "ready" && shopMap && typeof shopMap === "object";
+
+    if (usingShop) {
+      var shopProducts = getShopProductForArt(shopMap, art);
+      if (!shopProducts) return { finishes: [] };
+      var finishesRaw = Array.isArray(shopProducts.finishes) ? shopProducts.finishes : null;
+      if (!finishesRaw) return { finishes: [] };
+
+      var finishes = [];
+      for (var i = 0; i < finishesRaw.length; i++) {
+        var f = finishesRaw[i] || {};
+        if (!f.id) continue;
+
+        var sizesRaw = Array.isArray(f.sizes) ? f.sizes : [];
+        var sizes = [];
+        for (var j = 0; j < sizesRaw.length; j++) {
+          var s = sizesRaw[j] || {};
+          if (!s.id) continue;
+
+          sizes.push({
+            id: String(s.id),
+            label: String(s.label || s.id),
+            priceCents: parseInt(s.priceCents, 10) || 0,
+            currency: s.currency ? String(s.currency) : "",
+            printfulVariantId: s.printfulVariantId,
+            printfulSyncVariantId: s.printfulSyncVariantId,
+            printfulProductId: s.printfulProductId
+          });
+        }
+
+        if (!sizes.length) continue;
+
+        sortSizesAscending(sizes);
+        finishes.push({
+          id: String(f.id),
+          label: String(f.label || f.id),
+          sizes: sizes
+        });
+      }
+
+      return { finishes: finishes };
+    }
+
+    // If shop is enabled, do not fall back to hardcoded options.
+    if (isShopEnabled()) return { finishes: [] };
+
     var defaults = window.MELKAPOW_PRODUCTS_DEFAULT || {};
     var src = art && art.products ? art.products : defaults;
 
@@ -62,15 +274,15 @@
       finishesRaw = [];
       if (prints.length) {
         finishesRaw.push({
-          id: "fine-art-paper",
-          label: "Fine Art Paper",
+          id: "fine-art-print",
+          label: "Fine Art Print",
           sizes: mapLegacyOptionsToSizes(prints)
         });
       }
       if (canvas.length) {
         finishesRaw.push({
-          id: "stretched-canvas",
-          label: "Stretched Canvas",
+          id: "canvas",
+          label: "Canvas",
           sizes: mapLegacyOptionsToSizes(canvas)
         });
       }
@@ -96,6 +308,7 @@
 
       if (!sizes.length) continue;
 
+      sortSizesAscending(sizes);
       finishes.push({
         id: String(f.id),
         label: String(f.label || f.id),
@@ -111,9 +324,61 @@
     statusEl.textContent = message || "";
   }
 
+  function buildUnavailablePurchaseBox(art) {
+    var box = document.createElement("div");
+    box.className = "box purchase-box purchase-box-unavailable";
+
+    var heading = document.createElement("h3");
+    heading.textContent = "Buy Options";
+    box.appendChild(heading);
+
+    var message = document.createElement("p");
+    message.className = "purchase-unavailable align-center";
+    message.textContent = "Out of stock.";
+    box.appendChild(message);
+    return box;
+  }
+
+  function buildShopUnavailablePurchaseBox() {
+    var box = document.createElement("div");
+    box.className = "box purchase-box purchase-box-unavailable";
+
+    var heading = document.createElement("h3");
+    heading.textContent = "Buy Options";
+    box.appendChild(heading);
+
+    var message = document.createElement("p");
+    message.className = "purchase-unavailable align-center";
+    message.textContent = "Shop temporarily unavailable.";
+    box.appendChild(message);
+
+    return box;
+  }
+
+  function buildLoadingPurchaseBox() {
+    var box = document.createElement("div");
+    box.className = "box purchase-box purchase-box-unavailable";
+
+    var heading = document.createElement("h3");
+    heading.textContent = "Buy Options";
+    box.appendChild(heading);
+
+    var message = document.createElement("p");
+    message.className = "purchase-unavailable align-center";
+    message.textContent = "Loading options…";
+    box.appendChild(message);
+
+    return box;
+  }
+
   function buildPurchaseBox(art) {
+    var shopMode = isShopEnabled();
+    if (!shopMode) return buildShopUnavailablePurchaseBox();
+    if (shopCatalogStatus === "idle" || shopCatalogStatus === "loading") return buildLoadingPurchaseBox();
+    if (shopCatalogStatus === "failed") return buildShopUnavailablePurchaseBox();
+
     var catalog = getCatalogForArt(art);
-    if (!catalog.finishes.length) return null;
+    if (!catalog.finishes.length) return buildUnavailablePurchaseBox(art);
 
     var box = document.createElement("div");
     box.className = "box purchase-box";
@@ -136,6 +401,8 @@
       finishById[catalog.finishes[i].id] = catalog.finishes[i];
     }
 
+    var defaultFinish = catalog.finishes.length === 1 ? catalog.finishes[0] : null;
+
     var fields = document.createElement("div");
     fields.className = "fields";
 
@@ -145,17 +412,19 @@
     var finishId = "buy-" + String(art.id) + "-finish";
     var finishLabel = document.createElement("label");
     finishLabel.htmlFor = finishId;
-    finishLabel.textContent = "Finish";
+    finishLabel.textContent = "Type";
 
     var finishSelect = document.createElement("select");
     finishSelect.id = finishId;
     finishSelect.name = "finish";
     finishSelect.className = "purchase-select purchase-select-finish";
 
-    var finishPlaceholder = document.createElement("option");
-    finishPlaceholder.value = "";
-    finishPlaceholder.textContent = "Select a finish…";
-    finishSelect.appendChild(finishPlaceholder);
+    if (!defaultFinish) {
+      var finishPlaceholder = document.createElement("option");
+      finishPlaceholder.value = "";
+      finishPlaceholder.textContent = "Select a type…";
+      finishSelect.appendChild(finishPlaceholder);
+    }
 
     for (var f = 0; f < catalog.finishes.length; f++) {
       var finish = catalog.finishes[f];
@@ -196,7 +465,7 @@
 
       var placeholder = document.createElement("option");
       placeholder.value = "";
-      placeholder.textContent = finishObj ? "Select a size…" : "Select a finish first…";
+      placeholder.textContent = finishObj ? "Select a size…" : "Select a type first…";
       sizeSelect.appendChild(placeholder);
 
       if (!finishObj) {
@@ -224,6 +493,11 @@
       var selected = finishSelect.value || "";
       setSizeOptions(selected ? finishById[selected] : null);
     });
+
+    if (defaultFinish) {
+      finishSelect.value = defaultFinish.id;
+      setSizeOptions(defaultFinish);
+    }
 
     var fieldQty = document.createElement("div");
     fieldQty.className = "field";
@@ -267,7 +541,7 @@
       setPurchaseStatus(status, "");
 
       if (!currentFinish) {
-        setPurchaseStatus(status, "Please select a finish.");
+        setPurchaseStatus(status, "Please select a type.");
         return;
       }
 
@@ -305,6 +579,9 @@
         finishLabel: currentFinish.label,
         sizeId: chosenSize.id,
         sizeLabel: chosenSize.label,
+        printful_variant_id: chosenSize.printfulVariantId || null,
+        printful_sync_variant_id: chosenSize.printfulSyncVariantId || null,
+        printful_product_id: chosenSize.printfulProductId || null,
         priceCents: chosenSize.priceCents,
         qty: qtyVal
       });
@@ -312,9 +589,14 @@
       setPurchaseStatus(status, "Added to cart.");
 
       // Reset controls back to defaults for the next add.
-      finishSelect.value = "";
       qty.value = "1";
-      setSizeOptions(null);
+      if (defaultFinish) {
+        finishSelect.value = defaultFinish.id;
+        setSizeOptions(defaultFinish);
+      } else {
+        finishSelect.value = "";
+        setSizeOptions(null);
+      }
     });
 
     box.appendChild(form);
@@ -428,6 +710,29 @@
     return article;
   }
 
+  function refreshPurchaseBoxes() {
+    var list = getArtList();
+    if (!list.length) return;
+
+    for (var i = 0; i < list.length; i++) {
+      var art = list[i];
+      if (!art || !art.id) continue;
+
+      var article = document.getElementById("art-" + String(art.id));
+      if (!article) continue;
+
+      var existing = article.querySelector(".purchase-box");
+      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+      var next = buildPurchaseBox(art);
+      if (!next) continue;
+
+      var actions = article.querySelector("ul.actions");
+      if (actions && actions.parentNode) actions.parentNode.insertBefore(next, actions);
+      else article.appendChild(next);
+    }
+  }
+
   function buildArtArticles() {
     var mainEl = document.getElementById("main");
     if (!mainEl) return;
@@ -444,9 +749,21 @@
     }
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", buildArtArticles);
-  } else {
+  function init() {
+    var promise = loadShopCatalog(8000);
     buildArtArticles();
+
+    promise
+      .then(function (products) {
+        if (!isShopEnabled()) return;
+        refreshPurchaseBoxes();
+      })
+      .catch(function () { /* ignore */ });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
   }
 })();

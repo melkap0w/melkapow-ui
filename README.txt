@@ -1,7 +1,7 @@
 # Melkapow Portfolio
 
 A responsive, single-page portfolio website showcasing artwork, an about section, and an integrated contact form with  spam protection.  
-Built using static HTML, CSS, and lightweight JavaScript, with zero backend dependencies
+Built using static HTML, CSS, and lightweight JavaScript. An optional FastAPI backend in `app/` powers the contact form and Printful-powered shop options.
 
 ---
 
@@ -16,7 +16,12 @@ Built using static HTML, CSS, and lightweight JavaScript, with zero backend depe
   - `breakpoints.min.js`  
   - `util.js`  
   - `main.js`  
-  Used for article transitions, animations, and responsive behavior.
+Used for article transitions, animations, and responsive behavior.
+
+### **Backend (optional)**
+- **FastAPI** — lives in `app/` (see `app/README.md` for setup)
+  - `POST /api/contact` (email + Turnstile)
+  - `GET /api/shop/catalog` (Printful product options)
 
 ### **Icons**
 - **Font Awesome 6.5.0 (CDN)**  

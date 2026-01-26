@@ -22,7 +22,7 @@
     />
 
     <!-- Main styles -->
-    <link rel="stylesheet" href="assets/css/main.css?v=20250308-12" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20260126-2" />
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 
     <!-- Override global h1 styles for the logo font -->
@@ -119,7 +119,7 @@
 
           <div class="about-layout-inner">
             <div class="about-text">
-              <p>Self-taught data engineer, self-taught artist.</p>
+              <p>There’s no such thing as being too late, only living. </p>
             </div>
 
             <img src="__IMAGE_REMOVED__" alt="Mel" class="about-img" loading="lazy" decoding="async" />
@@ -175,32 +175,141 @@
         </article>
 
         <!-- Cart -->
-        <article id="cart">
-          <h2 class="major">Cart</h2>
+	        <article id="cart">
+	          <h2 class="major">Cart</h2>
 
-          <p id="cartEmpty" class="align-center" hidden>Your cart is empty.</p>
+	          <p id="cartEmpty" class="align-center" hidden>Your cart is empty.</p>
 
-          <div id="cartItems"></div>
+	          <div id="cartItems"></div>
 
-          <p class="align-center cart-total-line">
-            Total: <span id="cartTotal">$0.00</span>
-          </p>
+	          <p class="align-center cart-total-line">
+	            Estimate total: <span id="cartTotal">$0.00</span>
+	          </p>
 
           <p class="align-center cart-legal">
             By placing an order, you agree to the <a href="#terms">Terms &amp; Conditions</a>.
           </p>
 
-          <ul class="actions">
-            <li><a href="#work" class="button">Continue Shopping</a></li>
-            <li>
-              <a href="#" class="button primary disabled" aria-disabled="true">Checkout (soon)</a>
-            </li>
-          </ul>
-        </article>
+	          <ul class="actions">
+	            <li><a href="#work" class="button">Continue Shopping</a></li>
+	            <li>
+	              <a href="#checkout" class="button primary">Checkout</a>
+	            </li>
+	          </ul>
+	        </article>
 
-        <!-- Terms -->
-        <article id="terms">
-          <h2 class="major">Terms &amp; Conditions</h2>
+	        <!-- Checkout -->
+	        <article id="checkout">
+	          <h2 class="major">Checkout</h2>
+
+	          <p id="checkoutEmpty" class="align-center" hidden>Your cart is empty.</p>
+
+	          <div id="checkoutEstimateBox" class="box checkout-estimate" hidden>
+	            <h3>Shipping Address</h3>
+
+	            <form id="checkoutEstimateForm" action="#" method="post">
+	              <div class="fields">
+	                <div class="field">
+	                  <label for="checkoutAddress1">Address line 1</label>
+	                  <input
+	                    type="text"
+	                    id="checkoutAddress1"
+	                    name="checkoutAddress1"
+	                    autocomplete="address-line1"
+	                    placeholder="123 Main St"
+	                  />
+	                </div>
+
+	                <div class="field">
+	                  <label for="checkoutAddress2">Address line 2 (optional)</label>
+	                  <input
+	                    type="text"
+	                    id="checkoutAddress2"
+	                    name="checkoutAddress2"
+	                    autocomplete="address-line2"
+	                    placeholder="Apt 4B"
+	                  />
+	                </div>
+
+	                <div class="field">
+	                  <label for="checkoutCity">City</label>
+	                  <input
+	                    type="text"
+	                    id="checkoutCity"
+	                    name="checkoutCity"
+	                    inputmode="text"
+	                    autocomplete="address-level2"
+	                    placeholder="Los Angeles"
+	                  />
+	                </div>
+
+	                <div class="field">
+	                  <label for="checkoutState">State</label>
+	                  <input
+	                    type="text"
+	                    id="checkoutState"
+	                    name="checkoutState"
+	                    inputmode="text"
+	                    autocomplete="address-level1"
+	                    placeholder="CA"
+	                    maxlength="2"
+	                  />
+	                </div>
+
+	                <div class="field">
+	                  <label for="checkoutZip">ZIP</label>
+	                  <input
+	                    type="text"
+	                    id="checkoutZip"
+	                    name="checkoutZip"
+	                    inputmode="numeric"
+	                    autocomplete="postal-code"
+	                    placeholder="90210"
+	                    maxlength="10"
+	                  />
+	                </div>
+
+	                <div class="field">
+	                  <label for="checkoutCountry">Country</label>
+	                  <select id="checkoutCountry" name="checkoutCountry" autocomplete="country">
+	                    <option value="US">United States</option>
+	                  </select>
+	                </div>
+	              </div>
+
+	              <ul class="actions special">
+	                <li>
+	                  <button type="button" id="checkoutEstimateBtn" class="button primary">
+	                    Calculate Shipping &amp; Tax
+	                  </button>
+	                </li>
+	              </ul>
+
+	              <p id="checkoutEstimateStatus" class="align-center" aria-live="polite"></p>
+	              <div id="checkoutEstimateBreakdown" class="estimate-breakdown" hidden></div>
+
+	              <ul class="actions checkout-actions">
+	                <li><a href="#cart" class="button">Back to Cart</a></li>
+	                <li>
+	                  <button
+	                    type="button"
+	                    id="checkoutPayBtn"
+	                    class="button primary disabled"
+	                    aria-disabled="true"
+	                    disabled
+	                    title="Coming soon"
+	                  >
+	                    Payment (soon)
+	                  </button>
+	                </li>
+	              </ul>
+	            </form>
+	          </div>
+	        </article>
+
+	        <!-- Terms -->
+	        <article id="terms">
+	          <h2 class="major">Terms &amp; Conditions</h2>
 
           <h3>Return Policy</h3>
           <p>
@@ -301,14 +410,16 @@
     <script src="assets/js/browser.min.js" defer></script>
     <script src="assets/js/breakpoints.min.js" defer></script>
     <script src="assets/js/util.js" defer></script>
+    <script src="assets/js/polyfills.js" defer></script>
 
-    <!-- custom scripts -->
-    <script src="assets/js/art_data.js" defer></script>
-    <script src="assets/js/cart.js?v=20250308-97" defer></script>
-	    <script src="assets/js/art_build.js" defer></script>
-	    <script src="assets/js/gallery_build.js" defer></script>
-	    <script src="assets/js/gallery_close.js" defer></script>
-	    <script src="assets/js/main.js" defer></script>
+	    <!-- custom scripts -->
+	    <script src="assets/js/art_data.js" defer></script>
+		    <script src="assets/js/cart.js?v=20260125-3" defer></script>
+		    <script src="assets/js/checkout.js?v=20260126-3" defer></script>
+			    <script src="assets/js/art_build.js?v=20260125-1" defer></script>
+		    <script src="assets/js/gallery_build.js" defer></script>
+		    <script src="assets/js/gallery_close.js" defer></script>
+		    <script src="assets/js/main.js" defer></script>
 		    <script>
 		      (function () {
 		        var host = location.hostname;

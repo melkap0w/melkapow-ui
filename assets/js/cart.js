@@ -99,11 +99,36 @@
     return n;
   }
 
+  function normalizePositiveInt(value) {
+    var n = parseInt(value, 10);
+    if (!isFinite(n) || n <= 0) return null;
+    return n;
+  }
+
   function formatMoney(cents) {
     var n = parseInt(cents, 10);
     if (!isFinite(n)) n = 0;
     var dollars = (n / 100).toFixed(2);
     return "$" + dollars;
+  }
+
+  function getApiBase() {
+    var base = window.MELKAPOW_API_BASE;
+    if (typeof base === "string" && base.trim()) return base.replace(/\/+$/, "");
+
+    var host = location.hostname;
+    if (host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host === "::1" || host === "[::1]" || host === "0:0:0:0:0:0:0:1") {
+      return "http://127.0.0.1:8000";
+    }
+
+    var isPrivateIp = /^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})$/.test(host);
+    if (isPrivateIp) return location.protocol + "//" + host + ":8000";
+
+    return "";
+  }
+
+  function isShopEnabled() {
+    return !!(getApiBase() && typeof fetch === "function");
   }
 
   function findArtById(artId) {
@@ -194,13 +219,17 @@
       if (!sizeLabel && split && split.length > 1) sizeLabel = split.slice(1).join("—").trim();
 
       // Legacy fallbacks.
-      if (!finishId && it.productType === "canvas") finishId = "stretched-canvas";
-      if (!finishId && it.productType === "prints") finishId = "fine-art-paper";
+      if (!finishId && it.productType === "canvas") finishId = "canvas";
+      if (!finishId && it.productType === "prints") finishId = "fine-art-print";
 
-      if (!finishLabel && it.productType === "canvas") finishLabel = "Stretched Canvas";
-      if (!finishLabel && it.productType === "prints") finishLabel = "Fine Art Paper";
+      if (!finishLabel && it.productType === "canvas") finishLabel = "Canvas";
+      if (!finishLabel && it.productType === "prints") finishLabel = "Fine Art Print";
 
       if (!sizeLabel) sizeLabel = optionLabel || String(it.optionId || "");
+
+      var printfulVariantId = normalizePositiveInt(it.printful_variant_id || it.printfulVariantId);
+      var printfulSyncVariantId = normalizePositiveInt(it.printful_sync_variant_id || it.printfulSyncVariantId);
+      var printfulProductId = normalizePositiveInt(it.printful_product_id || it.printfulProductId);
 
       clean.push({
         key: String(it.key),
@@ -213,6 +242,9 @@
         finishLabel: finishLabel,
         sizeId: sizeId,
         sizeLabel: sizeLabel,
+        printful_variant_id: printfulVariantId,
+        printful_sync_variant_id: printfulSyncVariantId,
+        printful_product_id: printfulProductId,
         priceCents: parseInt(it.priceCents, 10) || 0,
         qty: normalizeQty(it.qty)
       });
@@ -264,6 +296,21 @@
     for (var i = 0; i < items.length; i++) {
       if (items[i].key === next.key) {
         items[i].qty = normalizeQty(items[i].qty + next.qty);
+
+        // Fill in any newer metadata (helps when upgrading stored cart schema).
+        if (!items[i].title && next.title) items[i].title = next.title;
+        if (!items[i].thumb && next.thumb) items[i].thumb = next.thumb;
+        if (!items[i].optionLabel && next.optionLabel) items[i].optionLabel = next.optionLabel;
+
+        if (!items[i].finishId && next.finishId) items[i].finishId = next.finishId;
+        if (!items[i].finishLabel && next.finishLabel) items[i].finishLabel = next.finishLabel;
+        if (!items[i].sizeId && next.sizeId) items[i].sizeId = next.sizeId;
+        if (!items[i].sizeLabel && next.sizeLabel) items[i].sizeLabel = next.sizeLabel;
+
+        if (!items[i].printful_variant_id && next.printful_variant_id) items[i].printful_variant_id = next.printful_variant_id;
+        if (!items[i].printful_sync_variant_id && next.printful_sync_variant_id) items[i].printful_sync_variant_id = next.printful_sync_variant_id;
+        if (!items[i].printful_product_id && next.printful_product_id) items[i].printful_product_id = next.printful_product_id;
+
         saveCart(cart);
         dispatchUpdated();
         return cart;
@@ -411,6 +458,7 @@
         var meta = document.createElement("p");
         meta.className = "cart-item-meta";
         var finish = it.finishLabel || it.finishId || "";
+        if (String(finish).toLowerCase() === "default") finish = "";
         var size = it.sizeLabel || it.optionLabel || it.optionId || "";
         meta.textContent = [finish, size].filter(Boolean).join(" \u2022 ");
         itemBox.appendChild(meta);
@@ -455,7 +503,7 @@
       thead.innerHTML =
         "<tr>" +
         "<th>Item</th>" +
-        "<th>Finish</th>" +
+        "<th>Type</th>" +
         "<th>Size</th>" +
         "<th>Qty</th>" +
         "<th>Unit</th>" +
@@ -485,7 +533,9 @@
         tdTitle.appendChild(titleWrap);
 
         var tdFinish = document.createElement("td");
-        tdFinish.textContent = it2.finishLabel || it2.finishId || "";
+        var finishText = it2.finishLabel || it2.finishId || "";
+        if (String(finishText).toLowerCase() === "default") finishText = "";
+        tdFinish.textContent = finishText;
 
         var tdSize = document.createElement("td");
         tdSize.textContent = it2.sizeLabel || it2.optionLabel || it2.optionId;
@@ -557,6 +607,51 @@
     }
   }
 
+  function wireCartLayoutWatcher() {
+    var mq = null;
+    try {
+      mq = window.matchMedia ? window.matchMedia("(max-width: 736px)") : null;
+    } catch (_) {
+      mq = null;
+    }
+
+    var lastIsMobile = mq ? !!mq.matches : null;
+    var timer = null;
+
+    function isMobileNow() {
+      if (!window.matchMedia) return false;
+      try {
+        return window.matchMedia("(max-width: 736px)").matches;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function schedule() {
+      if (timer) return;
+      timer = setTimeout(function () {
+        timer = null;
+        var next = isMobileNow();
+        if (lastIsMobile === null) {
+          lastIsMobile = next;
+          return;
+        }
+        if (next !== lastIsMobile) {
+          lastIsMobile = next;
+          if (window.location.hash === "#cart") renderCartPage();
+        }
+      }, 100);
+    }
+
+    if (mq) {
+      if (typeof mq.addEventListener === "function") mq.addEventListener("change", schedule);
+      else if (typeof mq.addListener === "function") mq.addListener(schedule);
+    }
+
+    window.addEventListener("resize", schedule);
+    window.addEventListener("orientationchange", schedule);
+  }
+
   // Public API for art pages.
   function addToCart(payload) {
     if (!payload || !payload.artId || !payload.optionId) return { items: [] };
@@ -572,6 +667,9 @@
       finishLabel: String(payload.finishLabel || ""),
       sizeId: String(payload.sizeId || ""),
       sizeLabel: String(payload.sizeLabel || ""),
+      printful_variant_id: normalizePositiveInt(payload.printful_variant_id || payload.printfulVariantId),
+      printful_sync_variant_id: normalizePositiveInt(payload.printful_sync_variant_id || payload.printfulSyncVariantId),
+      printful_product_id: normalizePositiveInt(payload.printful_product_id || payload.printfulProductId),
       priceCents: parseInt(payload.priceCents, 10) || 0,
       qty: normalizeQty(payload.qty)
     };
@@ -615,12 +713,14 @@
       refreshFab();
       wireFab();
       wireArticleVisibilityObserver();
+      wireCartLayoutWatcher();
       if (window.location.hash === "#cart") renderCartPage();
     });
   } else {
     refreshFab();
     wireFab();
     wireArticleVisibilityObserver();
+    wireCartLayoutWatcher();
     if (window.location.hash === "#cart") renderCartPage();
   }
 })();

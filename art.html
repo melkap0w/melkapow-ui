@@ -13,8 +13,23 @@
     </noscript>
     <script>
       (function () {
-        var url = new URL(window.location.href);
-        var id = url.searchParams.get("id");
+        function getQueryParam(name) {
+          var search = window.location.search || "";
+          if (search.charAt(0) === "?") search = search.substring(1);
+          if (!search) return "";
+
+          var parts = search.split("&");
+          for (var i = 0; i < parts.length; i++) {
+            var kv = parts[i].split("=");
+            var k = decodeURIComponent(kv[0] || "");
+            if (k !== name) continue;
+            return decodeURIComponent(kv.slice(1).join("=") || "");
+          }
+          return "";
+        }
+
+        var id = getQueryParam("id");
+        id = (id || "").replace(/[^a-zA-Z0-9_-]/g, "");
         if (id) window.location.replace("index.html#art-" + id);
         else window.location.replace("index.html#work");
       })();
@@ -29,7 +44,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
 
-    <link rel="stylesheet" href="assets/css/main.css?v=20250308-101" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20260126-2" />
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 
     <style>
