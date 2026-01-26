@@ -269,13 +269,24 @@
     }
 
     if (estimateState.result && estimateState.result.ok) {
-      var shipping = formatMoney(estimateState.result.shippingCents);
-      var tax = formatMoney(estimateState.result.taxCents);
-      var total = formatMoney(estimateState.result.totalCents);
+      var subtotalCents = parseInt(estimateState.result.subtotalCents, 10) || 0;
+      var shippingCents = parseInt(estimateState.result.shippingCents, 10) || 0;
+      var taxCents = parseInt(estimateState.result.taxCents, 10) || 0;
+      var totalCents = parseInt(estimateState.result.totalCents, 10) || 0;
+      var beforeTaxCents = Math.max(0, totalCents - taxCents);
+
+      var subtotal = formatMoney(subtotalCents);
+      var shipping = formatMoney(shippingCents);
+      var beforeTax = formatMoney(beforeTaxCents);
+      var tax = formatMoney(taxCents);
+      var total = formatMoney(totalCents);
       setStatus(els, "");
       setBreakdownRows(els, [
+        { label: "Item(s) subtotal", amount: subtotal },
         { label: "Shipping", amount: shipping },
-        { label: "Taxes", amount: tax },
+        { label: "Estimated total (before tax)", amount: beforeTax },
+        { isSpacer: true },
+        { label: "Estimated tax", amount: tax },
         { label: "Total", amount: total, isTotal: true }
       ]);
       return;
@@ -302,6 +313,13 @@
     els.breakdown.innerHTML = "";
     for (var i = 0; i < list.length; i++) {
       var row = list[i] || {};
+      if (row.isSpacer) {
+        var spacer = document.createElement("div");
+        spacer.className = "estimate-spacer";
+        spacer.setAttribute("aria-hidden", "true");
+        els.breakdown.appendChild(spacer);
+        continue;
+      }
       var label = String(row.label || "").trim();
       var amount = String(row.amount || "").trim();
       if (!label) continue;

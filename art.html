@@ -30,7 +30,7 @@
 
         var id = getQueryParam("id");
         id = (id || "").replace(/[^a-zA-Z0-9_-]/g, "");
-        if (id) window.location.replace("index.html#art-" + id);
+        if (id) window.location.replace("index.html#gallery-" + id);
         else window.location.replace("index.html#work");
       })();
     </script>
@@ -44,7 +44,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
 
-    <link rel="stylesheet" href="assets/css/main.css?v=20260126-2" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20260126-3" />
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 
     <style>
@@ -131,7 +131,8 @@
         <nav>
           <ul>
             <li><a href="index.html#intro">Intro</a></li>
-            <li><a href="index.html#work">Work</a></li>
+	            <li><a href="index.html#work">Gallery</a></li>
+            <li><a href="index.html#shop">Shop</a></li>
             <li><a href="index.html#about">About</a></li>
             <li><a href="index.html#contact">Contact</a></li>
           </ul>

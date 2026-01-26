@@ -9,7 +9,7 @@
 
   function resetNonActiveArtSliders() {
     var activeHash = window.location.hash || "";
-    var artSections = document.querySelectorAll('article[id^="art-"]');
+    var artSections = document.querySelectorAll('article[id^="gallery-"], article[id^="shop-"]');
 
     for (var i = 0; i < artSections.length; i++) {
       var section = artSections[i];
@@ -62,6 +62,13 @@
 
         var article = close.closest("article");
         if (!article) return;
+
+        if (article.classList.contains("from-shop")) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.location.hash = "#shop";
+          return;
+        }
 
         // Only hijack X behavior for gallery detail pages.
         if (article.classList.contains("from-gallery")) {

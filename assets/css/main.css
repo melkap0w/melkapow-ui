@@ -1837,6 +1837,10 @@ body.is-article-visible #cartFab {
   padding: 0.15rem 0;
 }
 
+.estimate-spacer {
+  height: 0.85rem;
+}
+
 .estimate-amount {
   text-align: right;
   justify-self: end;
@@ -2330,7 +2334,8 @@ body.is-article-visible #cartFab {
 }
 
 /* Caption under art image */
-#main article.from-gallery .art-caption {
+#main article.from-gallery .art-caption,
+#main article.from-shop .art-caption {
   text-align: center;
   font-size: 0.9rem;
   font-weight: 600;
@@ -2340,21 +2345,25 @@ body.is-article-visible #cartFab {
 }
 
 /* Purchase options under art details */
-#main article.from-gallery .purchase-box {
+#main article.from-gallery .purchase-box,
+#main article.from-shop .purchase-box {
   max-width: 720px;
   margin-left: auto;
   margin-right: auto;
 }
 
-#main article.from-gallery .purchase-box h3 {
+#main article.from-gallery .purchase-box h3,
+#main article.from-shop .purchase-box h3 {
   text-align: center;
 }
 
-#main article.from-gallery .purchase-form {
+#main article.from-gallery .purchase-form,
+#main article.from-shop .purchase-form {
   margin: 0 0 1.25rem 0;
 }
 
-#main article.from-gallery .purchase-box .purchase-form .fields {
+#main article.from-gallery .purchase-box .purchase-form .fields,
+#main article.from-shop .purchase-box .purchase-form .fields {
   width: 100%;
   margin: 0 0 1.5rem 0;
   display: flex;
@@ -2362,40 +2371,49 @@ body.is-article-visible #cartFab {
   gap: 1rem;
 }
 
-#main article.from-gallery .purchase-box .purchase-form .field {
+#main article.from-gallery .purchase-box .purchase-form .field,
+#main article.from-shop .purchase-box .purchase-form .field {
   flex: 1 1 100%;
   padding: 0;
   width: auto;
 }
 
 #main article.from-gallery .purchase-box .purchase-select,
-#main article.from-gallery .purchase-box .purchase-qty {
+#main article.from-gallery .purchase-box .purchase-qty,
+#main article.from-shop .purchase-box .purchase-select,
+#main article.from-shop .purchase-box .purchase-qty {
   width: 100%;
   max-width: 32rem;
 }
 
 @media screen and (min-width: 737px) {
   #main article.from-gallery .purchase-box .purchase-select,
-  #main article.from-gallery .purchase-box .purchase-qty {
+  #main article.from-gallery .purchase-box .purchase-qty,
+  #main article.from-shop .purchase-box .purchase-select,
+  #main article.from-shop .purchase-box .purchase-qty {
     max-width: 16rem;
   }
 }
 
 @media screen and (max-width: 736px) {
-  #main article.from-gallery .purchase-box .purchase-qty {
+  #main article.from-gallery .purchase-box .purchase-qty,
+  #main article.from-shop .purchase-box .purchase-qty {
     max-width: 10rem;
   }
 }
 
-#main article.from-gallery .purchase-form:last-of-type {
+#main article.from-gallery .purchase-form:last-of-type,
+#main article.from-shop .purchase-form:last-of-type {
   margin-bottom: 0;
 }
 
-#main article.from-gallery .purchase-box .purchase-form ul.actions {
+#main article.from-gallery .purchase-box .purchase-form ul.actions,
+#main article.from-shop .purchase-box .purchase-form ul.actions {
   justify-content: flex-end;
 }
 
-#main article.from-gallery .purchase-status {
+#main article.from-gallery .purchase-status,
+#main article.from-shop .purchase-status {
   margin-top: 1rem;
   text-transform: none;
   letter-spacing: 0;
@@ -2404,18 +2422,21 @@ body.is-article-visible #cartFab {
   opacity: 1;
 }
 
-#main article.from-gallery .purchase-box .purchase-unavailable {
+#main article.from-gallery .purchase-box .purchase-unavailable,
+#main article.from-shop .purchase-box .purchase-unavailable {
   font-size: 1.05rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
 }
 
-#main article.from-gallery .purchase-box .purchase-unavailable-note {
+#main article.from-gallery .purchase-box .purchase-unavailable-note,
+#main article.from-shop .purchase-box .purchase-unavailable-note {
   margin-top: 0;
   opacity: 0.9;
 }
 
-#main article.from-gallery .purchase-box .purchase-finish-static {
+#main article.from-gallery .purchase-box .purchase-finish-static,
+#main article.from-shop .purchase-box .purchase-finish-static {
   margin: 0 0 1rem 0;
   font-weight: 600;
 }

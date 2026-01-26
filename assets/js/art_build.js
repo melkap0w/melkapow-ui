@@ -92,7 +92,7 @@
   }
 
   function removeGeneratedArticles(mainEl) {
-    var existing = mainEl.querySelectorAll('article[data-generated="art"]');
+    var existing = mainEl.querySelectorAll('article[data-generated="shop-art"]');
     for (var i = existing.length - 1; i >= 0; i--) {
       existing[i].parentNode.removeChild(existing[i]);
     }
@@ -664,9 +664,9 @@
 
   function buildArtArticle(art) {
     var article = document.createElement("article");
-    article.id = "art-" + String(art.id);
-    article.className = "from-gallery";
-    article.setAttribute("data-generated", "art");
+    article.id = "shop-" + String(art.id);
+    article.className = "from-shop";
+    article.setAttribute("data-generated", "shop-art");
 
     var heading = document.createElement("h2");
     heading.className = "major";
@@ -698,9 +698,9 @@
 
     var liBack = document.createElement("li");
     var aBack = document.createElement("a");
-    aBack.href = "#work";
+    aBack.href = "#shop";
     aBack.className = "button";
-    aBack.textContent = "Back to Gallery";
+    aBack.textContent = "Back to Shop";
     liBack.appendChild(aBack);
 
     actions.appendChild(liBack);
@@ -718,7 +718,7 @@
       var art = list[i];
       if (!art || !art.id) continue;
 
-      var article = document.getElementById("art-" + String(art.id));
+      var article = document.getElementById("shop-" + String(art.id));
       if (!article) continue;
 
       var existing = article.querySelector(".purchase-box");

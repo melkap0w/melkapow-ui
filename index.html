@@ -22,7 +22,7 @@
     />
 
     <!-- Main styles -->
-    <link rel="stylesheet" href="assets/css/main.css?v=20260126-2" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20260126-3" />
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 
     <!-- Override global h1 styles for the logo font -->
@@ -68,7 +68,8 @@
         <nav>
           <ul>
             <li><a href="#intro">Intro</a></li>
-            <li><a href="#work">Work</a></li>
+	            <li><a href="#work">Gallery</a></li>
+            <li><a href="#shop">Shop</a></li>
             <li><a href="#about">About</a></li>
             <li><a href="#contact">Contact</a></li>
           </ul>
@@ -106,11 +107,17 @@
           </p>
         </article>
 
-        <article id="work">
-          <h2 class="major">Work</h2>
+	        <article id="work">
+	          <h2 class="major">Gallery</h2>
 
           <!-- JS will populate this -->
           <div class="gallery" id="gallery"></div>
+        </article>
+
+        <article id="shop">
+          <h2 class="major">Shop</h2>
+          <p id="shopStatus" class="align-center"></p>
+          <div class="gallery" id="shopGallery"></div>
         </article>
 
         <!-- About -->
@@ -191,7 +198,7 @@
           </p>
 
 	          <ul class="actions">
-	            <li><a href="#work" class="button">Continue Shopping</a></li>
+	            <li><a href="#shop" class="button">Continue Shopping</a></li>
 	            <li>
 	              <a href="#checkout" class="button primary">Checkout</a>
 	            </li>
@@ -415,10 +422,12 @@
 	    <!-- custom scripts -->
 	    <script src="assets/js/art_data.js" defer></script>
 		    <script src="assets/js/cart.js?v=20260125-3" defer></script>
-		    <script src="assets/js/checkout.js?v=20260126-3" defer></script>
-			    <script src="assets/js/art_build.js?v=20260125-1" defer></script>
-		    <script src="assets/js/gallery_build.js" defer></script>
-		    <script src="assets/js/gallery_close.js" defer></script>
+		    <script src="assets/js/checkout.js?v=20260126-4" defer></script>
+        <script src="assets/js/gallery_art_build.js?v=20260126-1" defer></script>
+        <script src="assets/js/shop_gallery_build.js?v=20260126-1" defer></script>
+			    <script src="assets/js/art_build.js?v=20260126-1" defer></script>
+		    <script src="assets/js/gallery_build.js?v=20260126-1" defer></script>
+		    <script src="assets/js/gallery_close.js?v=20260126-1" defer></script>
 		    <script src="assets/js/main.js" defer></script>
 		    <script>
 		      (function () {
