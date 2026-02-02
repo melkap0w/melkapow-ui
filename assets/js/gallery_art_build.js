@@ -70,6 +70,50 @@
     return slider;
   }
 
+  function createProductDetailsBox(art) {
+    if (!art) return null;
+
+    var info = art.productInfo && typeof art.productInfo === "object" ? art.productInfo : null;
+    var collectionRaw = info && info.collection ? String(info.collection).trim().toLowerCase() : "";
+    var collection = collectionRaw === "classic" || collectionRaw === "grandeur" ? collectionRaw : "grandeur";
+
+    var defaultDims = collection === "classic" ? '36" H x 48" W x 0.75" D' : '36" H x 38" W x 1.5" D';
+    var dims = info && info.dimensions ? String(info.dimensions).trim() : "";
+    if (!dims) dims = defaultDims;
+
+    var collectionLabel = collection === "classic" ? "Classic Collection" : "Grandeur Collection";
+    var lines = [
+      "Gallery quality canvas, kiln dried stretcher bars",
+      "Dimensions: " + dims,
+      "Material: Canvas & Wood",
+      "Content: 100% Cotton Duck",
+      "Net Weight: 12 Ounces (343g) Primed & 6 Ounces (172g) Un-Primed",
+      "Quantity: 1"
+    ];
+
+    var box = document.createElement("div");
+    box.className = "box purchase-box";
+
+    var desc = document.createElement("div");
+    desc.className = "purchase-description";
+
+    var heading = document.createElement("h4");
+    heading.textContent = collectionLabel;
+    desc.appendChild(heading);
+
+    var list = document.createElement("ul");
+    list.className = "purchase-description-list";
+    lines.forEach(function (line) {
+      var li = document.createElement("li");
+      li.textContent = line;
+      list.appendChild(li);
+    });
+    desc.appendChild(list);
+
+    box.appendChild(desc);
+    return box;
+  }
+
   function buildArtArticle(art) {
     var article = document.createElement("article");
     article.id = "gallery-" + String(art.id);
@@ -90,6 +134,9 @@
       caption.textContent = art.caption;
       article.appendChild(caption);
     }
+
+    var details = createProductDetailsBox(art);
+    if (details) article.appendChild(details);
 
     var actions = document.createElement("ul");
     actions.className = "actions";

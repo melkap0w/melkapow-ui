@@ -202,13 +202,78 @@
     if (art.thumb) candidates.push(slugify(basenameWithoutExt(art.thumb)));
     if (art.thumb) candidates.push(slugify(basename(art.thumb)));
 
+    var seen = {};
+    var matches = [];
     for (var i = 0; i < candidates.length; i++) {
       var id = candidates[i];
-      if (!id) continue;
-      if (Object.prototype.hasOwnProperty.call(shopMap, id)) return shopMap[id];
+      if (!id || seen[id]) continue;
+      seen[id] = true;
+      if (Object.prototype.hasOwnProperty.call(shopMap, id)) matches.push(shopMap[id]);
     }
 
-    return null;
+    if (!matches.length) return null;
+    if (matches.length === 1) return matches[0];
+
+    var merged = { finishes: [], finishThumbUrls: {} };
+
+    function mergeFinish(fromFinish) {
+      if (!fromFinish || typeof fromFinish !== "object" || !fromFinish.id) return;
+
+      var finishId = String(fromFinish.id);
+      var finishLabel = String(fromFinish.label || fromFinish.id);
+
+      var existing = null;
+      for (var j = 0; j < merged.finishes.length; j++) {
+        if (merged.finishes[j] && merged.finishes[j].id === finishId) {
+          existing = merged.finishes[j];
+          break;
+        }
+      }
+
+      if (!existing) {
+        existing = { id: finishId, label: finishLabel, sizes: [] };
+        if (fromFinish.description) existing.description = String(fromFinish.description);
+        merged.finishes.push(existing);
+      } else {
+        if (!existing.label && finishLabel) existing.label = finishLabel;
+        if (!existing.description && fromFinish.description) existing.description = String(fromFinish.description);
+      }
+
+      var sizesRaw = Array.isArray(fromFinish.sizes) ? fromFinish.sizes : [];
+      var have = {};
+      for (var k = 0; k < existing.sizes.length; k++) {
+        var s0 = existing.sizes[k];
+        if (s0 && s0.id) have[String(s0.id)] = true;
+      }
+      for (var s = 0; s < sizesRaw.length; s++) {
+        var size = sizesRaw[s];
+        if (!size || !size.id) continue;
+        var sid = String(size.id);
+        if (have[sid]) continue;
+        existing.sizes.push(size);
+        have[sid] = true;
+      }
+    }
+
+    for (var m = 0; m < matches.length; m++) {
+      var product = matches[m];
+      if (!product || typeof product !== "object") continue;
+
+      if (product.thumbUrl && !merged.thumbUrl) merged.thumbUrl = String(product.thumbUrl);
+
+      var thumbs = product.finishThumbUrls;
+      if (thumbs && typeof thumbs === "object") {
+        Object.keys(thumbs).forEach(function (key) {
+          if (!key) return;
+          if (!merged.finishThumbUrls[key]) merged.finishThumbUrls[key] = thumbs[key];
+        });
+      }
+
+      var finishes = Array.isArray(product.finishes) ? product.finishes : [];
+      for (var f = 0; f < finishes.length; f++) mergeFinish(finishes[f]);
+    }
+
+    return merged;
   }
 
   function getCatalogForArt(art) {
@@ -376,7 +441,7 @@
     "Printed on textured and fade-resistant canvas (OBA-Free)",
     "Mounting brackets included",
     "Hand-glued solid wood stretcher bars",
-    "Blank product sourced from the US, Canada, Europe, UK, or Australia"
+    "Product sourced from the US, Canada, Europe, UK, or Australia"
   ];
 
   var STATIC_DESCRIPTION_LINES = {
@@ -385,7 +450,7 @@
       "Printed on textured and fade-resistant canvas (OBA-Free)",
       "Mounting brackets included",
       "Hand-glued solid wood stretcher bars",
-      "Blank product sourced from the US, Canada, Europe, UK, or Australia"
+      "Product sourced from the US, Canada, Europe, UK, or Australia"
     ],
     "framed-canvas": [
       "Pine tree frame",
@@ -393,7 +458,7 @@
       "Frame thickness: 1.25″ (3.18 cm)",
       "Hanging hardware attached",
       "Floating canvas effect",
-      "Blank product sourced from Canada, the UK, and the US"
+      "Product sourced from Canada, the UK, and the US"
     ],
     "canvas-frame": [
       "Pine tree frame",
@@ -401,7 +466,7 @@
       "Frame thickness: 1.25″ (3.18 cm)",
       "Hanging hardware attached",
       "Floating canvas effect",
-      "Blank product sourced from Canada, the UK, and the US"
+      "Product sourced from Canada, the UK, and the US"
     ],
     "gloss-metal-print": [
       "Technique: Design is printed with dye ink on paper and transferred directly onto product with heat",
@@ -410,8 +475,7 @@
       "An additional coating applied for true color replication",
       "Gloss finish for vivid dimensional look",
       "Scratch and fade resistant",
-      "Product sourced from the US",
-      "Important: This product is available in the US only. If your shipping address is outside this region, please choose a different product."
+      "Product sourced from the US"
     ],
     "metal-print": [
       "Technique: Design is printed with dye ink on paper and transferred directly onto product with heat",
@@ -420,8 +484,7 @@
       "An additional coating applied for true color replication",
       "Gloss finish for vivid dimensional look",
       "Scratch and fade resistant",
-      "Product sourced from the US",
-      "Important: This product is available in the US only. If your shipping address is outside this region, please choose a different product."
+      "Product sourced from the US"
     ],
     metal: [
       "Technique: Design is printed with dye ink on paper and transferred directly onto product with heat",
@@ -430,8 +493,7 @@
       "An additional coating applied for true color replication",
       "Gloss finish for vivid dimensional look",
       "Scratch and fade resistant",
-      "Product sourced from the US",
-      "Important: This product is available in the US only. If your shipping address is outside this region, please choose a different product."
+      "Product sourced from the US"
     ]
   };
 
@@ -454,6 +516,22 @@
       .replace(/[^a-z0-9]+/g, "-");
   }
 
+  function resolveArtCollectionLabel(art) {
+    var info = art && art.productInfo && typeof art.productInfo === "object" ? art.productInfo : null;
+    var raw = info && info.collection ? String(info.collection).trim().toLowerCase() : "";
+    return raw === "classic" ? "Classic Collection" : "Grandeur Collection";
+  }
+
+  function isMetalFinishId(finishId) {
+    var id = mapFinishId(finishId);
+    return id === "metal-print" || id === "gloss-metal-print" || id === "metal";
+  }
+
+  function resolveCollectionHeading(art, finish) {
+    if (finish && isMetalFinishId(finish.id)) return "Metal Collection";
+    return resolveArtCollectionLabel(art);
+  }
+
   function resolveDescriptionText(art, finish) {
     var finishId = finish ? mapFinishId(finish.id) : "";
     var staticLines = STATIC_DESCRIPTION_LINES[finishId];
@@ -465,19 +543,19 @@
     return DEFAULT_DESCRIPTION_TEXT;
   }
 
-  function createDescriptionContainer() {
+  function createDescriptionContainer(art) {
     var container = document.createElement("div");
     container.className = "purchase-description";
 
     var heading = document.createElement("h4");
-    heading.textContent = "Product details";
+    heading.textContent = resolveCollectionHeading(art, null);
     container.appendChild(heading);
 
     var list = document.createElement("ul");
     list.className = "purchase-description-list";
     container.appendChild(list);
 
-    return { container: container, list: list };
+    return { container: container, list: list, heading: heading };
   }
 
   function updateDescriptionList(listEl, text) {
@@ -492,6 +570,24 @@
     listEl.style.display = lines.length ? "" : "none";
   }
 
+  function isUsOnlyFinish(finishObj) {
+    if (!finishObj || !finishObj.id) return false;
+    var id = mapFinishId(finishObj.id);
+    return id === "metal-print" || id === "gloss-metal-print" || id === "metal";
+  }
+
+  function createImportantNotice() {
+    var p = document.createElement("p");
+    p.className = "purchase-important";
+    p.hidden = true;
+
+    var strong = document.createElement("strong");
+    strong.textContent = "Important:";
+    p.appendChild(strong);
+    p.appendChild(document.createTextNode(" This product is available in the US only. If your shipping address is outside this region, please choose a different product."));
+    return p;
+  }
+
   function buildPurchaseBox(art) {
     var shopMode = isShopEnabled();
     if (!shopMode) return buildShopUnavailablePurchaseBox();
@@ -504,9 +600,13 @@
     var box = document.createElement("div");
     box.className = "box purchase-box";
 
-    var descriptionParts = createDescriptionContainer();
+    var descriptionParts = createDescriptionContainer(art);
     box.appendChild(descriptionParts.container);
     var descriptionList = descriptionParts.list;
+    var descriptionHeading = descriptionParts.heading;
+
+    var importantNotice = createImportantNotice();
+    box.appendChild(importantNotice);
 
     var form = document.createElement("form");
     form.className = "purchase-form";
@@ -527,13 +627,25 @@
       finishById[catalog.finishes[i].id] = catalog.finishes[i];
     }
 
-    var defaultFinish = catalog.finishes.length === 1 ? catalog.finishes[0] : null;
+    var defaultFinish = null;
+    if (catalog.finishes.length === 1) {
+      defaultFinish = catalog.finishes[0];
+    } else {
+      for (var df = 0; df < catalog.finishes.length; df++) {
+        var cand = catalog.finishes[df];
+        var candId = cand ? mapFinishId(cand.id) : "";
+        if (candId === "canvas" || candId === "stretched-canvas") {
+          defaultFinish = cand;
+          break;
+        }
+      }
+    }
 
     var fields = document.createElement("div");
     fields.className = "fields";
 
     var fieldFinish = document.createElement("div");
-    fieldFinish.className = "field";
+    fieldFinish.className = "field purchase-field purchase-field-finish";
 
     var finishId = "buy-" + String(art.id) + "-finish";
     var finishLabel = document.createElement("label");
@@ -564,7 +676,7 @@
     fieldFinish.appendChild(finishSelect);
 
     var fieldSize = document.createElement("div");
-    fieldSize.className = "field";
+    fieldSize.className = "field purchase-field purchase-field-size";
 
     var sizeId = "buy-" + String(art.id) + "-size";
     var sizeLabel = document.createElement("label");
@@ -596,11 +708,14 @@
 
       if (!finishObj) {
         sizeSelect.disabled = true;
+        if (descriptionHeading) descriptionHeading.textContent = resolveCollectionHeading(art, null);
         updateDescriptionList(descriptionList, resolveDescriptionText(art, null));
+        importantNotice.hidden = true;
         return;
       }
 
       sizeSelect.disabled = false;
+      if (descriptionHeading) descriptionHeading.textContent = resolveCollectionHeading(art, finishObj);
 
       for (var s = 0; s < finishObj.sizes.length; s++) {
         var size = finishObj.sizes[s];
@@ -613,6 +728,7 @@
       }
 
       updateDescriptionList(descriptionList, resolveDescriptionText(art, finishObj));
+      importantNotice.hidden = !isUsOnlyFinish(finishObj);
     }
 
     setSizeOptions(null);
@@ -629,7 +745,7 @@
     }
 
     var fieldQty = document.createElement("div");
-    fieldQty.className = "field";
+    fieldQty.className = "field purchase-field purchase-field-qty";
 
     var qtyId = "buy-" + String(art.id) + "-qty";
     var qtyLabel = document.createElement("label");
