@@ -1308,6 +1308,28 @@ button.primary,
   font-weight: 600;
 }
 
+.button.sold-out {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.65) !important;
+  cursor: not-allowed;
+  opacity: 0.65;
+  box-shadow: none;
+}
+
+input[type="submit"].sold-out,
+input[type="reset"].sold-out,
+input[type="button"].sold-out,
+button.sold-out,
+.button.sold-out {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.75) !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
 input[type="submit"].disabled,
 input[type="submit"]:disabled,
 input[type="reset"].disabled,
@@ -2255,6 +2277,7 @@ body.is-article-visible #cartFab {
   opacity: 0.8;
 }
 
+
 @media screen and (max-width: 500px) {
   .gallery {
     grid-template-columns: repeat(2, 1fr);
@@ -2439,6 +2462,57 @@ body.is-article-visible #cartFab {
 #main article.from-shop .purchase-box .purchase-finish-static {
   margin: 0 0 1rem 0;
   font-weight: 600;
+}
+
+#main article.from-gallery .purchase-box .purchase-description,
+#main article.from-shop .purchase-box .purchase-description {
+  max-width: 720px;
+  margin: 0 auto 0.75rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  text-align: left;
+}
+
+#main article.from-gallery .purchase-box .purchase-description h4,
+#main article.from-shop .purchase-box .purchase-description h4 {
+  margin-top: 0;
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.4rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+#main article.from-gallery .purchase-box .purchase-section-heading,
+#main article.from-shop .purchase-box .purchase-section-heading {
+  margin: 0;
+  margin-bottom: 0.65rem;
+  letter-spacing: 0.4rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+#main article.from-gallery .purchase-box .purchase-description-list,
+#main article.from-shop .purchase-box .purchase-description-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#main article.from-gallery .purchase-box .purchase-description-list li,
+#main article.from-shop .purchase-box .purchase-description-list li {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.9;
 }
 
 /* Accessibility helper */

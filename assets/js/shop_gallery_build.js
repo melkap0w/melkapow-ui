@@ -8,37 +8,68 @@
     return Array.isArray(window.MELKAPOW_ART) ? window.MELKAPOW_ART : [];
   }
 
-  function getApiBase() {
-    var base = window.MELKAPOW_API_BASE;
-    if (typeof base === "string" && base.trim()) return base.replace(/\/+$/, "");
+  function slugify(value) {
+    var val = String(value || "").trim().toLowerCase();
+    val = val.replace(/[^a-z0-9]+/g, "-");
+    val = val.replace(/^-+/, "").replace(/-+$/, "");
+    return val;
+  }
 
-    var host = location.hostname;
-    if (host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host === "::1" || host === "[::1]" || host === "0:0:0:0:0:0:0:1") {
-      return "http://127.0.0.1:8000";
+  function basenameWithoutExt(path) {
+    var raw = String(path || "");
+    if (!raw) return "";
+    var clean = raw.split("?")[0].split("#")[0];
+    var parts = clean.split("/");
+    var last = parts.length ? parts[parts.length - 1] : clean;
+    return last.replace(/\.[a-z0-9]+$/i, "");
+  }
+
+  function basename(path) {
+    var raw = String(path || "");
+    if (!raw) return "";
+    var clean = raw.split("?")[0].split("#")[0];
+    var parts = clean.split("/");
+    return parts.length ? parts[parts.length - 1] : clean;
+  }
+
+  function getShopProductForArt(shopMap, art) {
+    if (!shopMap || typeof shopMap !== "object" || !art) return null;
+
+    var candidates = [];
+    if (art.id) candidates.push(slugify(art.id));
+    if (art.title) candidates.push(slugify(art.title));
+    if (art.galleryTitle) candidates.push(slugify(art.galleryTitle));
+    if (art.thumb) candidates.push(slugify(basenameWithoutExt(art.thumb)));
+    if (art.thumb) candidates.push(slugify(basename(art.thumb)));
+
+    for (var i = 0; i < candidates.length; i++) {
+      var id = candidates[i];
+      if (!id) continue;
+      if (Object.prototype.hasOwnProperty.call(shopMap, id)) return shopMap[id];
     }
 
-    var isPrivateIp = /^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})$/.test(host);
-    if (isPrivateIp) return location.protocol + "//" + host + ":8000";
-
-    return "";
+    return null;
   }
 
-  function isShopEnabled() {
-    var apiBase = getApiBase();
-    return !!(apiBase && typeof fetch === "function");
-  }
+  var shopStatusEl = null;
 
-  function buildShopGallery() {
+  function buildShopGallery(products) {
     var wrap = $("#shopGallery");
     if (!wrap) return;
 
     wrap.innerHTML = "";
 
+    if (!products || typeof products !== "object") {
+      return;
+    }
+
     var list = getArtList();
+    var count = 0;
 
     for (var i = 0; i < list.length; i++) {
       var art = list[i];
       if (!art || !art.id) continue;
+      if (!getShopProductForArt(products, art)) continue;
 
       var a = document.createElement("a");
       a.className = "gallery-item";
@@ -57,7 +88,33 @@
       a.appendChild(img);
       a.appendChild(cap);
       wrap.appendChild(a);
+      count++;
     }
+
+    if (shopStatusEl) {
+      if (count) shopStatusEl.textContent = "";
+      else shopStatusEl.textContent = "No shop items are listed right now.";
+    }
+  }
+
+  function getApiBase() {
+    var base = window.MELKAPOW_API_BASE;
+    if (typeof base === "string" && base.trim()) return base.replace(/\/+$/, "");
+
+    var host = location.hostname;
+    if (host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host === "::1" || host === "[::1]" || host === "0:0:0:0:0:0:0:1") {
+      return "http://127.0.0.1:8000";
+    }
+
+    var isPrivateIp = /^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})$/.test(host);
+    if (isPrivateIp) return location.protocol + "//" + host + ":8000";
+
+    return "";
+  }
+
+  function isShopEnabled() {
+    var apiBase = getApiBase();
+    return !!(apiBase && typeof fetch === "function");
   }
 
   function loadShopCatalog(timeoutMs) {
@@ -108,22 +165,28 @@
     var wrap = $("#shopGallery");
     if (!wrap) return;
 
-    var status = $("#shopStatus");
+    shopStatusEl = $("#shopStatus");
 
-    buildShopGallery();
+    buildShopGallery(window.MELKAPOW_PRODUCTS_BY_ART_ID);
 
     if (!isShopEnabled()) {
-      if (status) status.textContent = "Shop temporarily unavailable.";
+      if (shopStatusEl) shopStatusEl.textContent = "Shop temporarily unavailable.";
       return;
     }
 
-    loadShopCatalog(8000).then(function (products) {
-      if (!products) {
-        if (status) status.textContent = "Shop temporarily unavailable.";
-        return;
-      }
-      if (status) status.textContent = "";
-    });
+    if (shopStatusEl) shopStatusEl.textContent = "Loading shop catalog…";
+
+    loadShopCatalog(8000)
+      .then(function (products) {
+        if (!products) {
+          if (shopStatusEl) shopStatusEl.textContent = "Shop temporarily unavailable.";
+          return;
+        }
+        buildShopGallery(products);
+      })
+      .catch(function () {
+        if (shopStatusEl) shopStatusEl.textContent = "Shop temporarily unavailable.";
+      });
   }
 
   if (document.readyState === "loading") {

@@ -371,6 +371,127 @@
     return box;
   }
 
+  var DEFAULT_DESCRIPTION_LINES = [
+    "Canvas thickness: 1.25″ (3.18 cm)",
+    "Printed on textured and fade-resistant canvas (OBA-Free)",
+    "Mounting brackets included",
+    "Hand-glued solid wood stretcher bars",
+    "Blank product sourced from the US, Canada, Europe, UK, or Australia"
+  ];
+
+  var STATIC_DESCRIPTION_LINES = {
+    canvas: [
+      "Canvas thickness: 1.25″ (3.18 cm)",
+      "Printed on textured and fade-resistant canvas (OBA-Free)",
+      "Mounting brackets included",
+      "Hand-glued solid wood stretcher bars",
+      "Blank product sourced from the US, Canada, Europe, UK, or Australia"
+    ],
+    "framed-canvas": [
+      "Pine tree frame",
+      "Canvas fabric, polyester cotton blend",
+      "Frame thickness: 1.25″ (3.18 cm)",
+      "Hanging hardware attached",
+      "Floating canvas effect",
+      "Blank product sourced from Canada, the UK, and the US"
+    ],
+    "canvas-frame": [
+      "Pine tree frame",
+      "Canvas fabric, polyester cotton blend",
+      "Frame thickness: 1.25″ (3.18 cm)",
+      "Hanging hardware attached",
+      "Floating canvas effect",
+      "Blank product sourced from Canada, the UK, and the US"
+    ],
+    "gloss-metal-print": [
+      "Technique: Design is printed with dye ink on paper and transferred directly onto product with heat",
+      "Aluminum metal surface, corrosion resistant",
+      "MDF wood frame, highly durable material",
+      "An additional coating applied for true color replication",
+      "Gloss finish for vivid dimensional look",
+      "Scratch and fade resistant",
+      "Product sourced from the US",
+      "Important: This product is available in the US only. If your shipping address is outside this region, please choose a different product."
+    ],
+    "metal-print": [
+      "Technique: Design is printed with dye ink on paper and transferred directly onto product with heat",
+      "Aluminum metal surface, corrosion resistant",
+      "MDF wood frame, highly durable material",
+      "An additional coating applied for true color replication",
+      "Gloss finish for vivid dimensional look",
+      "Scratch and fade resistant",
+      "Product sourced from the US",
+      "Important: This product is available in the US only. If your shipping address is outside this region, please choose a different product."
+    ],
+    metal: [
+      "Technique: Design is printed with dye ink on paper and transferred directly onto product with heat",
+      "Aluminum metal surface, corrosion resistant",
+      "MDF wood frame, highly durable material",
+      "An additional coating applied for true color replication",
+      "Gloss finish for vivid dimensional look",
+      "Scratch and fade resistant",
+      "Product sourced from the US",
+      "Important: This product is available in the US only. If your shipping address is outside this region, please choose a different product."
+    ]
+  };
+
+  var DEFAULT_DESCRIPTION_TEXT = DEFAULT_DESCRIPTION_LINES.join("\n");
+
+  function splitDescriptionText(text) {
+    var raw = String(text || "").trim();
+    if (!raw) return [];
+    return raw
+      .split(/\r?\n/)
+      .map(function (line) { return line.trim(); })
+      .filter(Boolean);
+  }
+
+  function mapFinishId(finishId) {
+    if (!finishId) return "";
+    return String(finishId || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-");
+  }
+
+  function resolveDescriptionText(art, finish) {
+    var finishId = finish ? mapFinishId(finish.id) : "";
+    var staticLines = STATIC_DESCRIPTION_LINES[finishId];
+    if (staticLines && staticLines.length) {
+      return staticLines.join("\n");
+    }
+    if (finish && finish.description) return String(finish.description).trim();
+    if (art && art.description) return String(art.description).trim();
+    return DEFAULT_DESCRIPTION_TEXT;
+  }
+
+  function createDescriptionContainer() {
+    var container = document.createElement("div");
+    container.className = "purchase-description";
+
+    var heading = document.createElement("h4");
+    heading.textContent = "Product details";
+    container.appendChild(heading);
+
+    var list = document.createElement("ul");
+    list.className = "purchase-description-list";
+    container.appendChild(list);
+
+    return { container: container, list: list };
+  }
+
+  function updateDescriptionList(listEl, text) {
+    if (!listEl) return;
+    var lines = splitDescriptionText(text);
+    listEl.innerHTML = "";
+    lines.forEach(function (line) {
+      var li = document.createElement("li");
+      li.textContent = line;
+      listEl.appendChild(li);
+    });
+    listEl.style.display = lines.length ? "" : "none";
+  }
+
   function buildPurchaseBox(art) {
     var shopMode = isShopEnabled();
     if (!shopMode) return buildShopUnavailablePurchaseBox();
@@ -383,14 +504,19 @@
     var box = document.createElement("div");
     box.className = "box purchase-box";
 
-    var heading = document.createElement("h3");
-    heading.textContent = "Buy Options";
-    box.appendChild(heading);
+    var descriptionParts = createDescriptionContainer();
+    box.appendChild(descriptionParts.container);
+    var descriptionList = descriptionParts.list;
 
     var form = document.createElement("form");
     form.className = "purchase-form";
     form.action = "#";
     form.addEventListener("submit", function (e) { e.preventDefault(); });
+
+    var sectionHeading = document.createElement("h4");
+    sectionHeading.className = "purchase-section-heading";
+    sectionHeading.textContent = "Buy Options";
+    form.appendChild(sectionHeading);
 
     var status = document.createElement("p");
     status.className = "purchase-status align-center";
@@ -470,6 +596,7 @@
 
       if (!finishObj) {
         sizeSelect.disabled = true;
+        updateDescriptionList(descriptionList, resolveDescriptionText(art, null));
         return;
       }
 
@@ -484,6 +611,8 @@
         o.textContent = size.label + " — " + formatMoney(size.priceCents);
         sizeSelect.appendChild(o);
       }
+
+      updateDescriptionList(descriptionList, resolveDescriptionText(art, finishObj));
     }
 
     setSizeOptions(null);

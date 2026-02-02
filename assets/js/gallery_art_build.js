@@ -102,6 +102,16 @@
     liBack.appendChild(aBack);
 
     actions.appendChild(liBack);
+
+    var liSold = document.createElement("li");
+    var btnSold = document.createElement("button");
+    btnSold.type = "button";
+    btnSold.className = "button sold-out";
+    btnSold.textContent = "Sold Out";
+    btnSold.disabled = true;
+    btnSold.setAttribute("aria-disabled", "true");
+    liSold.appendChild(btnSold);
+    actions.appendChild(liSold);
     article.appendChild(actions);
 
     return article;
@@ -133,4 +143,3 @@
     buildGalleryArtArticles();
   }
 })();
-
