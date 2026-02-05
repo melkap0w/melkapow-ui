@@ -11,7 +11,7 @@
     wrap.innerHTML = "";
 
     window.MELKAPOW_ART.forEach(function (art) {
-      var url = "#art-" + String(art.id);
+      var url = "#gallery-" + String(art.id);
 
       var a = document.createElement("a");
       a.className = "gallery-item";

@@ -13,9 +13,24 @@
     </noscript>
     <script>
       (function () {
-        var url = new URL(window.location.href);
-        var id = url.searchParams.get("id");
-        if (id) window.location.replace("index.html#art-" + id);
+        function getQueryParam(name) {
+          var search = window.location.search || "";
+          if (search.charAt(0) === "?") search = search.substring(1);
+          if (!search) return "";
+
+          var parts = search.split("&");
+          for (var i = 0; i < parts.length; i++) {
+            var kv = parts[i].split("=");
+            var k = decodeURIComponent(kv[0] || "");
+            if (k !== name) continue;
+            return decodeURIComponent(kv.slice(1).join("=") || "");
+          }
+          return "";
+        }
+
+        var id = getQueryParam("id");
+        id = (id || "").replace(/[^a-zA-Z0-9_-]/g, "");
+        if (id) window.location.replace("index.html#gallery-" + id);
         else window.location.replace("index.html#work");
       })();
     </script>
@@ -29,7 +44,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
 
-    <link rel="stylesheet" href="assets/css/main.css?v=20250308-10" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20260203-6" />
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 
     <style>
@@ -116,7 +131,8 @@
         <nav>
           <ul>
             <li><a href="index.html#intro">Intro</a></li>
-            <li><a href="index.html#work">Work</a></li>
+	            <li><a href="index.html#work">Gallery</a></li>
+            <li><a href="index.html#shop">Shop</a></li>
             <li><a href="index.html#about">About</a></li>
             <li><a href="index.html#contact">Contact</a></li>
           </ul>
@@ -166,7 +182,10 @@
             <a href="https://github.com/example" class="icon brands fa-github"><span class="label">GitHub</span></a>
           </li>
         </ul>
-        <p class="copyright">&copy;2026 Melkapow</p>
+        <p class="copyright">&copy; 2026 Melkapow</p>
+        <p class="microfooter">
+          <a href="index.html#terms">Terms</a> &middot; <a href="index.html#faq">FAQ</a> &middot; <a href="index.html#shipping">Shipping</a>
+        </p>
       </footer>
     </div>
 
@@ -177,7 +196,7 @@
     <script src="assets/js/breakpoints.min.js" defer></script>
     <script src="assets/js/util.js" defer></script>
 
-    <script src="assets/js/art_data.js" defer></script>
+	    <script src="assets/js/art_data.js?v=20260202-1" defer></script>
     <script src="assets/js/art_page.js" defer></script>
   </body>
 </html>
