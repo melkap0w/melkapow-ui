@@ -1,13 +1,12 @@
 # Melkapow Portfolio
 
-A responsive, single-page portfolio website showcasing artwork, an about section, and an integrated contact form with  spam protection.  
-Built using static HTML, CSS, and lightweight JavaScript. An optional FastAPI backend in `app/` powers the contact form and Printful-powered shop options.
+Built using HTML, CSS, and JavaScript. 
 
 ---
 
 ## 🚀 Tech Stack
 
-### **Frontend (Github Pages)**
+### **Frontend (CloudFlare pages)**
 - **HTML5** — structural layout, semantic sections
 - **CSS3** — full custom stylesheet (`assets/css/main.css`)
 - **JavaScript (vanilla + utilities)**  
