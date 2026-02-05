@@ -1041,6 +1041,13 @@ ul.icons li a:active {
   object-fit: cover;
 }
 
+/* Best-effort deterrents (cannot fully prevent saving/scraping). */
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .image.left,
 .image.right {
   max-width: 40%;

@@ -7,7 +7,7 @@ Built using static HTML, CSS, and lightweight JavaScript. An optional FastAPI ba
 
 ## 🚀 Tech Stack
 
-### **Frontend**
+### **Frontend (Github Pages)**
 - **HTML5** — structural layout, semantic sections
 - **CSS3** — full custom stylesheet (`assets/css/main.css`)
 - **JavaScript (vanilla + utilities)**  
@@ -18,7 +18,7 @@ Built using static HTML, CSS, and lightweight JavaScript. An optional FastAPI ba
   - `main.js`  
 Used for article transitions, animations, and responsive behavior.
 
-### **Backend (optional)**
+### **Backend (Render)** (contact form, Stripe, Printful webhooks later, etc.)
 - **FastAPI** — lives in `app/` (see `app/README.md` for setup)
   - `POST /api/contact` (email + Turnstile)
   - `GET /api/shop/catalog` (Printful product options)
