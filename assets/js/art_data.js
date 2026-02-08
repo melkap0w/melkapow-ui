@@ -104,8 +104,8 @@ window.MELKAPOW_ART = [
   },
   {
     id: "whirlpool",
-    title: "Trasmutation Vortex",
-    galleryTitle: "Trasmutation Vortex",
+    title: "Trasmutation",
+    galleryTitle: "Trasmutation",
     productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Whirlpool",
@@ -118,17 +118,37 @@ window.MELKAPOW_ART = [
     ]
   },
   {
-    id: "awaken",
-    title: "Awaken",
+    id: "purge",
+    title: "Purge",
     productInfo: { collection: "classic" },
     thumb: "__IMAGE_REMOVED__",
-    alt: "Awaken",
+    alt: "Purge",
     caption: "This piece still unraveling. Currently in progress.",
     slides: [
-      { src: "__IMAGE_REMOVED__", alt: "Awaken" },
-      { src: "__IMAGE_REMOVED__", alt: "Awaken detail 1" },
-      { src: "__IMAGE_REMOVED__", alt: "Awaken detail 2" }
-      // { src: "__IMAGE_REMOVED__", alt: "Awaken detail 3" }
+      { src: "__IMAGE_REMOVED__", alt: "Purge" }
+    ]
+  },
+  {
+    id: "strip_raw",
+    title: "Stripped Raw",
+    productInfo: { collection: "classic" },
+    thumb: "__IMAGE_REMOVED__",
+    alt: "Strip Raw",
+    caption: "This piece still unraveling.",
+    slides: [
+      { src: "__IMAGE_REMOVED__", alt: "Strip Raw" }
+    ]
+  },
+  {
+    id: "hidden_shadows",
+    title: "Hidden Shadows",
+    productInfo: { collection: "classic" },
+    thumb: "__IMAGE_REMOVED__",
+    alt: "Hidden Shadows",
+    caption: "What hides in color.<br>This piece still unraveling. Currently in progress.",
+    slides: [
+      { src: "__IMAGE_REMOVED__", alt: "Hidden Shadows" },
+      { src: "__IMAGE_REMOVED__", alt: "Hidden Shadows detail 1" }
     ]
   },
   {
@@ -141,7 +161,7 @@ window.MELKAPOW_ART = [
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Giver" },
       { src: "__IMAGE_REMOVED__", alt: "Giver detail 1" },
-      { src: "__IMAGE_REMOVED__", alt: "Giver detail 2" }
+      //{ src: "__IMAGE_REMOVED__", alt: "Giver detail 2" }
     ]
   }
 ];

@@ -2,6 +2,8 @@
 (function () {
   "use strict";
 
+  var PLACEHOLDER_IMG_SRC = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
   function getArtList() {
     return Array.isArray(window.MELKAPOW_ART) ? window.MELKAPOW_ART : [];
   }
@@ -570,6 +572,21 @@
     listEl.style.display = lines.length ? "" : "none";
   }
 
+  function setMultilineText(el, text) {
+    if (!el) return;
+
+    var raw = String(text || "");
+    raw = raw.replace(/<br\s*\/?>/gi, "\n").replace(/\\n/g, "\n");
+
+    var lines = raw.split(/\r?\n/);
+    el.textContent = "";
+
+    for (var i = 0; i < lines.length; i++) {
+      if (i) el.appendChild(document.createElement("br"));
+      el.appendChild(document.createTextNode(lines[i]));
+    }
+  }
+
   function isUsOnlyFinish(finishObj) {
     if (!finishObj || !finishObj.id) return false;
     var id = mapFinishId(finishObj.id);
@@ -864,6 +881,7 @@
       input.type = "radio";
       input.name = name;
       input.id = String(art.id) + "-" + String(i + 1);
+      input.setAttribute("data-slide-index", String(i));
       if (i === 0) input.checked = true;
       slider.appendChild(input);
     }
@@ -873,7 +891,8 @@
 
     for (var j = 0; j < slides.length; j++) {
       var img = document.createElement("img");
-      img.src = slides[j].src;
+      img.src = PLACEHOLDER_IMG_SRC;
+      img.setAttribute("data-src", slides[j].src);
       img.alt = slides[j].alt || art.title || "";
       img.decoding = "async";
       img.loading = "lazy";
@@ -924,7 +943,7 @@
     if (art.caption) {
       var caption = document.createElement("p");
       caption.className = "mt-2rem art-caption";
-      caption.textContent = art.caption;
+      setMultilineText(caption, art.caption);
       article.appendChild(caption);
     }
 

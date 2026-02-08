@@ -2,6 +2,86 @@
 (function () {
   "use strict";
 
+  function getActiveArticle() {
+    var hash = window.location.hash || "";
+    if (!hash || hash === "#" || !hash.startsWith("#")) return null;
+    return document.getElementById(hash.slice(1));
+  }
+
+  function loadImgFromData(img) {
+    if (!img) return;
+    var src = img.getAttribute("data-src");
+    if (!src) return;
+    img.removeAttribute("data-src");
+    img.src = src;
+  }
+
+  function hydrateImagesIn(root) {
+    if (!root) return;
+    var imgs = root.querySelectorAll("img[data-src]");
+    for (var i = 0; i < imgs.length; i++) loadImgFromData(imgs[i]);
+  }
+
+  function getCheckedSlideIndex(slider) {
+    if (!slider) return 0;
+    var checked = slider.querySelector('input[type="radio"]:checked');
+    if (!checked) return 0;
+    var raw = checked.getAttribute("data-slide-index");
+    var idx = parseInt(raw, 10);
+    return isFinite(idx) && idx >= 0 ? idx : 0;
+  }
+
+  function loadSliderImage(slider, index) {
+    if (!slider) return;
+    var imgs = slider.querySelectorAll(".slides img");
+    if (!imgs || index < 0 || index >= imgs.length) return;
+    loadImgFromData(imgs[index]);
+  }
+
+  function wireLazySlider(slider) {
+    if (!slider || slider.getAttribute("data-lazy-wired") === "true") return;
+    slider.setAttribute("data-lazy-wired", "true");
+
+    slider.addEventListener("change", function (e) {
+      var target = e && e.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      if (target.type !== "radio" || !target.checked) return;
+
+      var raw = target.getAttribute("data-slide-index");
+      var idx = parseInt(raw, 10);
+      if (!isFinite(idx) || idx < 0) idx = 0;
+      loadSliderImage(slider, idx);
+    });
+  }
+
+  function hydrateActivePageImages() {
+    var hash = window.location.hash || "";
+
+    // Only start downloading thumbs when the user opens Gallery/Shop.
+    if (hash === "#work") {
+      hydrateImagesIn(document.getElementById("work"));
+      return;
+    }
+
+    if (hash === "#shop") {
+      hydrateImagesIn(document.getElementById("shop"));
+      return;
+    }
+
+    // Only load full-res slides when the user opens a detail page.
+    if (!hash.startsWith("#gallery-") && !hash.startsWith("#shop-")) return;
+
+    var article = getActiveArticle();
+    if (!article) return;
+
+    var sliders = article.querySelectorAll(".art-slider");
+    for (var i = 0; i < sliders.length; i++) {
+      var slider = sliders[i];
+      wireLazySlider(slider);
+      loadSliderImage(slider, getCheckedSlideIndex(slider));
+    }
+  }
+
   function resetSliderToFirst(section) {
     var radios = section.querySelectorAll('input[type="radio"]');
     for (var i = 0; i < radios.length; i++) radios[i].checked = (i === 0);
@@ -27,27 +107,8 @@
     }
   }
 
-  function warmThumbCache() {
-    var thumbs = [];
-    var list = Array.isArray(window.MELKAPOW_ART) ? window.MELKAPOW_ART : [];
-
-    for (var i = 0; i < list.length; i++) {
-      if (list[i] && list[i].thumb) thumbs.push(list[i].thumb);
-    }
-
-    if (thumbs.length === 0) return;
-
-    var run = function () {
-      for (var j = 0; j < thumbs.length; j++) {
-        var img = new Image();
-        img.decoding = "async";
-        img.src = thumbs[j];
-      }
-    };
-
-    if ("requestIdleCallback" in window) window.requestIdleCallback(run);
-    else window.setTimeout(run, 500);
-  }
+  // Note: we intentionally do not preload thumbs on initial load anymore.
+  // They begin downloading when the user opens the Gallery/Shop tabs.
 
   function hijackCloseToWork() {
     var main = document.querySelector("#main");
@@ -81,10 +142,13 @@
     );
   }
 
-  window.addEventListener("hashchange", resetNonActiveArtSliders);
+  window.addEventListener("hashchange", function () {
+    resetNonActiveArtSliders();
+    hydrateActivePageImages();
+  });
   window.addEventListener("load", function () {
     resetNonActiveArtSliders();
-    warmThumbCache();
     hijackCloseToWork();
+    hydrateActivePageImages();
   });
 })();
