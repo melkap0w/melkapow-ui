@@ -38,17 +38,57 @@
     return !!(apiBase && typeof fetch === "function");
   }
 
-  function loadShopCatalog(timeoutMs) {
+  function loadShopCatalog(opts) {
+    var options = (opts && typeof opts === "object") ? opts : { timeoutMs: opts };
+    var timeoutMs = parseInt(options.timeoutMs, 10) || 8000;
+    var totalWaitMs = parseInt(options.totalWaitMs, 10) || 90000;
+    var forceRefresh = !!options.forceRefresh;
+
     var existing = window.MELKAPOW_PRODUCTS_BY_ART_ID;
-    if (existing && typeof existing === "object") {
+    var hadExisting = !!(existing && typeof existing === "object");
+    if (hadExisting && !forceRefresh) {
       shopCatalogStatus = "ready";
       return Promise.resolve(existing);
     }
-    if (shopCatalogPromise) return shopCatalogPromise;
 
     var apiBase = getApiBase();
-    if (!apiBase || typeof fetch !== "function") return Promise.resolve(null);
-    shopCatalogStatus = "loading";
+    if (!apiBase || typeof fetch !== "function") {
+      shopCatalogStatus = hadExisting ? "ready" : "failed";
+      return Promise.resolve(null);
+    }
+
+    // Prefer the shared loader from shop_gallery_build.js to avoid duplicate wake/retry loops.
+    var shared = window.MELKAPOW_SHOP_CATALOG;
+    if (shared && typeof shared.load === "function") {
+      if (shopCatalogPromise) return shopCatalogPromise;
+
+      // Keep UI usable if we have cached catalog data.
+      shopCatalogStatus = hadExisting ? "ready" : "loading";
+
+      shopCatalogPromise = Promise.resolve(
+        shared.load({ timeoutMs: timeoutMs, totalWaitMs: totalWaitMs, forceRefresh: forceRefresh })
+      )
+        .then(function (products) {
+          if (products && typeof products === "object") {
+            shopCatalogStatus = "ready";
+            return products;
+          }
+          shopCatalogStatus = hadExisting ? "ready" : "failed";
+          return null;
+        })
+        .catch(function () {
+          shopCatalogStatus = hadExisting ? "ready" : "failed";
+          return null;
+        })
+        .finally(function () {
+          shopCatalogPromise = null;
+        });
+
+      return shopCatalogPromise;
+    }
+
+    if (shopCatalogPromise) return shopCatalogPromise;
+    shopCatalogStatus = hadExisting ? "ready" : "loading";
 
     var controller = typeof AbortController === "function" ? new AbortController() : null;
     var timer = null;
@@ -69,12 +109,12 @@
       })
       .then(function (data) {
         if (!data || typeof data !== "object") {
-          shopCatalogStatus = "failed";
+          shopCatalogStatus = hadExisting ? "ready" : "failed";
           return null;
         }
         var products = data.products;
         if (!products || typeof products !== "object") {
-          shopCatalogStatus = "failed";
+          shopCatalogStatus = hadExisting ? "ready" : "failed";
           return null;
         }
         window.MELKAPOW_PRODUCTS_BY_ART_ID = products;
@@ -82,7 +122,7 @@
         return products;
       })
       .catch(function () {
-        shopCatalogStatus = "failed";
+        shopCatalogStatus = hadExisting ? "ready" : "failed";
         return null;
       })
       .finally(function () {
@@ -1014,13 +1054,18 @@
   }
 
   function init() {
-    var promise = loadShopCatalog(8000);
+    var hadExisting = !!(window.MELKAPOW_PRODUCTS_BY_ART_ID && typeof window.MELKAPOW_PRODUCTS_BY_ART_ID === "object");
+    var promise = loadShopCatalog({ timeoutMs: 15000, totalWaitMs: 90000, forceRefresh: true });
     buildArtArticles();
 
     promise
       .then(function (products) {
         if (!isShopEnabled()) return;
-        refreshPurchaseBoxes();
+        if (products && typeof products === "object") {
+          refreshPurchaseBoxes();
+          return;
+        }
+        if (!hadExisting && shopCatalogStatus === "failed") refreshPurchaseBoxes();
       })
       .catch(function () { /* ignore */ });
   }

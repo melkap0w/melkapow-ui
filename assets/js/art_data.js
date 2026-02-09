@@ -141,7 +141,7 @@ window.MELKAPOW_ART = [
   },
   {
     id: "hidden_shadows",
-    title: "Hidden Shadows",
+    title: "Shadows Lie",
     productInfo: { collection: "classic" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Hidden Shadows",
