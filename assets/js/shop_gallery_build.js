@@ -15,6 +15,32 @@
     return Array.isArray(window.MELKAPOW_ART) ? window.MELKAPOW_ART : [];
   }
 
+  function loadImgFromData(img) {
+    if (!img) return;
+    var src = img.getAttribute("data-src");
+    if (!src) return;
+
+    try { img.loading = "eager"; } catch (_) {}
+
+    var fallback = img.getAttribute("data-fallback-src");
+    if (fallback) {
+      img.addEventListener("error", function onError() {
+        img.removeEventListener("error", onError);
+        img.removeAttribute("data-fallback-src");
+        img.src = fallback;
+      });
+    }
+
+    img.removeAttribute("data-src");
+    img.src = src;
+  }
+
+  function hydrateImagesIn(root) {
+    if (!root) return;
+    var imgs = root.querySelectorAll("img[data-src]");
+    for (var i = 0; i < imgs.length; i++) loadImgFromData(imgs[i]);
+  }
+
   function safeJsonParse(text) {
     try {
       return JSON.parse(text);
@@ -74,6 +100,22 @@
       );
     } catch (_) {
       // ignore quota / privacy errors
+    }
+  }
+
+  function dispatchShopCatalogUpdated(source) {
+    try {
+      var detail = { source: String(source || "") };
+      var ev = null;
+      if (typeof CustomEvent === "function") {
+        ev = new CustomEvent("melkapow:shop-catalog-updated", { detail: detail });
+      } else if (document && typeof document.createEvent === "function") {
+        ev = document.createEvent("CustomEvent");
+        ev.initCustomEvent("melkapow:shop-catalog-updated", false, false, detail);
+      }
+      if (ev) window.dispatchEvent(ev);
+    } catch (_) {
+      // ignore
     }
   }
 
@@ -177,6 +219,14 @@
 
   var shopStatusEl = null;
   var shopCatalogHasNetworkResult = false;
+  var shopNetworkLoadStarted = false;
+  var shopNudgeTimerId = null;
+
+  function clearShopNudgeTimer() {
+    if (!shopNudgeTimerId) return;
+    clearTimeout(shopNudgeTimerId);
+    shopNudgeTimerId = null;
+  }
 
   function ensureShopCatalogLoader() {
     if (window.MELKAPOW_SHOP_CATALOG && typeof window.MELKAPOW_SHOP_CATALOG.load === "function") {
@@ -197,6 +247,7 @@
       if (cached && typeof cached === "object") {
         window.MELKAPOW_PRODUCTS_BY_ART_ID = cached;
         state.status = "ready";
+        dispatchShopCatalogUpdated("cache");
         return cached;
       }
       return null;
@@ -260,6 +311,7 @@
             state.status = "ready";
             state.lastError = "";
             shopCatalogHasNetworkResult = true;
+            dispatchShopCatalogUpdated("network");
             return products;
           })
           .catch(function (err) {
@@ -329,9 +381,21 @@
   // UI updates still happen in `init()` once the DOM is ready.
   (function prewarmShop() {
     var loader = ensureShopCatalogLoader();
-    loader.warm();
     loader.hydrateFromCache();
-    loader.load({ timeoutMs: SHOP_CATALOG_TIMEOUT_MS, totalWaitMs: SHOP_CATALOG_TOTAL_WAIT_MS, forceRefresh: true });
+
+    var warmed = false;
+    function warmOnce() {
+      if (warmed) return;
+      warmed = true;
+      loader.warm();
+    }
+
+    // Best-effort: warm the backend without impacting initial rendering.
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(warmOnce, { timeout: 3500 });
+    } else {
+      setTimeout(warmOnce, 1200);
+    }
   })();
 
   function buildShopGallery(products) {
@@ -368,11 +432,6 @@
 
       if (thumbSrc && fullThumbSrc && thumbSrc !== fullThumbSrc) {
         img.setAttribute("data-fallback-src", fullThumbSrc);
-        img.addEventListener("error", function onError() {
-          img.removeEventListener("error", onError);
-          var fallback = img.getAttribute("data-fallback-src");
-          if (fallback) img.src = fallback;
-        });
       }
 
       var cap = document.createElement("span");
@@ -384,6 +443,8 @@
       wrap.appendChild(a);
       count++;
     }
+
+    if (window.location.hash === "#shop") hydrateImagesIn(wrap);
 
     if (shopStatusEl) {
       if (count) shopStatusEl.textContent = "";
@@ -419,52 +480,74 @@
 
     shopStatusEl = $("#shopStatus");
     var loader = ensureShopCatalogLoader();
-    loader.warm();
     loader.hydrateFromCache();
-
-    var initialCount = buildShopGallery(window.MELKAPOW_PRODUCTS_BY_ART_ID);
 
     if (!isShopEnabled()) {
       if (shopStatusEl) shopStatusEl.textContent = "Shop temporarily unavailable.";
       return;
     }
 
-    if (shopStatusEl && initialCount === 0 && !shopCatalogHasNetworkResult) shopStatusEl.textContent = "Loading shop…";
+    function startNetworkLoad() {
+      if (shopNetworkLoadStarted) return;
+      shopNetworkLoadStarted = true;
 
-    var nudgeTimer = null;
-    if (shopStatusEl && initialCount === 0 && !shopCatalogHasNetworkResult) {
-      nudgeTimer = setTimeout(function () {
-        if (shopStatusEl && !shopCatalogHasNetworkResult) {
-          shopStatusEl.textContent = "Waking up the shop… (this can take up to a minute)";
-        }
-      }, 12000);
+      loader
+        .load({ timeoutMs: SHOP_CATALOG_TIMEOUT_MS, totalWaitMs: SHOP_CATALOG_TOTAL_WAIT_MS, forceRefresh: true })
+        .then(function (products) {
+          clearShopNudgeTimer();
+
+          if (products && typeof products === "object") {
+            shopCatalogHasNetworkResult = true;
+            if (window.location.hash === "#shop") buildShopGallery(products);
+            return;
+          }
+
+          // If we have cached products, keep showing them even if refresh fails.
+          var cached = window.MELKAPOW_PRODUCTS_BY_ART_ID;
+          if (cached && typeof cached === "object") return;
+
+          if (shopStatusEl && window.location.hash === "#shop") {
+            shopStatusEl.textContent = "Shop is spinning up. Please refresh in a moment.";
+          }
+        })
+        .catch(function () {
+          clearShopNudgeTimer();
+          var cached = window.MELKAPOW_PRODUCTS_BY_ART_ID;
+          if (cached && typeof cached === "object") return;
+          if (shopStatusEl && window.location.hash === "#shop") shopStatusEl.textContent = "Shop temporarily unavailable.";
+          shopNetworkLoadStarted = false; // allow retry on next open
+        });
     }
 
-    loader
-      .load({ timeoutMs: SHOP_CATALOG_TIMEOUT_MS, totalWaitMs: SHOP_CATALOG_TOTAL_WAIT_MS, forceRefresh: true })
-      .then(function (products) {
-        if (nudgeTimer) clearTimeout(nudgeTimer);
+    function activateShopUi() {
+      if (window.location.hash !== "#shop") return;
 
-        if (products && typeof products === "object") {
-          shopCatalogHasNetworkResult = true;
-          buildShopGallery(products);
-          return;
-        }
+      loader.hydrateFromCache();
+      var count = buildShopGallery(window.MELKAPOW_PRODUCTS_BY_ART_ID);
 
-        // If we have cached products, keep showing them even if refresh fails.
-        var cached = window.MELKAPOW_PRODUCTS_BY_ART_ID;
-        if (cached && typeof cached === "object") return;
+      if (shopStatusEl && count === 0 && !shopCatalogHasNetworkResult) shopStatusEl.textContent = "Loading shop…";
 
-        if (shopStatusEl) {
-          shopStatusEl.textContent = "Shop is still starting up. Please refresh in a moment.";
-        }
-      })
-      .catch(function () {
-        if (nudgeTimer) clearTimeout(nudgeTimer);
-        var cached = window.MELKAPOW_PRODUCTS_BY_ART_ID;
-        if (cached && typeof cached === "object") return;
-        if (shopStatusEl) shopStatusEl.textContent = "Shop temporarily unavailable.";
-      });
+      clearShopNudgeTimer();
+      if (shopStatusEl && count === 0 && !shopCatalogHasNetworkResult) {
+        shopNudgeTimerId = setTimeout(function () {
+          if (shopStatusEl && !shopCatalogHasNetworkResult) {
+            shopStatusEl.textContent = "Waking up the shop… (this can take up to a minute)";
+          }
+        }, 12000);
+      }
+
+      startNetworkLoad();
+    }
+
+    window.addEventListener("hashchange", activateShopUi, true);
+    window.addEventListener("melkapow:shop-catalog-updated", function () {
+      if (window.location.hash !== "#shop") return;
+      clearShopNudgeTimer();
+      buildShopGallery(window.MELKAPOW_PRODUCTS_BY_ART_ID);
+    });
+
+    // If the user landed directly on the Shop tab, render immediately.
+    activateShopUi();
   }
 
   if (document.readyState === "loading") {

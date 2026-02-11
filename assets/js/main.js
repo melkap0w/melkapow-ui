@@ -281,13 +281,45 @@
 		$this.on('click', function(event) {
 			event.stopPropagation();
 		});
-	});
+		});
 
-	// Events.
-	$body.on('click', function(event) {
-		if ($body.hasClass('is-article-visible'))
+		// Events.
+		var lastTouchInsideArticle = false,
+			lastTouchInsideArticleTimer = null;
+
+		$body.on('touchend', function(event) {
+			if (!$body.hasClass('is-article-visible'))
+				return;
+
+			// On iOS Safari, taps inside form controls can sometimes "ghost" into the body click handler.
+			// Track whether the last tap ended inside an article so we don't accidentally close it.
+			lastTouchInsideArticle = $(event.target).closest('article').length > 0;
+
+			clearTimeout(lastTouchInsideArticleTimer);
+			lastTouchInsideArticleTimer = setTimeout(function() {
+				lastTouchInsideArticle = false;
+			}, 750);
+		});
+
+		$body.on('click', function(event) {
+			if (!$body.hasClass('is-article-visible'))
+				return;
+
+			// Ignore "ghost clicks" that were caused by a tap inside an article.
+			if (lastTouchInsideArticle) {
+				lastTouchInsideArticle = false;
+				return;
+			}
+
+			// If a form control inside the article is focused, blur it first (tap outside closes the keyboard).
+			var ae = document.activeElement;
+			if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) && $(ae).closest('article').length > 0) {
+				try { ae.blur(); } catch (e) {}
+				return;
+			}
+
 			$main._hide(true);
-	});
+		});
 
 	$window.on('keyup', function(event) {
 		switch (event.keyCode) {
@@ -336,8 +368,6 @@
 
 	// Initial article.
 	if (location.hash != '' && location.hash != '#')
-		$window.on('load', function() {
-			$main._show(location.hash.substr(1), true);
-		});
+		$main._show(location.hash.substr(1), true);
 
 })(jQuery);

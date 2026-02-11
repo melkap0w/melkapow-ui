@@ -56,7 +56,7 @@ window.MELKAPOW_ART = [
       { src: "__IMAGE_REMOVED__", alt: "Birth of life" },
       { src: "__IMAGE_REMOVED__", alt: "Birth of life detail 1" },
       { src: "__IMAGE_REMOVED__", alt: "Birth of life detail 2" },
-      { src: "__IMAGE_REMOVED__", alt: "Birth of life detail 3" }
+     // { src: "__IMAGE_REMOVED__", alt: "Birth of life detail 3" }
     ]
   },
   {
@@ -104,8 +104,8 @@ window.MELKAPOW_ART = [
   },
   {
     id: "whirlpool",
-    title: "Trasmutation",
-    galleryTitle: "Trasmutation",
+    title: "Transmutation",
+    galleryTitle: "Transmutation",
     productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Whirlpool",
@@ -123,7 +123,7 @@ window.MELKAPOW_ART = [
     productInfo: { collection: "classic" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Purge",
-    caption: "This piece still unraveling. Currently in progress.",
+    caption: "This piece is still unraveling. Currently in progress.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Purge" }
     ]
@@ -134,7 +134,7 @@ window.MELKAPOW_ART = [
     productInfo: { collection: "classic" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Strip Raw",
-    caption: "This piece still unraveling.",
+    caption: "This piece is still unraveling.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Strip Raw" }
     ]
@@ -145,7 +145,7 @@ window.MELKAPOW_ART = [
     productInfo: { collection: "classic" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Hidden Shadows",
-    caption: "What hides in color.<br>This piece still unraveling. Currently in progress.",
+    caption: "What hides in color.<br>This piece is still unraveling. Currently in progress.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Hidden Shadows" },
       { src: "__IMAGE_REMOVED__", alt: "Hidden Shadows detail 1" }

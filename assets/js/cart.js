@@ -5,6 +5,14 @@
   var STORAGE_KEY = "melkapow_cart_v1";
   var MAX_QTY = 99;
 
+  var ESTIMATE_ZIP_KEY = "melkapow_cart_estimate_zip_v1";
+  var ESTIMATE_STATE_KEY = "melkapow_cart_estimate_state_v1";
+
+  var estimateEls = null;
+  var estimateInFlight = false;
+  var lastEstimateCartSig = "";
+  var lastEstimate = null;
+
   // Cart should clear when the tab/browser session ends, so prefer sessionStorage.
   // Falls back to localStorage if sessionStorage isn't available.
   var storage = null;
@@ -105,11 +113,140 @@
     return n;
   }
 
+  function normalizeZip(value) {
+    var raw = String(value || "").trim();
+    if (!raw) return "";
+    raw = raw.replace(/[^\d-]/g, "");
+    if (raw.length > 10) raw = raw.slice(0, 10);
+    return raw;
+  }
+
+  function normalizeState(value) {
+    var raw = String(value || "").trim().toUpperCase();
+    if (!raw) return "";
+    raw = raw.replace(/[^A-Z]/g, "");
+    if (raw.length > 2) raw = raw.slice(0, 2);
+    return raw;
+  }
+
+  function buildEstimateItems(cart) {
+    var items = cart && Array.isArray(cart.items) ? cart.items : [];
+    var out = [];
+
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i] || {};
+      var qty = normalizeQty(it.qty);
+
+      var syncId = normalizePositiveInt(it.printful_sync_variant_id || it.printfulSyncVariantId);
+      var variantId = normalizePositiveInt(it.printful_variant_id || it.printfulVariantId);
+      if (!syncId && !variantId) continue;
+
+      out.push({
+        printful_sync_variant_id: syncId,
+        printful_variant_id: variantId,
+        quantity: qty
+      });
+    }
+
+    return out;
+  }
+
+  function cartSignature(cart) {
+    var items = cart && Array.isArray(cart.items) ? cart.items : [];
+    if (!items.length) return "";
+
+    var parts = [];
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i] || {};
+      var key = String(it.key || "");
+      var qty = normalizeQty(it.qty);
+      if (!key) continue;
+      parts.push(key + "=" + String(qty));
+    }
+    parts.sort();
+    return parts.join("|");
+  }
+
   function formatMoney(cents) {
     var n = parseInt(cents, 10);
     if (!isFinite(n)) n = 0;
     var dollars = (n / 100).toFixed(2);
     return "$" + dollars;
+  }
+
+  function getEstimateForCart(cart) {
+    if (!lastEstimate || typeof lastEstimate !== "object") return null;
+    var sig = cartSignature(cart);
+    if (!sig) return null;
+    if (String(lastEstimate.cartSig || "") !== sig) return null;
+    return lastEstimate;
+  }
+
+  function clearEstimate() {
+    lastEstimate = null;
+  }
+
+  var lastLeaveClearAt = 0;
+  function clearEstimateOnCartLeave() {
+    var now = Date.now ? Date.now() : new Date().getTime();
+    if (now - lastLeaveClearAt < 300) return;
+    lastLeaveClearAt = now;
+    clearEstimateLocationInputs({ clearStorage: true });
+  }
+
+  function clearEstimateLocationInputs(opts) {
+    var options = opts && typeof opts === "object" ? opts : {};
+    var clearStorage = options.clearStorage !== false;
+
+    if (estimateEls && estimateEls.zip) estimateEls.zip.value = "";
+    if (estimateEls && estimateEls.state) estimateEls.state.value = "";
+
+    if (clearStorage) {
+      storageRemove(ESTIMATE_ZIP_KEY);
+      storageRemove(ESTIMATE_STATE_KEY);
+    }
+
+    clearEstimate();
+    lastEstimateCartSig = "";
+
+    if (estimateEls) {
+      if (estimateEls.shipping) estimateEls.shipping.textContent = "\u2014";
+      if (estimateEls.tax) estimateEls.tax.textContent = "\u2014";
+      if (estimateEls.discountRow) estimateEls.discountRow.hidden = true;
+      if (estimateEls.discount) estimateEls.discount.textContent = "\u2014";
+      if (estimateEls.status) {
+        estimateEls.status.hidden = true;
+        estimateEls.status.textContent = "";
+      }
+    }
+
+    renderCartSubtotalLine(loadCart());
+    refreshEstimateWidget(loadCart());
+  }
+
+  function renderCartSubtotalLine(cart) {
+    var amountEl = document.getElementById("cartTotal");
+    if (!amountEl) return;
+    var labelEl = document.getElementById("cartTotalLabel");
+
+    var base = getTotalCents(cart);
+    var est = getEstimateForCart(cart);
+    var ship = est ? parseInt(est.shippingCents, 10) : 0;
+    var tax = est ? parseInt(est.taxCents, 10) : 0;
+    var discount = est ? parseInt(est.discountCents, 10) : 0;
+    var total = est ? parseInt(est.totalCents, 10) : NaN;
+    if (!isFinite(ship)) ship = 0;
+    if (!isFinite(tax)) tax = 0;
+    if (!isFinite(discount)) discount = 0;
+
+    if (est) {
+      if (!isFinite(total)) total = base + ship + tax - discount;
+      amountEl.textContent = formatMoney(total);
+      if (labelEl) labelEl.textContent = "Estimated subtotal";
+    } else {
+      amountEl.textContent = formatMoney(base);
+      if (labelEl) labelEl.textContent = "Subtotal";
+    }
   }
 
   function getApiBase() {
@@ -400,8 +537,7 @@
   function renderCartPage() {
     var wrap = document.getElementById("cartItems");
     var empty = document.getElementById("cartEmpty");
-    var totalEl = document.getElementById("cartTotal");
-    if (!wrap || !empty || !totalEl) return;
+    if (!wrap || !empty) return;
 
     var cart = loadCart();
     var items = cart.items;
@@ -410,7 +546,9 @@
 
     if (!items.length) {
       empty.hidden = false;
-      totalEl.textContent = formatMoney(0);
+      clearEstimate();
+      renderCartSubtotalLine(cart);
+      refreshEstimateWidget(cart);
       return;
     }
 
@@ -569,7 +707,8 @@
       wrap.appendChild(tableWrap);
     }
 
-    totalEl.textContent = formatMoney(getTotalCents(cart));
+    renderCartSubtotalLine(cart);
+    refreshEstimateWidget(cart);
 
     // Wire up events.
     var removeBtns = wrap.querySelectorAll(".cart-remove");
@@ -582,6 +721,457 @@
       })(removeBtns[r]);
     }
 
+  }
+
+  function wireEstimateWidget() {
+    var box = document.getElementById("cartEstimateBox");
+    var form = document.getElementById("cartEstimateForm");
+    var zipInput = document.getElementById("cartEstimateZip");
+    var stateInput = document.getElementById("cartEstimateState");
+    var statusEl = document.getElementById("cartEstimateStatus");
+    var breakdown = document.getElementById("cartEstimateBreakdown");
+    var itemsSubtotalEl = document.getElementById("cartEstimateItemsSubtotal");
+    var shipEl = document.getElementById("cartEstimateShipping");
+    var taxEl = document.getElementById("cartEstimateTax");
+    var discountRow = document.getElementById("cartEstimateDiscountRow");
+    var discountEl = document.getElementById("cartEstimateDiscount");
+    if (!box || !form || !zipInput || !stateInput || !statusEl || !breakdown || !itemsSubtotalEl || !shipEl || !taxEl) return;
+
+    if (form.__melkapowBound) return;
+    form.__melkapowBound = true;
+
+    estimateEls = {
+      box: box,
+      form: form,
+      zip: zipInput,
+      state: stateInput,
+      status: statusEl,
+      breakdown: breakdown,
+      itemsSubtotal: itemsSubtotalEl,
+      shipping: shipEl,
+      tax: taxEl,
+      discountRow: discountRow,
+      discount: discountEl,
+      btn: form.querySelector("button[type=\"submit\"]")
+    };
+
+    breakdown.hidden = false;
+
+    try {
+      zipInput.value = normalizeZip(storageGet(ESTIMATE_ZIP_KEY) || "");
+      stateInput.value = normalizeState(storageGet(ESTIMATE_STATE_KEY) || "");
+    } catch (_) {
+      // ignore
+    }
+
+    function setStatus(text) {
+      var msg = String(text || "");
+      statusEl.textContent = msg;
+      statusEl.hidden = !msg;
+    }
+
+    function setAmounts(shipText, taxText) {
+      shipEl.textContent = shipText;
+      taxEl.textContent = taxText;
+    }
+
+    function setDiscountCents(cents) {
+      if (!discountRow || !discountEl) return;
+      var n = parseInt(cents, 10);
+      if (!isFinite(n) || !n) {
+        discountRow.hidden = true;
+        discountEl.textContent = "\u2014";
+        return;
+      }
+      discountRow.hidden = false;
+      discountEl.textContent = "-$" + (Math.abs(n) / 100).toFixed(2);
+    }
+
+    function renderItemsSubtotal(cart) {
+      itemsSubtotalEl.textContent = formatMoney(getTotalCents(cart));
+    }
+
+	    function resetAmounts() {
+	      setAmounts("\u2014", "\u2014");
+	      setDiscountCents(0);
+	    }
+
+	    var autoTimer = null;
+	    var estimateReqSeq = 0;
+	    var activeEstimateReqId = 0;
+	    var estimateAbortController = null;
+
+	    function clearAutoTimer() {
+	      if (!autoTimer) return;
+	      clearTimeout(autoTimer);
+	      autoTimer = null;
+	    }
+
+	    function abortInFlightEstimate() {
+	      if (!estimateInFlight) return;
+	      activeEstimateReqId = 0;
+	      estimateInFlight = false;
+
+	      if (estimateAbortController && typeof estimateAbortController.abort === "function") {
+	        try {
+	          estimateAbortController.abort();
+	        } catch (_) {
+	          // ignore
+	        }
+	      }
+	      estimateAbortController = null;
+
+	      if (estimateEls && estimateEls.btn) estimateEls.btn.disabled = false;
+	    }
+
+	    function scheduleAutoEstimate() {
+	      clearAutoTimer();
+	      autoTimer = setTimeout(function () {
+	        autoTimer = null;
+	        var zipNow = normalizeZip(zipInput.value);
+	        var stateNow = normalizeState(stateInput.value);
+	        var zipDigitsNow = zipNow.replace(/\D/g, "");
+	        if (zipDigitsNow.length < 5 || stateNow.length < 2) return;
+	        runEstimate({ normalizeInputs: false, showMissingZipError: false });
+	      }, 650);
+	    }
+
+	    function runEstimate(opts) {
+	      try {
+	        var options = opts && typeof opts === "object" ? opts : {};
+	        var normalizeInputs = !!options.normalizeInputs;
+	        var showMissingZipError = !!options.showMissingZipError;
+
+	        var cart = loadCart();
+	        renderItemsSubtotal(cart);
+	        if (!cart.items || !cart.items.length) {
+	          clearEstimate();
+	          resetAmounts();
+	          renderCartSubtotalLine(cart);
+	          if (showMissingZipError) setStatus("Your cart is empty.");
+	          refreshEstimateWidget(cart);
+	          return;
+	        }
+
+	        if (!isShopEnabled()) {
+	          clearEstimate();
+	          resetAmounts();
+	          renderCartSubtotalLine(cart);
+	          if (showMissingZipError) setStatus("Shipping estimates are unavailable right now.");
+	          refreshEstimateWidget(cart);
+	          return;
+	        }
+
+	        var zip = normalizeZip(zipInput.value);
+	        var state = normalizeState(stateInput.value);
+	        var zipDigits = zip.replace(/\D/g, "");
+	        if (normalizeInputs) {
+	          zipInput.value = zip;
+	          stateInput.value = state;
+	        }
+
+	        if (!zipDigits || zipDigits.length < 5) {
+	          clearEstimate();
+	          resetAmounts();
+	          renderCartSubtotalLine(cart);
+	          if (showMissingZipError) setStatus("Please enter a ZIP code.");
+	          return;
+	        }
+
+	        if (!state || state.length < 2) {
+	          clearEstimate();
+	          resetAmounts();
+	          renderCartSubtotalLine(cart);
+	          if (showMissingZipError) setStatus("Please enter your 2-letter state code (e.g., CA).");
+	          return;
+	        }
+
+	        try {
+	          storageSet(ESTIMATE_ZIP_KEY, zip);
+	          storageSet(ESTIMATE_STATE_KEY, state);
+	        } catch (_) {
+	          // ignore
+	        }
+
+	        var apiBase = getApiBase();
+	        if (!apiBase || typeof fetch !== "function") {
+	          clearEstimate();
+	          resetAmounts();
+	          renderCartSubtotalLine(cart);
+	          setStatus("Shipping estimates are unavailable right now.");
+	          return;
+	        }
+
+	        var estimateItems = buildEstimateItems(cart);
+	        if (!estimateItems.length) {
+	          clearEstimate();
+	          resetAmounts();
+	          renderCartSubtotalLine(cart);
+	          setStatus("This cart can't be estimated yet.");
+	          return;
+	        }
+
+	        var sig = cartSignature(cart);
+	        if (
+	          lastEstimate &&
+	          String(lastEstimate.cartSig || "") === sig &&
+	          String(lastEstimate.zip || "") === zip &&
+	          String(lastEstimate.state || "") === state
+	        ) {
+	          setStatus("");
+	          return;
+	        }
+
+	        clearAutoTimer();
+
+	        if (estimateInFlight) return;
+	        estimateInFlight = true;
+
+	        var reqId = ++estimateReqSeq;
+	        activeEstimateReqId = reqId;
+
+	        if (estimateAbortController && typeof estimateAbortController.abort === "function") {
+	          try {
+	            estimateAbortController.abort();
+	          } catch (_) {
+	            // ignore
+	          }
+	        }
+	        estimateAbortController = typeof AbortController === "function" ? new AbortController() : null;
+
+	        setStatus("Calculating\u2026");
+	        setAmounts("\u2026", "\u2026");
+	        setDiscountCents(0);
+	        if (estimateEls.btn) estimateEls.btn.disabled = true;
+
+	        var req = {
+	          country_code: "US",
+	          zip: zip,
+	          items: estimateItems
+	        };
+	        if (state) req.state_code = state;
+
+	        var fetchOpts = {
+	          method: "POST",
+	          headers: { "Content-Type": "application/json" },
+	          body: JSON.stringify(req)
+	        };
+	        if (estimateAbortController) fetchOpts.signal = estimateAbortController.signal;
+
+	        fetch(apiBase + "/api/shop/estimate", fetchOpts)
+	          .then(function (res) {
+	            return res
+	              .json()
+	              .catch(function () { return {}; })
+	              .then(function (data) {
+	                if (reqId !== activeEstimateReqId) return null;
+	                if (!res.ok) {
+	                  var msg = (data && data.detail) ? String(data.detail) : "Estimate failed.";
+	                  throw new Error(msg);
+	                }
+	                return data;
+	              });
+	          })
+	          .then(function (data) {
+	            if (reqId !== activeEstimateReqId) return;
+	            if (!data || !data.ok) throw new Error("Estimate failed.");
+
+	            var currentCart = loadCart();
+	            var currentSig = cartSignature(currentCart);
+	            var currentZip = normalizeZip(zipInput.value);
+	            var currentState = normalizeState(stateInput.value);
+	            var currentZipDigits = currentZip.replace(/\D/g, "");
+	            if (currentSig !== sig || currentZipDigits !== zipDigits || currentState !== state) return;
+
+	            var ship = parseInt(data.shippingCents, 10) || 0;
+	            var tax = parseInt(data.taxCents, 10) || 0;
+	            var discount = parseInt(data.discountCents, 10) || 0;
+	            var total = parseInt(data.totalCents, 10);
+	            if (!isFinite(total)) total = getTotalCents(currentCart) + ship + tax - discount;
+
+	            shipEl.textContent = formatMoney(ship);
+	            taxEl.textContent = formatMoney(tax);
+	            setDiscountCents(discount);
+
+	            lastEstimate = {
+	              cartSig: sig,
+	              zip: zip,
+	              state: state,
+	              shippingCents: ship,
+	              taxCents: tax,
+	              discountCents: discount,
+	              totalCents: total
+	            };
+
+	            setStatus("");
+	            renderCartSubtotalLine(currentCart);
+	          })
+	          .catch(function (err) {
+	            if (reqId !== activeEstimateReqId) return;
+	            if (err && err.name === "AbortError") return;
+
+	            var msg = err && err.message ? String(err.message) : "";
+	            if (!msg) msg = "Estimate failed.";
+
+	            // Browsers often surface network failures as a generic "Failed to fetch".
+	            if (/failed to fetch|networkerror|load failed|err_connection/i.test(msg)) {
+	              msg = "Unable to reach the shop server right now. Please try again in a moment.";
+	            }
+	            clearEstimate();
+	            resetAmounts();
+	            renderCartSubtotalLine(loadCart());
+	            setStatus(msg);
+	          })
+	          .finally(function () {
+	            if (reqId !== activeEstimateReqId) return;
+	            estimateInFlight = false;
+	            activeEstimateReqId = 0;
+	            estimateAbortController = null;
+	            if (estimateEls && estimateEls.btn) estimateEls.btn.disabled = false;
+	            refreshEstimateWidget(loadCart());
+	          });
+	      } catch (err) {
+	        // Fail-safe: never let estimate exceptions break the cart UI.
+	        abortInFlightEstimate();
+	        clearEstimate();
+	        resetAmounts();
+	        renderCartSubtotalLine(loadCart());
+	        setStatus("Estimate failed.");
+	        refreshEstimateWidget(loadCart());
+	      }
+	    }
+
+	    form.addEventListener("submit", function (e) {
+	      e.preventDefault();
+	      e.stopPropagation();
+	      clearAutoTimer();
+	      runEstimate({ normalizeInputs: true, showMissingZipError: true });
+	    });
+
+	    zipInput.addEventListener("input", function () {
+	      if (estimateInFlight) abortInFlightEstimate();
+	      var cart = loadCart();
+	      renderItemsSubtotal(cart);
+	      var sig = cartSignature(cart);
+	      var zip = normalizeZip(zipInput.value);
+	      var zipDigits = zip.replace(/\D/g, "");
+	      var state = normalizeState(stateInput.value);
+
+	      if (!zipDigits || zipDigits.length < 5) {
+	        if (state && state.length >= 2) setStatus("Enter your ZIP code to calculate.");
+	        else setStatus("");
+	      } else if (!state || state.length < 2) {
+	        setStatus("Enter your state code to calculate.");
+	      } else {
+	        setStatus("");
+	      }
+
+	      if (lastEstimate && String(lastEstimate.cartSig || "") === sig) {
+	        if (String(lastEstimate.zip || "") !== zip || String(lastEstimate.state || "") !== state) {
+	          clearEstimate();
+	          resetAmounts();
+	          renderCartSubtotalLine(cart);
+	        }
+	      }
+
+	      if (zipDigits && zipDigits.length >= 5 && state && state.length >= 2) scheduleAutoEstimate();
+	      else clearAutoTimer();
+	    });
+
+	    zipInput.addEventListener("blur", function () {
+	      zipInput.value = normalizeZip(zipInput.value);
+	    });
+
+    function onEnterKey(e) {
+      var key = e && (e.key || e.keyCode);
+      var isEnter = key === "Enter" || key === 13;
+      if (!isEnter) return;
+      e.preventDefault();
+      e.stopPropagation();
+      runEstimate({ normalizeInputs: true, showMissingZipError: true });
+    }
+
+	    zipInput.addEventListener("keydown", onEnterKey);
+
+	    stateInput.addEventListener("input", function () {
+	      if (estimateInFlight) abortInFlightEstimate();
+	      var cart = loadCart();
+	      renderItemsSubtotal(cart);
+	      var sig = cartSignature(cart);
+	      var zip = normalizeZip(zipInput.value);
+	      var zipDigits = zip.replace(/\D/g, "");
+	      var state = normalizeState(stateInput.value);
+
+	      if (!zipDigits || zipDigits.length < 5) {
+	        if (state && state.length >= 2) setStatus("Enter your ZIP code to calculate.");
+	        else setStatus("");
+	      } else if (!state || state.length < 2) {
+	        setStatus("Enter your state code to calculate.");
+	      } else {
+	        setStatus("");
+	      }
+
+	      if (lastEstimate && String(lastEstimate.cartSig || "") === sig) {
+	        if (String(lastEstimate.zip || "") !== zip || String(lastEstimate.state || "") !== state) {
+	          clearEstimate();
+	          resetAmounts();
+	          renderCartSubtotalLine(cart);
+	        }
+	      }
+
+	      if (zipDigits && zipDigits.length >= 5 && state && state.length >= 2) scheduleAutoEstimate();
+	      else clearAutoTimer();
+	    });
+
+    stateInput.addEventListener("blur", function () {
+      stateInput.value = normalizeState(stateInput.value);
+    });
+
+    stateInput.addEventListener("keydown", onEnterKey);
+
+    refreshEstimateWidget(loadCart());
+  }
+
+  function refreshEstimateWidget(cart) {
+    if (!estimateEls || !estimateEls.box) return;
+
+    var items = cart && Array.isArray(cart.items) ? cart.items : [];
+    var hasItems = !!items.length;
+    var canEstimate = hasItems && isShopEnabled();
+
+    estimateEls.box.hidden = !canEstimate;
+    if (estimateEls.breakdown) estimateEls.breakdown.hidden = false;
+    if (estimateEls.itemsSubtotal) estimateEls.itemsSubtotal.textContent = formatMoney(getTotalCents(cart));
+
+    if (!canEstimate) {
+      clearEstimate();
+      if (estimateEls.shipping) estimateEls.shipping.textContent = "\u2014";
+      if (estimateEls.tax) estimateEls.tax.textContent = "\u2014";
+      if (estimateEls.discountRow) estimateEls.discountRow.hidden = true;
+      if (estimateEls.discount) estimateEls.discount.textContent = "\u2014";
+      if (estimateEls.status) {
+        estimateEls.status.hidden = true;
+        estimateEls.status.textContent = "";
+      }
+      renderCartSubtotalLine(cart);
+    }
+
+    var sig = cartSignature(cart);
+    if (sig !== lastEstimateCartSig) {
+      lastEstimateCartSig = sig;
+      clearEstimate();
+      if (estimateEls.shipping) estimateEls.shipping.textContent = "\u2014";
+      if (estimateEls.tax) estimateEls.tax.textContent = "\u2014";
+      if (estimateEls.discountRow) estimateEls.discountRow.hidden = true;
+      if (estimateEls.discount) estimateEls.discount.textContent = "\u2014";
+      estimateEls.status.hidden = true;
+      estimateEls.status.textContent = "";
+      renderCartSubtotalLine(cart);
+    }
+
+    if (estimateEls.btn) {
+      estimateEls.btn.disabled = !canEstimate || estimateInFlight;
+    }
   }
 
   function wireFab() {
@@ -602,6 +1192,26 @@
         refreshFab();
       });
       obs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  function wireCartLeaveObserver() {
+    if (!("MutationObserver" in window)) return;
+    var cartArticle = document.getElementById("cart");
+    if (!cartArticle) return;
+
+    var wasActive = cartArticle.classList.contains("active");
+    try {
+      var obs = new MutationObserver(function () {
+        var isActive = cartArticle.classList.contains("active");
+        if (wasActive && !isActive) {
+          clearEstimateOnCartLeave();
+        }
+        wasActive = isActive;
+      });
+      obs.observe(cartArticle, { attributes: true, attributeFilter: ["class"] });
     } catch (_) {
       // ignore
     }
@@ -703,23 +1313,36 @@
     });
   }
 
+  var lastHash = window.location.hash || "";
   window.addEventListener("hashchange", function () {
+    var nextHash = window.location.hash || "";
+    var leavingCart = lastHash === "#cart" && nextHash !== "#cart";
+    lastHash = nextHash;
+
+    if (leavingCart) {
+      clearEstimateOnCartLeave();
+    }
+
     refreshFab();
-    if (window.location.hash === "#cart") renderCartPage();
+    if (nextHash === "#cart") renderCartPage();
   });
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {
       refreshFab();
       wireFab();
+      wireEstimateWidget();
       wireArticleVisibilityObserver();
+      wireCartLeaveObserver();
       wireCartLayoutWatcher();
       if (window.location.hash === "#cart") renderCartPage();
     });
   } else {
     refreshFab();
     wireFab();
+    wireEstimateWidget();
     wireArticleVisibilityObserver();
+    wireCartLeaveObserver();
     wireCartLayoutWatcher();
     if (window.location.hash === "#cart") renderCartPage();
   }

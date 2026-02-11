@@ -168,7 +168,12 @@
     return sizes;
   }
 
-  var SIZE_RE = /(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/i;
+  // Support common label formats like:
+  // - "12×18"
+  // - "12 x 18 in"
+  // - "12″ × 18″"
+  // - "12in x 18in"
+  var SIZE_RE = /(\d+(?:\.\d+)?)[^0-9]*[x×][^0-9]*(\d+(?:\.\d+)?)/i;
 
   function parseSizeDims(value) {
     var text = String(value || "");
@@ -479,65 +484,61 @@
   }
 
   var DEFAULT_DESCRIPTION_LINES = [
-    "Canvas thickness: 1.25″ (3.18 cm)",
-    "Printed on textured and fade-resistant canvas (OBA-Free)",
-    "Mounting brackets included",
-    "Hand-glued solid wood stretcher bars",
-    "Product sourced from the US, Canada, Europe, UK, or Australia"
-  ];
+	    "Canvas Depth: 1.25″ (3.18 cm)",
+      "Material: Polyester / Cotton blend",
+	    "Finish: Textured, fade-resistant canvas (OBA-free)",
+	    "Hardware: Mounting brackets included",
+	    "Origin: US / Canada / Europe / UK / Australia (varies)"
+	  ];
 
-  var STATIC_DESCRIPTION_LINES = {
-    canvas: [
-      "Canvas thickness: 1.25″ (3.18 cm)",
-      "Printed on textured and fade-resistant canvas (OBA-Free)",
-      "Mounting brackets included",
-      "Hand-glued solid wood stretcher bars",
-      "Product sourced from the US, Canada, Europe, UK, or Australia"
-    ],
-    "framed-canvas": [
-      "Pine tree frame",
-      "Canvas fabric, polyester cotton blend",
-      "Frame thickness: 1.25″ (3.18 cm)",
-      "Hanging hardware attached",
-      "Floating canvas effect",
-      "Product sourced from Canada, the UK, and the US"
-    ],
-    "canvas-frame": [
-      "Pine tree frame",
-      "Canvas fabric, polyester cotton blend",
-      "Frame thickness: 1.25″ (3.18 cm)",
-      "Hanging hardware attached",
-      "Floating canvas effect",
-      "Product sourced from Canada, the UK, and the US"
-    ],
-    "gloss-metal-print": [
-      "Technique: Design is printed with dye ink on paper and transferred directly onto product with heat",
-      "Aluminum metal surface, corrosion resistant",
-      "MDF wood frame, highly durable material",
-      "An additional coating applied for true color replication",
-      "Gloss finish for vivid dimensional look",
-      "Scratch and fade resistant",
-      "Product sourced from the US"
-    ],
-    "metal-print": [
-      "Technique: Design is printed with dye ink on paper and transferred directly onto product with heat",
-      "Aluminum metal surface, corrosion resistant",
-      "MDF wood frame, highly durable material",
-      "An additional coating applied for true color replication",
-      "Gloss finish for vivid dimensional look",
-      "Scratch and fade resistant",
-      "Product sourced from the US"
-    ],
-    metal: [
-      "Technique: Design is printed with dye ink on paper and transferred directly onto product with heat",
-      "Aluminum metal surface, corrosion resistant",
-      "MDF wood frame, highly durable material",
-      "An additional coating applied for true color replication",
-      "Gloss finish for vivid dimensional look",
-      "Scratch and fade resistant",
-      "Product sourced from the US"
-    ]
-  };
+	  var STATIC_DESCRIPTION_LINES = {
+	    canvas: [
+	      "Canvas Depth: 1.25″ (3.18 cm)",
+        "Material: Polyester / Cotton blend",
+	      "Finish: Textured, fade-resistant canvas (OBA-free)",
+	      "Hardware: Mounting brackets included",
+	      "Origin: US / Canada / Europe / UK / Australia (varies on location)"
+	    ],
+	    "framed-canvas": [
+	      "Canvas: Polyester / Cotton blend",
+	      "Frame thickness: 1.25″ (3.18 cm)",
+	      "Hardware: Hanging hardware attached",
+	      "Style: Floating frame effect",
+	      "Origin: Canada / UK / US"
+	    ],
+	    "canvas-frame": [
+	      "Frame: Pine",
+	      "Canvas: Polyester / cotton blend",
+	      "Frame thickness: 1.25″ (3.18 cm)",
+	      "Hardware: Hanging hardware attached",
+	      "Style: Floating frame effect",
+	      "Origin: Canada / UK / US"
+	    ],
+	    "gloss-metal-print": [
+	      "Technique: Dye-sublimation transfer (heat)",
+	      "Surface: Aluminum metal (corrosion resistant)",
+	      "Backing: MDF wood frame",
+	      "Coating: Protective layer for color fidelity",
+	      "Finish: Gloss for vivid depth",
+	      "Origin: US"
+	    ],
+	    "metal-print": [
+	      "Technique: Dye-sublimation transfer (heat)",
+	      "Surface: Aluminum metal (corrosion resistant)",
+	      "Backing: MDF wood frame",
+	      "Coating: Protective layer for color fidelity",
+	      "Finish: Gloss for vivid depth",
+	      "Origin: US"
+	    ],
+	    metal: [
+	      "Technique: Dye-sublimation transfer (heat)",
+	      "Surface: Aluminum metal (corrosion resistant)",
+	      "Backing: MDF wood frame",
+	      "Coating: Protective layer for color fidelity",
+	      "Finish: Gloss for vivid depth",
+	      "Origin: US"
+	    ]
+	  };
 
   var DEFAULT_DESCRIPTION_TEXT = DEFAULT_DESCRIPTION_LINES.join("\n");
 
@@ -593,23 +594,51 @@
     heading.textContent = resolveCollectionHeading(art, null);
     container.appendChild(heading);
 
-    var list = document.createElement("ul");
-    list.className = "purchase-description-list";
-    container.appendChild(list);
+    var dl = document.createElement("dl");
+    dl.className = "purchase-specs";
+    container.appendChild(dl);
 
-    return { container: container, list: list, heading: heading };
+    return { container: container, specs: dl, heading: heading };
   }
 
-  function updateDescriptionList(listEl, text) {
-    if (!listEl) return;
+  function updateDescriptionSpecs(specsEl, text) {
+    if (!specsEl) return;
     var lines = splitDescriptionText(text);
-    listEl.innerHTML = "";
+    specsEl.innerHTML = "";
+
     lines.forEach(function (line) {
-      var li = document.createElement("li");
-      li.textContent = line;
-      listEl.appendChild(li);
+      var idx = line.indexOf(":");
+      var label = "";
+      var value = "";
+
+      if (idx > 0 && idx < line.length - 1) {
+        label = line.slice(0, idx).trim();
+        value = line.slice(idx + 1).trim();
+      }
+
+      if (label && value) {
+        var dt = document.createElement("dt");
+        dt.textContent = label;
+        var dd = document.createElement("dd");
+        dd.textContent = value;
+        specsEl.appendChild(dt);
+        specsEl.appendChild(dd);
+        return;
+      }
+
+      var dtNote = document.createElement("dt");
+      dtNote.className = "sr-only";
+      dtNote.textContent = "Detail";
+
+      var ddNote = document.createElement("dd");
+      ddNote.className = "purchase-specs-note";
+      ddNote.textContent = line;
+
+      specsEl.appendChild(dtNote);
+      specsEl.appendChild(ddNote);
     });
-    listEl.style.display = lines.length ? "" : "none";
+
+    specsEl.style.display = lines.length ? "" : "none";
   }
 
   function setMultilineText(el, text) {
@@ -659,7 +688,7 @@
 
     var descriptionParts = createDescriptionContainer(art);
     box.appendChild(descriptionParts.container);
-    var descriptionList = descriptionParts.list;
+    var descriptionSpecs = descriptionParts.specs;
     var descriptionHeading = descriptionParts.heading;
 
     var importantNotice = createImportantNotice();
@@ -766,7 +795,7 @@
       if (!finishObj) {
         sizeSelect.disabled = true;
         if (descriptionHeading) descriptionHeading.textContent = resolveCollectionHeading(art, null);
-        updateDescriptionList(descriptionList, resolveDescriptionText(art, null));
+        updateDescriptionSpecs(descriptionSpecs, resolveDescriptionText(art, null));
         importantNotice.hidden = true;
         return;
       }
@@ -784,7 +813,7 @@
         sizeSelect.appendChild(o);
       }
 
-      updateDescriptionList(descriptionList, resolveDescriptionText(art, finishObj));
+      updateDescriptionSpecs(descriptionSpecs, resolveDescriptionText(art, finishObj));
       importantNotice.hidden = !isUsOnlyFinish(finishObj);
     }
 
@@ -966,11 +995,25 @@
     return slider;
   }
 
-  function buildArtArticle(art) {
-    var article = document.createElement("article");
-    article.id = "shop-" + String(art.id);
+  function populateArtArticle(article, art) {
+    if (!article || !art) return;
+    if (article.getAttribute("data-rendered") === "true") return;
+
+    var closeEl = null;
+    var children = article.children;
+    for (var i = 0; i < children.length; i++) {
+      var child = children[i];
+      if (child && child.classList && child.classList.contains("close")) {
+        closeEl = child;
+        break;
+      }
+    }
+    if (closeEl && closeEl.parentNode) closeEl.parentNode.removeChild(closeEl);
+
+    article.textContent = "";
     article.className = "from-shop";
     article.setAttribute("data-generated", "shop-art");
+    article.setAttribute("data-rendered", "true");
 
     var heading = document.createElement("h2");
     heading.className = "major";
@@ -1011,7 +1054,7 @@
     actions.appendChild(liCart);
     article.appendChild(actions);
 
-    return article;
+    if (closeEl) article.appendChild(closeEl);
   }
 
   function refreshPurchaseBoxes() {
@@ -1024,6 +1067,7 @@
 
       var article = document.getElementById("shop-" + String(art.id));
       if (!article) continue;
+      if (article.getAttribute("data-rendered") !== "true") continue;
 
       var existing = article.querySelector(".purchase-box");
       if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
@@ -1048,26 +1092,74 @@
 
     var insertBefore = document.getElementById("about");
     for (var i = 0; i < list.length; i++) {
-      var article = buildArtArticle(list[i]);
+      var art = list[i];
+      if (!art || !art.id) continue;
+
+      var article = document.createElement("article");
+      article.id = "shop-" + String(art.id);
+      article.className = "from-shop";
+      article.setAttribute("data-generated", "shop-art");
+      article.setAttribute("data-rendered", "false");
+
+      var heading = document.createElement("h2");
+      heading.className = "major";
+      heading.textContent = art.title || "Artwork";
+      article.appendChild(heading);
+
+      var note = document.createElement("p");
+      note.className = "align-center";
+      note.textContent = "Loading…";
+      article.appendChild(note);
+
       mainEl.insertBefore(article, insertBefore);
     }
   }
 
-  function init() {
-    var hadExisting = !!(window.MELKAPOW_PRODUCTS_BY_ART_ID && typeof window.MELKAPOW_PRODUCTS_BY_ART_ID === "object");
-    var promise = loadShopCatalog({ timeoutMs: 15000, totalWaitMs: 90000, forceRefresh: true });
-    buildArtArticles();
+  function findArtById(id) {
+    var list = getArtList();
+    var needle = String(id || "");
+    if (!needle) return null;
 
-    promise
-      .then(function (products) {
-        if (!isShopEnabled()) return;
-        if (products && typeof products === "object") {
-          refreshPurchaseBoxes();
-          return;
-        }
-        if (!hadExisting && shopCatalogStatus === "failed") refreshPurchaseBoxes();
-      })
-      .catch(function () { /* ignore */ });
+    for (var i = 0; i < list.length; i++) {
+      var art = list[i];
+      if (!art || !art.id) continue;
+      if (String(art.id) === needle) return art;
+    }
+
+    return null;
+  }
+
+  function ensureRenderedForHash(hash) {
+    var h = String(hash || "");
+    if (!h.startsWith("#shop-")) return;
+
+    var id = h.slice("#shop-".length);
+    if (!id) return;
+
+    var art = findArtById(id);
+    if (!art) return;
+
+    var article = document.getElementById("shop-" + String(id));
+    if (!article) return;
+    populateArtArticle(article, art);
+
+    // If the user is viewing a shop detail page, make sure we're loading the latest catalog in the background.
+    loadShopCatalog({ timeoutMs: 15000, totalWaitMs: 90000, forceRefresh: true });
+  }
+
+  function handleHashChange() {
+    ensureRenderedForHash(window.location.hash || "");
+  }
+
+  function init() {
+    buildArtArticles();
+    ensureRenderedForHash(window.location.hash || "");
+    window.addEventListener("hashchange", handleHashChange, true);
+
+    // Keep rendered purchase boxes in sync when the shared catalog loader updates.
+    window.addEventListener("melkapow:shop-catalog-updated", function () {
+      refreshPurchaseBoxes();
+    });
   }
 
   if (document.readyState === "loading") {

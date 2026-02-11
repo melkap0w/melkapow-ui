@@ -12,6 +12,18 @@
     if (!img) return;
     var src = img.getAttribute("data-src");
     if (!src) return;
+
+    try { img.loading = "eager"; } catch (_) {}
+
+    var fallback = img.getAttribute("data-fallback-src");
+    if (fallback) {
+      img.addEventListener("error", function onError() {
+        img.removeEventListener("error", onError);
+        img.removeAttribute("data-fallback-src");
+        img.src = fallback;
+      });
+    }
+
     img.removeAttribute("data-src");
     img.src = src;
   }
@@ -68,18 +80,23 @@
       return;
     }
 
-    // Only load full-res slides when the user opens a detail page.
-    if (!hash.startsWith("#gallery-") && !hash.startsWith("#shop-")) return;
+    // Detail pages: only load the active slide image.
+    if (hash.startsWith("#gallery-") || hash.startsWith("#shop-")) {
+      var article = getActiveArticle();
+      if (!article) return;
 
-    var article = getActiveArticle();
-    if (!article) return;
-
-    var sliders = article.querySelectorAll(".art-slider");
-    for (var i = 0; i < sliders.length; i++) {
-      var slider = sliders[i];
-      wireLazySlider(slider);
-      loadSliderImage(slider, getCheckedSlideIndex(slider));
+      var sliders = article.querySelectorAll(".art-slider");
+      for (var i = 0; i < sliders.length; i++) {
+        var slider = sliders[i];
+        wireLazySlider(slider);
+        loadSliderImage(slider, getCheckedSlideIndex(slider));
+      }
+      return;
     }
+
+    // Other pages (Intro/About/etc): hydrate inline images when opened.
+    var other = getActiveArticle();
+    if (other && other.tagName === "ARTICLE") hydrateImagesIn(other);
   }
 
   function resetSliderToFirst(section) {

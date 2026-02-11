@@ -1,5 +1,4 @@
-@import url(fontawesome-all.min.css);
-@import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:300italic,600italic,300,600");
+/* Note: Font Awesome + Google Fonts are linked from HTML for faster parallel loading. */
 
 /* Custom logo font */
 @font-face {
@@ -31,8 +30,8 @@ html {
 
   /* Page padding by breakpoint */
   --page-padding-desktop: 4.5rem 2.5rem 3.5rem 2.5rem;
-  --page-padding-tablet: 3.5rem 2rem 3rem 2rem;
-  --page-padding-mobile: 3rem 1.5rem 3rem 1.5rem;
+  --page-padding-tablet: 4rem 2rem 3rem 2rem;
+  --page-padding-mobile: 4rem 1.5rem 3rem 1.5rem;
 
   /* Auto-gutter for article/page window */
   --auto-gutter-mobile: 1rem;
@@ -272,7 +271,7 @@ html {
   }
 }
 
-@media screen and (max-width: 736px) {
+  @media screen and (max-width: 736px) {
   html {
     font-size: 11pt;
   }
@@ -406,6 +405,8 @@ h6.major {
   max-width: 100%;
   white-space: nowrap;
   text-transform: none;
+  font-style: italic;
+  font-weight: 700;
   font-size: clamp(0.85rem, 4vw, 1.25rem);
   letter-spacing: 0;
   border-bottom: none;
@@ -1533,6 +1534,14 @@ input[type="button"] {
     transform 0.325s ease-in-out,
     filter 0.325s ease-in-out;
   background-image: url("../../__IMAGE_REMOVED__");
+  background-image: -webkit-image-set(
+    url("../../__IMAGE_REMOVED__") type("image/webp"),
+    url("../../__IMAGE_REMOVED__") type("image/jpeg")
+  );
+  background-image: image-set(
+    url("../../__IMAGE_REMOVED__") type("image/webp"),
+    url("../../__IMAGE_REMOVED__") type("image/jpeg")
+  );
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;
@@ -2010,6 +2019,16 @@ body.is-article-visible #cartFab {
   margin-top: 1.25rem;
 }
 
+.checkout-estimate .estimate-title {
+  margin: 0 0 0.85rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.9;
+  text-align: center;
+}
+
 .checkout-estimate form {
   margin: 0;
 }
@@ -2053,8 +2072,43 @@ body.is-article-visible #cartFab {
   padding: 0.15rem 0;
 }
 
-.estimate-spacer {
-  height: 0.85rem;
+.estimate-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+  margin: 0.25rem auto 1rem;
+}
+
+input.estimate-zip-input {
+  width: 6.25rem;
+  margin: 0;
+  flex: 0 1 auto;
+}
+
+input.estimate-state-input {
+  width: 4.5rem;
+  margin: 0;
+  flex: 0 1 auto;
+}
+
+/* Prevent iOS from auto-zooming form fields (keeps cart UI stable on mobile). */
+@media screen and (max-width: 736px) {
+  .checkout-estimate input.estimate-zip-input,
+  .checkout-estimate input.estimate-state-input {
+    font-size: 16px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  input.estimate-zip-input {
+    width: 5.75rem;
+  }
+
+  input.estimate-state-input {
+    width: 4.25rem;
+  }
 }
 
 .estimate-amount {
@@ -2069,6 +2123,373 @@ body.is-article-visible #cartFab {
   border-top: 1px solid rgba(255, 255, 255, 0.18);
   font-weight: 600;
   opacity: 1;
+}
+
+.align-right {
+  text-align: right;
+}
+
+/* Checkout success: keep the article height stable while the invoice loads. */
+#main article#checkout-success {
+  min-height: calc(100dvh - 8rem);
+  max-height: calc(100dvh - 8rem);
+  overflow-y: auto;
+}
+
+.checkout-success-loading {
+  margin-top: 1.25rem;
+}
+
+.loading-spinner {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-top-color: rgba(255, 255, 255, 0.9);
+  animation: melkapow-spin 0.9s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes melkapow-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  #main article#checkout-success {
+    min-height: calc(100dvh - 4rem);
+    max-height: calc(100dvh - 4rem);
+  }
+}
+
+.receipt-box {
+  margin-top: 1.25rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.receipt-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.receipt-heading-left {
+  min-width: 0;
+}
+
+.receipt-heading-meta {
+  margin-left: auto;
+}
+
+.receipt-heading-meta-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.9rem;
+}
+
+.receipt-heading-meta-label {
+  font-size: inherit;
+  opacity: 0.9;
+  font-weight: 700;
+}
+
+.receipt-heading-meta-value {
+  font-size: inherit;
+  font-weight: 400;
+  opacity: 0.95;
+}
+
+.receipt-title {
+  margin: 0 0 0.85rem 0;
+  text-transform: none;
+  letter-spacing: 0.15rem;
+  font-size: 1.15rem;
+}
+
+.receipt-subtitle {
+  margin: 0.35rem 0 0;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.receipt-subtitle strong {
+  font-weight: 700;
+}
+
+.receipt-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.receipt-mono {
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.receipt-top {
+  margin-top: 1.1rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--text-color);
+}
+
+.receipt-addresses {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.receipt-address-block {
+  min-width: 0;
+}
+
+.receipt-block-label {
+  display: block;
+  margin: 0 0 0.35rem 0;
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 0.9;
+  font-weight: 700;
+}
+
+.receipt-meta-list {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(7rem, 9rem) minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+  text-transform: none;
+  letter-spacing: 0;
+  align-content: start;
+}
+
+.receipt-meta-list dt {
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 0.9;
+  font-weight: 700;
+}
+
+.receipt-meta-list dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+  opacity: 0.95;
+  overflow-wrap: break-word;
+}
+
+.receipt-meta {
+  margin-top: 1.1rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.receipt-meta-item {
+  min-width: 0;
+}
+
+.receipt-meta-label {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.18rem;
+  text-transform: uppercase;
+  opacity: 0.85;
+  font-weight: 700;
+}
+
+.receipt-meta-value {
+  display: block;
+  margin-top: 0.25rem;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.95;
+  overflow-wrap: anywhere;
+}
+
+.receipt-grid {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.receipt-panel h4 {
+  margin: 0 0 0.85rem 0;
+  text-transform: none;
+  letter-spacing: 0.05rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.receipt-address {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  opacity: 0.9;
+  overflow-wrap: break-word;
+  white-space: pre-line;
+}
+
+.receipt-address::first-line {
+  font-weight: 700;
+  opacity: 1;
+}
+
+.receipt-table-wrap {
+  margin-top: 1.25rem;
+}
+
+.receipt-table {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.9rem;
+}
+
+.receipt-table th,
+.receipt-table td {
+  vertical-align: top;
+}
+
+.receipt-table th {
+  font-weight: 700;
+}
+
+.receipt-table td.align-right,
+.receipt-table th.align-right {
+  font-variant-numeric: tabular-nums;
+}
+
+.receipt-item-title {
+  font-weight: 600;
+  opacity: 0.95;
+  line-height: 1.35;
+}
+
+.receipt-item-details {
+  margin-top: 0.15rem;
+  font-size: 0.85em;
+  opacity: 0.78;
+  line-height: 1.35;
+}
+
+.receipt-summary {
+  margin: 1rem 0 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--text-color);
+  max-width: 28rem;
+  margin-left: auto;
+}
+
+.receipt-payment {
+  margin: 1.5rem 0 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--text-color);
+  max-width: none;
+  margin-left: 0;
+}
+
+.receipt-payment-title {
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.receipt-payment-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.15rem 0;
+  font-size: 0.9rem;
+  opacity: 0.95;
+}
+
+.receipt-summary-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.15rem 0;
+  font-size: 0.9rem;
+  opacity: 0.95;
+}
+
+.receipt-summary-total {
+  margin-top: 0.4rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--text-color);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.receipt-note {
+  margin-top: 1.15rem;
+  margin-bottom: 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+@media screen and (max-width: 736px) {
+  .receipt-meta-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .receipt-meta-list dd {
+    text-align: left;
+  }
+
+  .receipt-summary {
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .receipt-payment {
+    max-width: none;
+    margin-left: 0;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .receipt-table th:nth-child(3),
+  .receipt-table td:nth-child(3) {
+    display: none;
+  }
+
+  .receipt-table th {
+    font-size: 0.75em;
+  }
+
+  .receipt-table td {
+    padding: 0.65em 0.5em;
+  }
 }
 
 .cart-item-cell {
@@ -2131,40 +2552,6 @@ body.is-article-visible #cartFab {
   }
 
   #main article#cart ul.actions .button {
-    font-size: 0.65rem;
-    letter-spacing: 0.1rem;
-    padding: 0.7rem 0.6rem;
-    height: auto;
-    min-height: 2.5rem;
-    line-height: 1.1;
-    white-space: normal;
-  }
-
-  /* Checkout: bottom nav buttons (Back / Payment) */
-  #main article#checkout ul.actions.checkout-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    align-items: stretch;
-  }
-
-  #main article#checkout ul.actions.checkout-actions li {
-    flex: initial;
-    min-width: 0;
-  }
-
-  #main article#checkout ul.actions.checkout-actions li + li {
-    margin-left: 0;
-  }
-
-  #main article#checkout ul.actions.checkout-actions li > * {
-    width: 100%;
-    height: auto;
-    box-sizing: border-box;
-    min-width: 0;
-  }
-
-  #main article#checkout ul.actions.checkout-actions .button {
     font-size: 0.65rem;
     letter-spacing: 0.1rem;
     padding: 0.7rem 0.6rem;
@@ -2341,11 +2728,6 @@ body.is-article-visible #cartFab {
   object-fit: cover;
 }
 
-.about-layout .about-img.about-img--hero {
-  width: 100% !important;
-  max-width: 560px;
-}
-
 /* Optional: tweak responsiveness for intro/about */
 @media (max-width: 600px) {
   #intro .image.main img {
@@ -2355,10 +2737,6 @@ body.is-article-visible #cartFab {
   .about-layout .about-img {
     max-width: 200px;
     margin: 0 auto;
-  }
-
-  .about-layout .about-img.about-img--hero {
-    max-width: 100%;
   }
 }
 
@@ -2417,6 +2795,38 @@ body.is-article-visible #cartFab {
   /* iOS/mobile Safari can fail to click inside cross-origin iframes (Turnstile) when an ancestor is transformed. */
   #main article#contact,
   #main article#contact.active {
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  /* iOS Safari can render <select> option menus at a weird scale inside transformed containers.
+     Disable transforms for shop articles to keep native dropdowns normal-sized. */
+  #main article.from-shop,
+  #main article.from-shop.active {
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  /* iOS Safari can glitch/crash focusing inputs inside transformed containers.
+     The cart has ZIP/State inputs, so keep it transform-free on mobile. */
+  #main article#cart,
+  #main article#cart.active {
+    transform: none !important;
+    will-change: auto !important;
+  }
+}
+
+/* Touch devices (iPad/Android) can also render <select> menus at odd/tiny scales inside transformed containers. */
+@media (hover: none) and (pointer: coarse) {
+  /* Turnstile + form inputs + native selects behave better without transforms on iOS Safari. */
+  #main article#contact,
+  #main article#contact.active,
+  #main article#cart,
+  #main article#cart.active,
+  #main article.from-shop,
+  #main article.from-shop.active,
+  #main article.from-gallery,
+  #main article.from-gallery.active {
     transform: none !important;
     will-change: auto !important;
   }
@@ -2609,27 +3019,79 @@ body.is-article-visible #cartFab {
   width: auto;
 }
 
-#main article.from-gallery .purchase-box .purchase-select,
-#main article.from-gallery .purchase-box .purchase-qty,
-#main article.from-shop .purchase-box .purchase-select,
-#main article.from-shop .purchase-box .purchase-qty {
-  width: 100%;
-  max-width: 32rem;
+#main article.from-shop .purchase-box .purchase-form .purchase-field {
+  max-width: 30rem;
 }
 
-@media screen and (min-width: 737px) {
+#main article.from-gallery .purchase-box .purchase-select,
+#main article.from-shop .purchase-box .purchase-select,
+#main article.from-gallery .purchase-box .purchase-qty,
+#main article.from-shop .purchase-box .purchase-qty {
+  width: 100%;
+}
+
+#main article.from-gallery .purchase-box .purchase-select,
+#main article.from-shop .purchase-box .purchase-select {
+  max-width: none;
+}
+
+#main article.from-gallery .purchase-box .purchase-qty {
+  max-width: 10rem;
+}
+
+@media screen and (max-width: 736px) {
+  #main article.from-shop .purchase-box .purchase-form .purchase-field {
+    max-width: none;
+  }
+
+  /* Keep purchase dropdowns readable + avoid iOS focus zoom. */
   #main article.from-gallery .purchase-box .purchase-select,
   #main article.from-gallery .purchase-box .purchase-qty,
   #main article.from-shop .purchase-box .purchase-select,
   #main article.from-shop .purchase-box .purchase-qty {
-    max-width: 16rem;
+    font-size: 18px;
+    font-weight: 400;
+  }
+
+  #main article.from-gallery .purchase-box .purchase-select option,
+  #main article.from-shop .purchase-box .purchase-select option {
+    font-size: inherit;
+  }
+
+  /* Mobile browsers can render styled <select> menus at odd/tiny scales.
+     Prefer native select rendering for the shop/gallery purchase dropdowns. */
+  #main article.from-gallery .purchase-box .purchase-select,
+  #main article.from-shop .purchase-box .purchase-select {
+    -webkit-appearance: menulist-button !important;
+    appearance: auto !important;
+    background-image: none !important;
+  }
+
+  #main article.from-gallery .purchase-box .purchase-qty {
+    max-width: 10rem;
   }
 }
 
-@media screen and (max-width: 736px) {
+/* Apply the same "native + readable" purchase control rules to touch devices, even when the viewport is wider than 736px (iPad). */
+@media (hover: none) and (pointer: coarse) {
+  #main article.from-gallery .purchase-box .purchase-select,
   #main article.from-gallery .purchase-box .purchase-qty,
+  #main article.from-shop .purchase-box .purchase-select,
   #main article.from-shop .purchase-box .purchase-qty {
-    max-width: 10rem;
+    font-size: 18px;
+    font-weight: 400;
+  }
+
+  #main article.from-gallery .purchase-box .purchase-select option,
+  #main article.from-shop .purchase-box .purchase-select option {
+    font-size: inherit;
+  }
+
+  #main article.from-gallery .purchase-box .purchase-select,
+  #main article.from-shop .purchase-box .purchase-select {
+    -webkit-appearance: menulist-button !important;
+    appearance: auto !important;
+    background-image: none !important;
   }
 }
 
@@ -2686,11 +3148,59 @@ body.is-article-visible #cartFab {
 #main article.from-gallery .purchase-box .purchase-description h4,
 #main article.from-shop .purchase-box .purchase-description h4 {
   margin-top: 0;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.75rem;
   letter-spacing: 0.4rem;
   text-transform: uppercase;
   font-weight: 600;
   font-size: 1rem;
+}
+
+#main article.from-gallery .purchase-box .purchase-description .purchase-description-lead,
+#main article.from-shop .purchase-box .purchase-description .purchase-description-lead {
+  margin: 0 0 1.25rem 0;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  opacity: 0.9;
+  text-align: center;
+}
+
+#main article.from-gallery .purchase-box .purchase-description .purchase-specs,
+#main article.from-shop .purchase-box .purchase-description .purchase-specs {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 10rem) minmax(0, 1fr);
+  gap: 0.35rem 1rem;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+#main article.from-gallery .purchase-box .purchase-description .purchase-specs dt,
+#main article.from-shop .purchase-box .purchase-description .purchase-specs dt {
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+#main article.from-gallery .purchase-box .purchase-description .purchase-specs dd,
+#main article.from-shop .purchase-box .purchase-description .purchase-specs dd {
+  margin: 0;
+  opacity: 0.9;
+}
+
+#main article.from-gallery .purchase-box .purchase-description .purchase-specs dd.purchase-specs-note,
+#main article.from-shop .purchase-box .purchase-description .purchase-specs dd.purchase-specs-note {
+  grid-column: 1 / -1;
+}
+
+@media screen and (max-width: 736px) {
+  #main article.from-shop .purchase-box .purchase-description .purchase-specs {
+    gap: 0.55rem 1rem;
+  }
+}
+
+#main article.from-gallery .purchase-unavailable-action {
+  display: none;
 }
 
 #main article.from-gallery .purchase-box .purchase-section-heading,
@@ -2895,6 +3405,19 @@ body.is-preload #footer {
   /* Turnstile can be unclickable inside nested scroll containers on some mobile browsers.
      Let Contact page scroll naturally instead of using the inner overflow. */
   #main article#contact {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  /* iOS Safari can glitch focusing inputs (cart ZIP/State) inside nested scroll containers. */
+  #main article#cart {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  /* Native iOS <select> menus can render at odd scales inside nested scroll containers. */
+  #main article.from-gallery,
+  #main article.from-shop {
     max-height: none;
     overflow-y: visible;
   }
