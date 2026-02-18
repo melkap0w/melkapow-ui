@@ -1,6 +1,9 @@
 src/data_extract
 src/product_sales
 
+# Frontend build output
+dist/
+
 # Python caches
 __pycache__/
 *.py[cod]
@@ -13,3 +16,6 @@ __pycache__/
 app/.env
 app/.env.*
 !app/.env.example
+
+# Service account keys (never commit)
+etc/secrets/

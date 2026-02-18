@@ -31,6 +31,22 @@
     return THUMB_DIR + file;
   }
 
+  function bindPortraitClass(img) {
+    if (!img) return;
+
+    function apply() {
+      var w = img.naturalWidth || 0;
+      var h = img.naturalHeight || 0;
+      if (!w || !h) return;
+
+      if (h > w) img.classList.add("gallery-img-portrait");
+      else img.classList.remove("gallery-img-portrait");
+    }
+
+    img.addEventListener("load", apply);
+    if (img.complete) apply();
+  }
+
   function buildGallery() {
     var wrap = $("#gallery");
     if (!wrap || !window.MELKAPOW_ART) return;
@@ -54,6 +70,7 @@
       img.alt = art.alt || art.title;
       img.loading = "lazy";
       img.decoding = "async";
+      bindPortraitClass(img);
 
       if (thumbSrc && fullThumbSrc && thumbSrc !== fullThumbSrc) {
         img.setAttribute("data-fallback-src", fullThumbSrc);

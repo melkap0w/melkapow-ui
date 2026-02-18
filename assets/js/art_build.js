@@ -433,7 +433,17 @@
 
   function setPurchaseStatus(statusEl, message) {
     if (!statusEl) return;
-    statusEl.textContent = message || "";
+    var text = String(message || "");
+    statusEl.textContent = text;
+    if (!text) {
+      statusEl.removeAttribute("data-state");
+      return;
+    }
+    if (/added to cart/i.test(text)) {
+      statusEl.setAttribute("data-state", "success");
+      return;
+    }
+    statusEl.setAttribute("data-state", "error");
   }
 
   function buildUnavailablePurchaseBox(art) {

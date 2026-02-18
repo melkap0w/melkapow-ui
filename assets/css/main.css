@@ -738,6 +738,7 @@ select {
 select option {
   color: var(--text-color);
   background: var(--bg-color);
+  font-size: inherit;
 }
 
 select:focus::-ms-value {
@@ -2015,6 +2016,93 @@ body.is-article-visible #cartFab {
   border-bottom: 0;
 }
 
+.cart-dev-banner {
+  margin: 0 0 1.15rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(158, 47, 47, 0.58);
+  border-radius: 9px;
+  background: rgba(108, 22, 22, 0.22);
+  color: #f0caca;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.12rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.cart-order-summary {
+  margin-top: 1.5rem;
+}
+
+.cart-order-summary .estimate-breakdown {
+  margin-top: 0.35rem;
+}
+
+.cart-discount {
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.cart-discount-label {
+  display: block;
+  margin-bottom: 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12rem;
+  font-size: 0.66rem;
+  opacity: 0.9;
+  text-align: center;
+}
+
+.cart-discount-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 14rem) auto;
+  gap: 0.65rem;
+  align-items: center;
+  justify-content: center;
+  max-width: 24rem;
+  margin: 0 auto 0.5rem;
+}
+
+.cart-discount-controls input {
+  margin: 0;
+}
+
+.discount-code-input {
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+  padding-left: 0.8rem;
+  padding-right: 0.8rem;
+}
+
+.cart-discount-controls .button {
+  min-width: 5.5rem;
+}
+
+.cart-discount-status {
+  margin: 0.65rem 0 0;
+  font-size: 0.78rem;
+  opacity: 0.86;
+  text-transform: none;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.cart-discount-status[data-state="error"] {
+  color: #9b2424;
+  font-weight: 600;
+}
+
+#checkoutShippingStatus[data-state="error"],
+#cartCheckoutStatus[data-state="error"],
+#receiptStatusMsg[data-state="error"],
+#checkoutCancelMsg[data-state="error"] {
+  color: #9b2424;
+  font-weight: 600;
+}
+
 .checkout-estimate {
   margin-top: 1.25rem;
 }
@@ -2072,6 +2160,140 @@ body.is-article-visible #cartFab {
   padding: 0.15rem 0;
 }
 
+.estimate-shipping-method {
+  margin: 0.9rem auto 0;
+  max-width: 26rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.estimate-shipping-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14rem;
+  opacity: 0.85;
+  text-align: center;
+}
+
+.estimate-shipping-static {
+  margin: 0;
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.estimate-shipping-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.estimate-shipping-option {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.estimate-shipping-option:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.estimate-shipping-option.is-selected {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16) inset;
+}
+
+.estimate-shipping-option input[type="radio"] {
+  margin: 0.18rem 0.55rem 0 0;
+  flex: 0 0 auto;
+  accent-color: #f2f2f2;
+}
+
+.estimate-shipping-option-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+}
+
+.estimate-shipping-option-copy {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.estimate-shipping-option-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.estimate-shipping-option-meta {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.76rem;
+  opacity: 0.8;
+}
+
+.estimate-shipping-option-amount {
+  display: inline-block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  opacity: 0.95;
+}
+
+.estimate-shipping-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.76rem;
+  opacity: 0.8;
+  text-align: center;
+}
+
+.estimate-delivery {
+  margin: 0.9rem auto 0;
+  max-width: 26rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  text-align: center;
+}
+
+.estimate-delivery-title {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14rem;
+  opacity: 0.85;
+}
+
+.estimate-delivery-text {
+  margin: 0.45rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.estimate-delivery-meta {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+
 .estimate-controls {
   display: flex;
   justify-content: center;
@@ -2123,6 +2345,191 @@ input.estimate-state-input {
   border-top: 1px solid rgba(255, 255, 255, 0.18);
   font-weight: 600;
   opacity: 1;
+}
+
+.checkout-shipping-layout {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.checkout-shipping-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.checkout-shipping-panel {
+  margin-bottom: 0;
+}
+
+.checkout-shipping-heading {
+  margin: 0 0 1rem 0;
+  text-transform: none;
+  letter-spacing: 0.08rem;
+  font-size: 1rem;
+}
+
+.checkout-shipping-panel .fields {
+  margin-bottom: 1rem;
+}
+
+.checkout-shipping-panel .field label {
+  text-transform: none;
+  letter-spacing: 0.03rem;
+  font-size: 0.8rem;
+}
+
+.checkout-shipping-breakdown {
+  margin-top: 0.35rem;
+  max-width: none;
+}
+
+.checkout-shipping-options-panel {
+  margin-top: 0;
+}
+
+.checkout-shipping-options-panel .estimate-shipping-method {
+  margin-top: 0;
+  max-width: none;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.checkout-shipping-calc-actions {
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+}
+
+.checkout-shipping-calc-actions li > * {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.checkout-shipping-actions {
+  margin: 1rem 0 0;
+}
+
+.checkout-shipping-actions li {
+  min-width: 0;
+}
+
+.checkout-shipping-actions li > * {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.checkout-shipping-bottom-actions {
+  margin-bottom: 0;
+}
+
+@media screen and (max-width: 980px) {
+  .checkout-shipping-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 736px) {
+  #checkoutShippingForm {
+    width: 100%;
+    padding: 0 0.35rem;
+    box-sizing: border-box;
+  }
+
+  #checkoutShippingForm > .fields {
+    width: 100%;
+    margin: 0 0 0.8rem 0;
+    gap: 0.8rem;
+  }
+
+  #checkoutShippingForm > .fields > .field,
+  #checkoutShippingForm > .fields > .field.half,
+  #checkoutShippingForm > .fields > .field.third,
+  #checkoutShippingForm > .fields > .field.quarter {
+    width: 100%;
+    padding: 0;
+  }
+
+  #checkoutShippingForm input,
+  #checkoutShippingForm select {
+    width: 100%;
+    height: 2.45rem;
+    padding-left: 0.72rem;
+    padding-right: 0.72rem;
+    font-size: 0.95rem;
+  }
+
+  #checkoutShippingForm .field label {
+    font-size: 0.74rem;
+  }
+
+  .checkout-shipping-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  .checkout-shipping-actions li + li {
+    margin-left: 0;
+  }
+
+  .checkout-shipping-actions .button {
+    font-size: 0.65rem;
+    letter-spacing: 0.1rem;
+    padding: 0.7rem 0.6rem;
+    height: auto;
+    min-height: 2.5rem;
+    line-height: 1.1;
+    white-space: normal;
+  }
+
+  .checkout-shipping-calc-actions {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+
+  .checkout-shipping-calc-actions li {
+    width: 100%;
+    max-width: 18rem;
+  }
+
+  .checkout-shipping-calc-actions .button {
+    font-size: 0.65rem;
+    letter-spacing: 0.1rem;
+    padding: 0.7rem 0.6rem;
+    min-height: 2.5rem;
+    line-height: 1.1;
+    white-space: normal;
+  }
+
+  .cart-discount-controls {
+    grid-template-columns: 1fr;
+    max-width: none;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .cart-discount-controls .button {
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  #checkoutShippingForm {
+    padding: 0 0.25rem;
+  }
+
+  #checkoutShippingForm input,
+  #checkoutShippingForm select {
+    height: 2.35rem;
+    font-size: 0.9rem;
+  }
 }
 
 .align-right {
@@ -2199,7 +2606,7 @@ input.estimate-state-input {
   flex-wrap: wrap;
   text-transform: none;
   letter-spacing: 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .receipt-heading-meta-label {
@@ -2217,15 +2624,15 @@ input.estimate-state-input {
 .receipt-title {
   margin: 0 0 0.85rem 0;
   text-transform: none;
-  letter-spacing: 0.15rem;
-  font-size: 1.15rem;
+  letter-spacing: 0.12rem;
+  font-size: 1.24rem;
 }
 
 .receipt-subtitle {
-  margin: 0.35rem 0 0;
+  margin: 0;
   text-transform: none;
   letter-spacing: 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
   opacity: 0.9;
 }
 
@@ -2242,12 +2649,13 @@ input.estimate-state-input {
 .receipt-mono {
   font-variant-numeric: tabular-nums;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: inherit;
 }
 
 .receipt-top {
   margin-top: 1.1rem;
-  padding-top: 1.1rem;
-  border-top: 1px solid var(--text-color);
+  padding-top: 0.35rem;
+  border-top: 0;
 }
 
 .receipt-addresses {
@@ -2264,7 +2672,7 @@ input.estimate-state-input {
 .receipt-block-label {
   display: block;
   margin: 0 0 0.35rem 0;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   letter-spacing: 0;
   text-transform: none;
   opacity: 0.9;
@@ -2346,9 +2754,9 @@ input.estimate-state-input {
 .receipt-address {
   text-transform: none;
   letter-spacing: 0;
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.45;
-  opacity: 0.9;
+  opacity: 0.94;
   overflow-wrap: break-word;
   white-space: pre-line;
 }
@@ -2365,7 +2773,15 @@ input.estimate-state-input {
 .receipt-table {
   text-transform: none;
   letter-spacing: 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  border-collapse: collapse;
+}
+
+.receipt-table tbody tr,
+.receipt-table tbody tr:nth-child(2n + 1),
+.receipt-table tbody tr:nth-child(2n) {
+  background-color: rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .receipt-table th,
@@ -2375,6 +2791,8 @@ input.estimate-state-input {
 
 .receipt-table th {
   font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.01rem;
 }
 
 .receipt-table td.align-right,
@@ -2382,31 +2800,53 @@ input.estimate-state-input {
   font-variant-numeric: tabular-nums;
 }
 
+.receipt-table td {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.receipt-table td:first-child {
+  font-size: 1rem;
+}
+
 .receipt-item-title {
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 650;
   opacity: 0.95;
   line-height: 1.35;
 }
 
 .receipt-item-details {
-  margin-top: 0.15rem;
-  font-size: 0.85em;
-  opacity: 0.78;
-  line-height: 1.35;
+  margin-top: 0.2rem;
+  font-size: 1rem;
+  opacity: 0.92;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.receipt-table th:nth-child(2),
+.receipt-table th:nth-child(4) {
+  font-size: 1rem;
+}
+
+.receipt-table td:nth-child(2),
+.receipt-table td:nth-child(4) {
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .receipt-summary {
   margin: 1rem 0 0;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--text-color);
+  padding-top: 0;
+  border-top: 0;
   max-width: 28rem;
   margin-left: auto;
 }
 
 .receipt-payment {
   margin: 1.5rem 0 0;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--text-color);
+  padding-top: 0;
+  border-top: 0;
   max-width: none;
   margin-left: 0;
 }
@@ -2414,9 +2854,9 @@ input.estimate-state-input {
 .receipt-payment-title {
   margin: 0 0 0.5rem 0;
   text-transform: uppercase;
-  letter-spacing: 0.2rem;
-  font-size: 0.75rem;
-  font-weight: 600;
+  letter-spacing: 0.14rem;
+  font-size: 0.84rem;
+  font-weight: 700;
   opacity: 0.9;
 }
 
@@ -2426,7 +2866,7 @@ input.estimate-state-input {
   gap: 1rem;
   align-items: baseline;
   padding: 0.15rem 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
   opacity: 0.95;
 }
 
@@ -2436,14 +2876,14 @@ input.estimate-state-input {
   gap: 1rem;
   align-items: baseline;
   padding: 0.15rem 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
   opacity: 0.95;
 }
 
 .receipt-summary-total {
   margin-top: 0.4rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--text-color);
+  padding-top: 0.55rem;
+  border-top: 0;
   font-weight: 600;
   opacity: 1;
 }
@@ -2451,7 +2891,7 @@ input.estimate-state-input {
 .receipt-note {
   margin-top: 1.15rem;
   margin-bottom: 0;
-  font-size: 0.85rem;
+  font-size: 1rem;
   opacity: 0.9;
   text-transform: none;
   letter-spacing: 0;
@@ -2478,17 +2918,46 @@ input.estimate-state-input {
 }
 
 @media screen and (max-width: 480px) {
+  .receipt-block-label {
+    font-size: 0.92rem;
+  }
+
+  .receipt-address {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
   .receipt-table th:nth-child(3),
   .receipt-table td:nth-child(3) {
     display: none;
   }
 
   .receipt-table th {
-    font-size: 0.75em;
+    font-size: 0.96rem;
   }
 
   .receipt-table td {
+    font-size: 1rem;
     padding: 0.65em 0.5em;
+  }
+
+  .receipt-item-title {
+    font-size: 1rem;
+  }
+
+  .receipt-item-details {
+    font-size: 1rem;
+  }
+
+  .receipt-table th:nth-child(2),
+  .receipt-table th:nth-child(4) {
+    font-size: 0.96rem;
+  }
+
+  .receipt-table td:nth-child(2),
+  .receipt-table td:nth-child(4) {
+    font-size: 1rem;
+    font-weight: 650;
   }
 }
 
@@ -2503,6 +2972,10 @@ input.estimate-state-input {
   vertical-align: middle;
 }
 
+.cart-table tbody tr:nth-child(2n + 1) {
+  background-color: transparent;
+}
+
 .cart-table td:nth-child(2),
 .cart-table td:nth-child(3) {
   font-size: 1.05rem;
@@ -2512,6 +2985,7 @@ input.estimate-state-input {
 .cart-item-name {
   overflow-wrap: anywhere;
   display: block;
+  font-size: 0.95rem;
   line-height: 1.25;
 }
 
@@ -2593,6 +3067,8 @@ input.estimate-state-input {
 
   .cart-item-title {
     margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.3;
     overflow-wrap: anywhere;
     flex: 1 1 auto;
     min-width: 0;
@@ -2600,7 +3076,7 @@ input.estimate-state-input {
 
   .cart-item-meta {
     margin: 0.65rem 0 1rem 0;
-    font-size: 0.9rem;
+    font-size: 0.98rem;
     opacity: 0.85;
     text-transform: none;
     letter-spacing: 0;
@@ -2624,14 +3100,14 @@ input.estimate-state-input {
   .cart-item-qty-label {
     text-transform: uppercase;
     letter-spacing: 0.2rem;
-    font-size: 0.7rem;
+    font-size: 0.82rem;
     opacity: 0.9;
   }
 
   .cart-item-qty-value {
     text-transform: uppercase;
     letter-spacing: 0.2rem;
-    font-size: 0.7rem;
+    font-size: 0.82rem;
     opacity: 0.9;
     white-space: nowrap;
   }
@@ -2639,9 +3115,23 @@ input.estimate-state-input {
   .cart-item-price {
     text-transform: uppercase;
     letter-spacing: 0.2rem;
-    font-size: 0.7rem;
+    font-size: 0.82rem;
     opacity: 0.9;
     white-space: nowrap;
+  }
+
+  #main article#cart .cart-order-summary .estimate-title {
+    font-size: 0.82rem;
+  }
+
+  #main article#cart .cart-order-summary .estimate-breakdown {
+    font-size: 0.98rem;
+  }
+
+  #main article#cart .cart-order-summary .estimate-row,
+  #main article#cart .cart-order-summary .estimate-amount {
+    font-size: 0.98rem;
+    line-height: 1.35;
   }
 
   .cart-remove-x {
@@ -2686,6 +3176,16 @@ input.estimate-state-input {
 #main article.active {
   transform: translateY(0);
   opacity: 1;
+}
+
+/* Keep shop/gallery dropdown menus in a non-transformed context.
+   This prevents tiny native option sheets in Safari/Chrome. */
+#main article.from-shop,
+#main article.from-shop.active,
+#main article.from-gallery,
+#main article.from-gallery.active {
+  transform: none !important;
+  will-change: auto !important;
 }
 
 /* Fix giant bg image in Intro 
@@ -2810,7 +3310,9 @@ input.estimate-state-input {
   /* iOS Safari can glitch/crash focusing inputs inside transformed containers.
      The cart has ZIP/State inputs, so keep it transform-free on mobile. */
   #main article#cart,
-  #main article#cart.active {
+  #main article#cart.active,
+  #main article#checkout-shipping,
+  #main article#checkout-shipping.active {
     transform: none !important;
     will-change: auto !important;
   }
@@ -2823,6 +3325,8 @@ input.estimate-state-input {
   #main article#contact.active,
   #main article#cart,
   #main article#cart.active,
+  #main article#checkout-shipping,
+  #main article#checkout-shipping.active,
   #main article.from-shop,
   #main article.from-shop.active,
   #main article.from-gallery,
@@ -2878,6 +3382,11 @@ input.estimate-state-input {
   content-visibility: visible; /* prevent deferred render */
 }
 
+.gallery-item img.gallery-img-portrait {
+  object-fit: cover;
+  object-position: center 35%;
+}
+
 .gallery-item:hover img {
   transform: scale(1.05);
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
@@ -2888,6 +3397,72 @@ input.estimate-state-input {
   margin-top: 0.5rem;
   font-size: 0.9rem;
   opacity: 0.8;
+}
+
+/* =========================================
+   SKELETON (SHOP STARTUP LOADING)
+   ========================================= */
+
+.gallery-item--skeleton {
+  pointer-events: none;
+}
+
+.gallery-item--skeleton .gallery-skeleton-thumb,
+.gallery-item--skeleton .gallery-skeleton-caption {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 25%,
+    rgba(255, 255, 255, 0.14) 37%,
+    rgba(255, 255, 255, 0.06) 63%
+  );
+  background-size: 400% 100%;
+  animation: mel-skeleton-shimmer 1.35s ease infinite;
+}
+
+.gallery-item--skeleton .gallery-skeleton-thumb {
+  width: 100%;
+  border-radius: 8px;
+  aspect-ratio: 4 / 3;
+}
+
+.gallery-item--skeleton .gallery-skeleton-caption {
+  height: 0.9rem;
+  border-radius: 6px;
+  opacity: 0.9;
+}
+
+.gallery-item--skeleton:nth-child(3n) .gallery-skeleton-caption {
+  width: 78%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.gallery-item--skeleton:nth-child(3n + 1) .gallery-skeleton-caption {
+  width: 62%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.gallery-item--skeleton:nth-child(3n + 2) .gallery-skeleton-caption {
+  width: 70%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@keyframes mel-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-item--skeleton .gallery-skeleton-thumb,
+  .gallery-item--skeleton .gallery-skeleton-caption {
+    animation: none;
+  }
 }
 
 @media screen and (max-width: 500px) {
@@ -3033,6 +3608,19 @@ input.estimate-state-input {
 #main article.from-gallery .purchase-box .purchase-select,
 #main article.from-shop .purchase-box .purchase-select {
   max-width: none;
+  font-size: 1rem !important;
+  font-weight: 400;
+  line-height: 1.35;
+  -webkit-appearance: menulist-button;
+  appearance: auto;
+  background-image: none;
+  padding-right: 0.9rem;
+}
+
+#main article.from-gallery .purchase-box .purchase-select option,
+#main article.from-shop .purchase-box .purchase-select option {
+  font-size: 1rem !important;
+  line-height: 1.35;
 }
 
 #main article.from-gallery .purchase-box .purchase-qty {
@@ -3049,13 +3637,13 @@ input.estimate-state-input {
   #main article.from-gallery .purchase-box .purchase-qty,
   #main article.from-shop .purchase-box .purchase-select,
   #main article.from-shop .purchase-box .purchase-qty {
-    font-size: 18px;
+    font-size: 18px !important;
     font-weight: 400;
   }
 
   #main article.from-gallery .purchase-box .purchase-select option,
   #main article.from-shop .purchase-box .purchase-select option {
-    font-size: inherit;
+    font-size: 18px !important;
   }
 
   /* Mobile browsers can render styled <select> menus at odd/tiny scales.
@@ -3078,13 +3666,13 @@ input.estimate-state-input {
   #main article.from-gallery .purchase-box .purchase-qty,
   #main article.from-shop .purchase-box .purchase-select,
   #main article.from-shop .purchase-box .purchase-qty {
-    font-size: 18px;
+    font-size: 18px !important;
     font-weight: 400;
   }
 
   #main article.from-gallery .purchase-box .purchase-select option,
   #main article.from-shop .purchase-box .purchase-select option {
-    font-size: inherit;
+    font-size: 18px !important;
   }
 
   #main article.from-gallery .purchase-box .purchase-select,
@@ -3113,6 +3701,11 @@ input.estimate-state-input {
   font-size: 1.05rem;
   font-weight: 600;
   opacity: 1;
+}
+
+#main article.from-gallery .purchase-status[data-state="error"],
+#main article.from-shop .purchase-status[data-state="error"] {
+  color: #9b2424;
 }
 
 #main article.from-gallery .purchase-box .purchase-unavailable,

@@ -41,6 +41,70 @@
     for (var i = 0; i < imgs.length; i++) loadImgFromData(imgs[i]);
   }
 
+  function bindPortraitClass(img) {
+    if (!img) return;
+
+    function apply() {
+      var w = img.naturalWidth || 0;
+      var h = img.naturalHeight || 0;
+      if (!w || !h) return;
+
+      if (h > w) img.classList.add("gallery-img-portrait");
+      else img.classList.remove("gallery-img-portrait");
+    }
+
+    img.addEventListener("load", apply);
+    if (img.complete) apply();
+  }
+
+  function calcShopSkeletonCount() {
+    // Aim for ~2 rows across common breakpoints.
+    try {
+      if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
+        if (window.matchMedia("(max-width: 500px)").matches) return 6;
+        if (window.matchMedia("(max-width: 980px)").matches) return 8;
+      }
+    } catch (_) {
+      // ignore
+    }
+    return 10;
+  }
+
+  function renderShopSkeleton() {
+    var wrap = $("#shopGallery");
+    if (!wrap) return 0;
+
+    if (wrap.getAttribute("data-skeleton") === "true" && wrap.children && wrap.children.length) {
+      return wrap.children.length;
+    }
+
+    wrap.setAttribute("data-skeleton", "true");
+    wrap.innerHTML = "";
+
+    var count = calcShopSkeletonCount();
+    var frag = document.createDocumentFragment();
+
+    for (var i = 0; i < count; i++) {
+      var card = document.createElement("div");
+      card.className = "gallery-item gallery-item--skeleton";
+      card.setAttribute("aria-hidden", "true");
+
+      var thumb = document.createElement("div");
+      thumb.className = "gallery-skeleton-thumb";
+
+      var cap = document.createElement("span");
+      cap.className = "caption gallery-skeleton-caption";
+      cap.textContent = "\u00A0";
+
+      card.appendChild(thumb);
+      card.appendChild(cap);
+      frag.appendChild(card);
+    }
+
+    wrap.appendChild(frag);
+    return count;
+  }
+
   function safeJsonParse(text) {
     try {
       return JSON.parse(text);
@@ -402,6 +466,7 @@
     var wrap = $("#shopGallery");
     if (!wrap) return 0;
 
+    wrap.removeAttribute("data-skeleton");
     wrap.innerHTML = "";
 
     if (!products || typeof products !== "object") {
@@ -429,6 +494,7 @@
       img.alt = art.alt || art.title || String(art.id);
       img.loading = "lazy";
       img.decoding = "async";
+      bindPortraitClass(img);
 
       if (thumbSrc && fullThumbSrc && thumbSrc !== fullThumbSrc) {
         img.setAttribute("data-fallback-src", fullThumbSrc);
@@ -523,7 +589,13 @@
       if (window.location.hash !== "#shop") return;
 
       loader.hydrateFromCache();
-      var count = buildShopGallery(window.MELKAPOW_PRODUCTS_BY_ART_ID);
+      var products = window.MELKAPOW_PRODUCTS_BY_ART_ID;
+      var count = 0;
+      if (products && typeof products === "object") {
+        count = buildShopGallery(products);
+      } else {
+        renderShopSkeleton();
+      }
 
       if (shopStatusEl && count === 0 && !shopCatalogHasNetworkResult) shopStatusEl.textContent = "Loading shop…";
 

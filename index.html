@@ -27,7 +27,7 @@
     <!-- Main styles -->
 	    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,300italic,600,600italic,700,700italic&display=swap" />
     <link rel="stylesheet" href="assets/css/fontawesome-all.min.css" />
-								    <link rel="stylesheet" href="assets/css/main.css?v=20260210-29" />
+									    <link rel="stylesheet" href="assets/css/main.css?v=20260218-5" />
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 
     <!-- Override global h1 styles for the logo font -->
@@ -125,7 +125,7 @@
           <div class="gallery" id="shopGallery"></div>
         </article>
 
-        <!-- About -->
+        <!-- About Me-->
         <article id="about" class="about-layout">
           <h2 class="major">About</h2>
 
@@ -242,64 +242,55 @@
         </article>
 
         <!-- Cart -->
-	        <article id="cart">
-	          <h2 class="major">Cart</h2>
+		        <article id="cart">
+		          <h2 class="major">Cart</h2>
+		          <p class="cart-dev-banner">DEV SANDBOX TESTING - PAYMENT SYSTEM NOT ENABLED</p>
 
-	          <p id="cartEmpty" class="align-center" hidden>Your cart is empty.</p>
+		          <p id="cartEmpty" class="align-center" hidden>Your cart is empty.</p>
 
 				          <div id="cartItems"></div>
 
-				          <div id="cartEstimateBox" class="box checkout-estimate" hidden>
-				            <p class="estimate-title">Calculate shipping &amp; tax</p>
-						            <form id="cartEstimateForm" action="#cart" method="post">
-					              <button type="submit" class="sr-only">Calculate</button>
-
-					              <div class="estimate-controls">
-					                <label for="cartEstimateZip" class="sr-only">ZIP code</label>
+				          <div id="cartOrderSummary" class="box checkout-estimate cart-order-summary">
+				            <p class="estimate-title">Order Summary</p>
+				            <div class="estimate-breakdown">
+				              <div class="estimate-row">
+				                <span>Items subtotal</span>
+				                <span id="cartSummaryItemsSubtotal" class="estimate-amount">$0.00</span>
+				              </div>
+					              <div id="cartSummaryDiscountRow" class="estimate-row" hidden>
+					                <span id="cartSummaryDiscountLabel">Discount</span>
+					                <span id="cartSummaryDiscount" class="estimate-amount">—</span>
+					              </div>
+				              <div class="estimate-row">
+				                <span>Shipping</span>
+				                <span class="estimate-amount">Calculated on next screen</span>
+				              </div>
+				              <div class="estimate-row">
+				                <span>Tax</span>
+				                <span class="estimate-amount">Calculated on next screen</span>
+				              </div>
+				              <div class="estimate-row estimate-row-total">
+				                <span id="cartTotalLabel">Estimated total</span>
+				                <span id="cartTotal" class="estimate-amount">$0.00</span>
+				              </div>
+				            </div>
+				            <div class="cart-discount">
+				              <label for="cartDiscountCode" class="cart-discount-label">Discount Code<br /></label>
+				              <div class="cart-discount-controls">
 					                <input
 					                  type="text"
-					                  id="cartEstimateZip"
-					                  name="zip"
-					                  inputmode="numeric"
-					                  autocomplete="shipping postal-code"
-					                  placeholder="ZIP"
-					                  class="estimate-zip-input"
+					                  id="cartDiscountCode"
+					                  name="discount_code"
+					                  class="discount-code-input"
+					                  maxlength="20"
+					                  autocomplete="off"
+					                  placeholder="Enter code"
 					                />
-
-					                <label for="cartEstimateState" class="sr-only">State</label>
-					                <input
-					                  type="text"
-					                  id="cartEstimateState"
-					                  name="state"
-					                  autocomplete="shipping address-level1"
-						                  placeholder="CA"
-					                  maxlength="2"
-					                  class="estimate-state-input"
-					                />
-					              </div>
-
-					              <div id="cartEstimateBreakdown" class="estimate-breakdown">
-					                <div class="estimate-row">
-					                  <span>Items subtotal</span>
-					                  <span id="cartEstimateItemsSubtotal" class="estimate-amount">—</span>
-					                </div>
-					                <div class="estimate-row">
-					                  <span>Shipping</span>
-					                  <span id="cartEstimateShipping" class="estimate-amount">—</span>
-					                </div>
-					                <div class="estimate-row">
-					                  <span>Tax</span>
-					                  <span id="cartEstimateTax" class="estimate-amount">—</span>
-					                </div>
-					              </div>
-
-					              <p id="cartEstimateStatus" class="align-center" aria-live="polite" hidden></p>
-					            </form>
+				                <button type="button" id="cartDiscountApplyBtn" class="button small">Apply</button>
+				              </div>
+				              <p id="cartDiscountStatus" class="cart-discount-status" aria-live="polite" hidden></p>
+				            </div>
 				          </div>
-
-				          <p class="align-center cart-total-line">
-				            <span id="cartTotalLabel">Subtotal</span>: <span id="cartTotal">$0.00</span>
-				          </p>
 
 				          <p class="align-center cart-legal">
 				            By placing an order, you agree to the <a href="#terms">Terms &amp; Policies</a>.
@@ -315,9 +306,187 @@
 	          <p id="cartCheckoutStatus" class="align-center" aria-live="polite" hidden></p>
 	        </article>
 
+	        <!-- Checkout Shipping -->
+	        <article id="checkout-shipping">
+	          <h2 class="major">Shipping</h2>
+
+		          <div class="checkout-shipping-layout">
+		            <div class="box checkout-shipping-panel">
+		              <form id="checkoutShippingForm" action="#checkout-shipping" method="post" autocomplete="on" novalidate>
+		                <div class="fields">
+	                  <div class="field half">
+	                    <label for="checkoutShippingFirstName">First Name</label>
+	                    <input
+	                      type="text"
+	                      id="checkoutShippingFirstName"
+	                      name="first_name"
+	                      autocomplete="section-checkout shipping given-name"
+	                      maxlength="120"
+	                      required
+	                    />
+	                  </div>
+
+	                  <div class="field half">
+	                    <label for="checkoutShippingLastName">Last Name</label>
+	                    <input
+	                      type="text"
+	                      id="checkoutShippingLastName"
+	                      name="last_name"
+	                      autocomplete="section-checkout shipping family-name"
+	                      maxlength="120"
+	                      required
+	                    />
+	                  </div>
+
+		                  <div class="field half">
+		                    <label for="checkoutShippingEmail">Email</label>
+		                    <input
+		                      type="email"
+	                      id="checkoutShippingEmail"
+	                      name="email"
+	                      autocomplete="section-checkout email"
+	                      maxlength="254"
+	                      required
+	                    />
+	                  </div>
+
+		                  <div class="field half">
+		                    <label for="checkoutShippingAddress1">Address Line 1</label>
+		                    <input
+		                      type="text"
+	                      id="checkoutShippingAddress1"
+	                      name="address1"
+	                      autocomplete="section-checkout shipping address-line1"
+	                      maxlength="200"
+	                      required
+	                    />
+	                  </div>
+
+		                  <div class="field half">
+		                    <label for="checkoutShippingAddress2">Address Line 2</label>
+		                    <input
+		                      type="text"
+	                      id="checkoutShippingAddress2"
+	                      name="address2"
+	                      autocomplete="section-checkout shipping address-line2"
+	                      maxlength="200"
+	                    />
+	                  </div>
+
+	                  <div class="field half">
+	                    <label for="checkoutShippingCity">City</label>
+	                    <input
+	                      type="text"
+	                      id="checkoutShippingCity"
+	                      name="city"
+	                      autocomplete="section-checkout shipping address-level2"
+	                      maxlength="120"
+	                      required
+	                    />
+	                  </div>
+
+	                  <div class="field half">
+	                    <label for="checkoutShippingState">State / Province</label>
+	                    <input
+	                      type="text"
+	                      id="checkoutShippingState"
+	                      name="state_code"
+	                      autocomplete="section-checkout shipping address-level1"
+	                      maxlength="64"
+	                      placeholder="CA"
+	                    />
+	                  </div>
+
+	                  <div class="field half">
+	                    <label for="checkoutShippingPostal">ZIP / Postal Code</label>
+	                    <input
+	                      type="text"
+	                      id="checkoutShippingPostal"
+	                      name="zip"
+	                      autocomplete="section-checkout shipping postal-code"
+	                      maxlength="16"
+	                      required
+	                    />
+	                  </div>
+
+	                  <div class="field half">
+	                    <label for="checkoutShippingCountry">Country</label>
+	                    <select id="checkoutShippingCountry" name="country_code" autocomplete="section-checkout shipping country" required>
+	                      <option value="US">United States</option>
+	                      <option value="CA">Canada</option>
+	                      <option value="GB">United Kingdom</option>
+	                      <option value="AU">Australia</option>
+	                      <option value="NZ">New Zealand</option>
+	                      <option value="DE">Germany</option>
+	                      <option value="FR">France</option>
+	                      <option value="ES">Spain</option>
+	                      <option value="IT">Italy</option>
+	                      <option value="NL">Netherlands</option>
+	                    </select>
+	                  </div>
+	                </div>
+
+	                <p id="checkoutShippingStatus" class="align-center" aria-live="polite" hidden></p>
+
+	                <ul class="actions checkout-shipping-calc-actions">
+	                  <li>
+	                    <button type="button" id="checkoutShippingCalculateBtn" class="button">Calculate Shipping</button>
+	                  </li>
+	                </ul>
+	              </form>
+	            </div>
+
+		            <div class="checkout-shipping-side">
+		              <div class="box checkout-shipping-panel checkout-shipping-options-panel">
+		                <h3 class="checkout-shipping-heading">Shipping Options</h3>
+		                <div id="checkoutShippingMethodBox" class="estimate-shipping-method">
+		                  <p id="checkoutShippingMethodStatic" class="estimate-shipping-static">--</p>
+		                  <div id="checkoutShippingMethodOptions" class="estimate-shipping-options" hidden></div>
+		                  <p id="checkoutShippingMethodHint" class="estimate-shipping-hint" hidden></p>
+		                </div>
+		              </div>
+
+		              <div class="box checkout-shipping-panel checkout-shipping-summary-panel">
+		                <h3 class="checkout-shipping-heading">Order Summary</h3>
+		                <div class="estimate-breakdown checkout-shipping-breakdown">
+		                  <div class="estimate-row">
+		                    <span>Items subtotal</span>
+		                    <span id="checkoutShippingItemsSubtotal" class="estimate-amount">$0.00</span>
+		                  </div>
+		                  <div class="estimate-row">
+		                    <span>Shipping</span>
+		                    <span id="checkoutShippingSummaryShipping" class="estimate-amount">--</span>
+		                  </div>
+		                  <div class="estimate-row">
+		                    <span>Tax</span>
+		                    <span id="checkoutShippingSummaryTax" class="estimate-amount">--</span>
+		                  </div>
+		                  <div id="checkoutShippingSummaryDiscountRow" class="estimate-row" hidden>
+		                    <span id="checkoutShippingSummaryDiscountLabel">Discount</span>
+		                    <span id="checkoutShippingSummaryDiscount" class="estimate-amount">—</span>
+		                  </div>
+		                  <div class="estimate-row estimate-row-total">
+		                    <span>Estimated total</span>
+		                    <span id="checkoutShippingSummaryTotal" class="estimate-amount">$0.00</span>
+		                  </div>
+		                </div>
+		              </div>
+		            </div>
+		          </div>
+
+	          <ul class="actions checkout-shipping-actions checkout-shipping-bottom-actions">
+	            <li><a href="#cart" class="button">Back to Cart</a></li>
+	            <li>
+	              <button type="button" id="checkoutShippingContinueBtn" class="button primary">
+	                Continue to Payment
+	              </button>
+	            </li>
+	          </ul>
+	        </article>
+
 		        <!-- Checkout Success -->
 		        <article id="checkout-success">
-		          <h2 class="major">Thank You</h2>
+		          <h2 class="major">Thank You &lt;3</h2>
 		          <div id="checkoutSuccessLoading" class="checkout-success-loading">
 		            <div class="loading-spinner" aria-hidden="true"></div>
 		            <p class="align-center">
@@ -330,15 +499,14 @@
 			            Your payment was received. If you have any questions, reach out via the <a href="#contact">contact form</a>.
 			          </p>
 
-				          <div id="receiptBox" class="box receipt-box" hidden>
-				            <div class="receipt-heading">
-				              <div class="receipt-heading-left">
-				                <h3 class="receipt-title">Invoice</h3>
-			                <p class="receipt-subtitle">
-			                  <strong>Order ID</strong><br />
-			                  <span id="receiptNumber" class="receipt-mono">—</span>
-			                </p>
-			              </div>
+					          <div id="receiptBox" class="box receipt-box" hidden>
+					            <div class="receipt-heading">
+					              <div class="receipt-heading-left">
+				                <p class="receipt-subtitle">
+				                  <strong>Order ID</strong><br />
+				                  <span id="receiptNumber" class="receipt-mono">—</span>
+				                </p>
+				              </div>
 			              <div class="receipt-heading-meta" aria-label="Invoice date">
 			                <div class="receipt-heading-meta-row">
 			                  <span class="receipt-heading-meta-label">Date</span>
@@ -932,21 +1100,46 @@
 	    <script src="assets/js/util.js" defer></script>
 	    <script src="assets/js/polyfills.js" defer></script>
 	
-		    <!-- custom scripts -->
-				    <script src="assets/js/image_protect.js?v=20260203-1" defer></script>
-				    <script src="assets/js/art_data.js?v=20260208-1" defer></script>
-											    <script src="assets/js/cart.js?v=20260210-11" defer></script>
-											    <script src="assets/js/checkout.js?v=20260210-11" defer></script>
+			    <!-- custom scripts -->
+					    <script src="assets/js/failure_reporting.js?v=20260218-3" defer></script>
+					    <script src="assets/js/image_protect.js?v=20260203-1" defer></script>
+					    <script src="assets/js/art_data.js?v=20260217-1" defer></script>
+														    <script src="assets/js/cart.js?v=20260218-1" defer></script>
+															    <script src="assets/js/checkout.js?v=20260218-8" defer></script>
 						        <script src="assets/js/gallery_art_build.js?v=20260210-1" defer></script>
-						        <script src="assets/js/shop_gallery_build.js?v=20260210-1" defer></script>
-										    <script src="assets/js/art_build.js?v=20260210-2" defer></script>
+								        <script src="assets/js/shop_gallery_build.js?v=20260217-1" defer></script>
+												    <script src="assets/js/art_build.js?v=20260217-3" defer></script>
 				    <script src="assets/js/faq.js?v=20260203-6" defer></script>
-			    <script src="assets/js/gallery_build.js?v=20260206-2" defer></script>
+				    <script src="assets/js/gallery_build.js?v=20260217-1" defer></script>
 					    <script src="assets/js/gallery_close.js?v=20260210-1" defer></script>
 		    <script src="assets/js/nav_section_control.js" defer></script>
 			    <script src="assets/js/main.js?v=20260210-2" defer></script>
+		    <script src="assets/js/runtime-config.js?v=20260218-1"></script>
 		    <script>
 		      (function () {
+		        var injectedBase = "";
+		        try {
+		          injectedBase = String(
+		            (
+		              window.MELKAPOW_RUNTIME_CONFIG
+		              && (
+		                window.MELKAPOW_RUNTIME_CONFIG.MELKAPOW_API_BASE
+		                || window.MELKAPOW_RUNTIME_CONFIG.API_BASE_URL
+		              )
+		            )
+		              || window.MELKAPOW_API_BASE
+		              || window.API_BASE_URL
+		              || ""
+		          ).trim();
+		        } catch (_) {
+		          injectedBase = "";
+		        }
+
+		        if (injectedBase) {
+		          window.MELKAPOW_API_BASE = injectedBase.replace(/\/+$/, "");
+		          return;
+		        }
+
 		        var host = location.hostname;
 		        var isLoopback = host === "localhost" || host === "127.0.0.1";
 
@@ -954,14 +1147,14 @@
 
 		        if (isLoopback) return;
 
-		        // Local LAN testing (phone on same Wi‑Fi): match host, switch to API port.
+		        // Local LAN testing (phone on same Wi-Fi): match host, switch to API port.
 		        if (isPrivateIp) {
 		          window.MELKAPOW_API_BASE = location.protocol + "//" + host + ":8000";
 		          return;
 		        }
 
-		        // Production API
-		        window.MELKAPOW_API_BASE = "https://example.com";
+		        // No injected base on hosted domains: leave empty and let shop/contact show unavailable states.
+		        window.MELKAPOW_API_BASE = "";
 		      })();
 		    </script>
 			    <script src="assets/js/contactform.js?v=20260209-1" defer></script>
