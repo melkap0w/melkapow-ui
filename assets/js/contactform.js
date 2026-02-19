@@ -9,6 +9,10 @@
     lastError: null
   };
 
+  var TURNSTILE_SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+  var TURNSTILE_SCRIPT_ID = "melkapowTurnstileScript";
+  var turnstileScriptPromise = null;
+
   var turnstileWatchdogId = null;
   var turnstileWidgetId = null;
   var turnstileFrameObserver = null;
@@ -20,6 +24,76 @@
     } catch (_) {
       return true;
     }
+  }
+
+  function loadTurnstileScript() {
+    if (window.turnstile && typeof window.turnstile.render === "function") return Promise.resolve(true);
+    if (turnstileScriptPromise) return turnstileScriptPromise;
+
+    turnstileScriptPromise = new Promise(function (resolve, reject) {
+      var existing = document.getElementById(TURNSTILE_SCRIPT_ID);
+      var script = existing;
+
+      if (script && script.getAttribute("data-loaded") === "true") {
+        resolve(true);
+        return;
+      }
+
+      var done = false;
+      var timeoutId = null;
+
+      function cleanup() {
+        if (!script) return;
+        script.removeEventListener("load", onLoad);
+        script.removeEventListener("error", onError);
+      }
+
+      function finish(ok, err) {
+        if (done) return;
+        done = true;
+        if (timeoutId) clearTimeout(timeoutId);
+        cleanup();
+        if (ok) resolve(true);
+        else reject(err || new Error("turnstile-load-failed"));
+      }
+
+      function onLoad() {
+        try { script.setAttribute("data-loaded", "true"); } catch (_) { /* ignore */ }
+        finish(true);
+      }
+
+      function onError() {
+        finish(false, new Error("turnstile-load-failed"));
+      }
+
+      if (!script) {
+        script = document.createElement("script");
+        script.id = TURNSTILE_SCRIPT_ID;
+        script.src = TURNSTILE_SCRIPT_SRC;
+        script.async = true;
+        script.defer = true;
+        script.referrerPolicy = "no-referrer";
+      }
+
+      script.addEventListener("load", onLoad);
+      script.addEventListener("error", onError);
+
+      timeoutId = setTimeout(function () {
+        finish(false, new Error("turnstile-timeout"));
+      }, 15000);
+
+      if (!existing) {
+        (document.head || document.documentElement).appendChild(script);
+      } else if (window.turnstile && typeof window.turnstile.render === "function") {
+        // Turnstile is already available (likely loaded elsewhere); resolve immediately.
+        finish(true);
+      }
+    }).catch(function (err) {
+      turnstileScriptPromise = null;
+      throw err;
+    });
+
+    return turnstileScriptPromise;
   }
 
   function clearTurnstileWatchdog() {
@@ -342,22 +416,25 @@
     clearTurnstileWatchdog();
     setStatus("");
 
-    // Wait for the template to actually show the article (it's display:none until opened).
-    var tries = 0;
-    var maxTries = 30;
-
-    function attempt() {
-      if (window.location.hash !== "#contact") return;
-
-      var rendered = renderTurnstile(form);
-      if (rendered) return;
-
-      tries += 1;
-      if (tries >= maxTries) return;
-      setTimeout(attempt, 250);
+    if (!isTurnstileConfigured(form)) {
+      removeTurnstileWidget(form);
+      return;
     }
 
-    setTimeout(attempt, 400);
+    loadTurnstileScript()
+      .then(function () {
+        if (window.location.hash !== "#contact") return;
+        rerenderTurnstile(form);
+        scheduleTurnstileWatchdog(form);
+      })
+      .catch(function () {
+        if (window.location.hash !== "#contact") return;
+        setStatus(
+          isEmbedded()
+            ? "Captcha can't load inside an embedded/preview frame. Open this site in a normal browser tab and try again."
+            : "Captcha couldn't load. If you use blockers/privacy protections, allow challenges.cloudflare.com and refresh."
+        );
+      });
   }
 
   function initContactSubmit() {
@@ -393,6 +470,30 @@
       }
 
       if (isTurnstileConfigured(form) && !token) {
+        if (typeof window.turnstile === "undefined") {
+          setStatus(
+            isEmbedded()
+              ? "Captcha can't load inside an embedded/preview frame. Open this site in a normal browser tab and try again."
+              : "Loading captcha… If it never appears, try disabling blockers/privacy protections and refresh."
+          );
+
+          loadTurnstileScript()
+            .then(function () {
+              if (window.location.hash !== "#contact") return;
+              rerenderTurnstile(form);
+              scheduleTurnstileWatchdog(form);
+            })
+            .catch(function () {
+              if (window.location.hash !== "#contact") return;
+              setStatus(
+                isEmbedded()
+                  ? "Captcha can't load inside an embedded/preview frame. Open this site in a normal browser tab and try again."
+                  : "Captcha couldn't load. If you use blockers/privacy protections, allow challenges.cloudflare.com and refresh."
+              );
+            });
+          return;
+        }
+
         // Ensure we have a rendered widget (the Contact article starts hidden),
         // and recover if a previous reset left it stuck/unclickable.
         rerenderTurnstile(form);
@@ -403,18 +504,12 @@
           scheduleTurnstileWatchdog(form);
         }
 
-        if (typeof window.turnstile === "undefined") {
-          setStatus(
-            isEmbedded()
-              ? "Captcha can't load inside an embedded/preview frame. Open this site in a normal browser tab and try again."
-              : "Captcha couldn't load on this page. Check your Turnstile sitekey/domain."
-          );
-        } else if (turnstileState.hadError && !turnstileState.errorShown) {
+        if (turnstileState.hadError && !turnstileState.errorShown) {
           turnstileState.errorShown = true;
           setStatus("Captcha isn't configured for this domain (" + location.hostname + "). Check your Turnstile allowed hostnames.");
         } else {
-            setStatus("Please complete the captcha.");
-          }
+          setStatus("Please complete the captcha.");
+        }
         return;
       }
 

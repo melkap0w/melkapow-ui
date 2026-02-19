@@ -41,8 +41,8 @@ window.MELKAPOW_ART = [
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Eye" },
       { src: "__IMAGE_REMOVED__", alt: "Eye detail 1" },
-      { src: "__IMAGE_REMOVED__", alt: "Eye detail 2" },
-      { src: "__IMAGE_REMOVED__", alt: "Eye detail 3" }
+      { src: "__IMAGE_REMOVED__", alt: "Eye detail 2" }
+    //  { src: "__IMAGE_REMOVED__", alt: "Eye detail 3" }
     ]
   },
   {
@@ -56,7 +56,7 @@ window.MELKAPOW_ART = [
       { src: "__IMAGE_REMOVED__", alt: "Birth of life" },
       { src: "__IMAGE_REMOVED__", alt: "Birth of life detail 1" },
       { src: "__IMAGE_REMOVED__", alt: "Birth of life detail 2" },
-      { src: "__IMAGE_REMOVED__", alt: "Birth of life detail 3" }
+     // { src: "__IMAGE_REMOVED__", alt: "Birth of life detail 3" }
     ]
   },
   {
@@ -65,11 +65,11 @@ window.MELKAPOW_ART = [
     productInfo: { collection: "grandeur", dimensions: '24" H x 36" W x 1.5" D' },
     thumb: "__IMAGE_REMOVED__",
     alt: "Home",
-    caption: "What would you create if you could not speak?", // I've been looking for you my whole life.
+    caption: "What would you create if you could not speak.", // I've been looking for you my whole life.
     slides: [
-      { src: "__IMAGE_REMOVED__", alt: "Home" } //,
-      //{ src: "__IMAGE_REMOVED__", alt: "Home detail 1" },
-      //{ src: "__IMAGE_REMOVED__", alt: "Home detail 2" },
+      { src: "__IMAGE_REMOVED__", alt: "Home" },
+      { src: "__IMAGE_REMOVED__", alt: "Home detail 1" },
+      { src: "__IMAGE_REMOVED__", alt: "Home detail 2" },
       //{ src: "__IMAGE_REMOVED__", alt: "Home detail 3" }
     ]
   },
@@ -104,8 +104,8 @@ window.MELKAPOW_ART = [
   },
   {
     id: "whirlpool",
-    title: "Trasmutation Vortex",
-    galleryTitle: "Trasmutation Vortex",
+    title: "Transmutation",
+    galleryTitle: "Transmutation",
     productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Whirlpool",
@@ -118,17 +118,38 @@ window.MELKAPOW_ART = [
     ]
   },
   {
-    id: "awaken",
-    title: "Awaken",
+    id: "purge",
+    title: "Purge",
     productInfo: { collection: "classic" },
     thumb: "__IMAGE_REMOVED__",
-    alt: "Awaken",
-    caption: "This piece still unraveling. Currently in progress.",
+    alt: "Purge",
+    caption: "This piece is still unraveling. <br>Currently in progress.",
     slides: [
-      { src: "__IMAGE_REMOVED__", alt: "Awaken" },
-      { src: "__IMAGE_REMOVED__", alt: "Awaken detail 1" },
-      { src: "__IMAGE_REMOVED__", alt: "Awaken detail 2" }
-      // { src: "__IMAGE_REMOVED__", alt: "Awaken detail 3" }
+      { src: "__IMAGE_REMOVED__", alt: "Purge" }
+    ]
+  },
+  {
+    id: "strip_raw",
+    title: "Stripped Raw",
+    productInfo: { collection: "classic" },
+    thumb: "__IMAGE_REMOVED__",
+    alt: "Strip Raw",
+    caption: "Stripped Raw of the fundamentals.",
+    slides: [
+      { src: "__IMAGE_REMOVED__", alt: "Strip Raw" }
+    ]
+  },
+  {
+    id: "shadows_lie",
+    title: "Shadows Lie",
+    productInfo: { collection: "classic" },
+    thumb: "__IMAGE_REMOVED__",
+    alt: "Hidden Shadows",
+    caption: "What hides in plain sight.",
+    slides: [
+      { src: "__IMAGE_REMOVED__", alt: "Hidden Shadows" },
+      { src: "__IMAGE_REMOVED__", alt: "Hidden Shadows detail 1" },     
+       { src: "__IMAGE_REMOVED__", alt: "Hidden Shadows detail 2" }
     ]
   },
   {
@@ -137,11 +158,35 @@ window.MELKAPOW_ART = [
     productInfo: { collection: "classic" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Giver",
-    caption: "Can you receive what is given? Currently in progress.",
+    caption: "Can you receive what is given.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Giver" },
       { src: "__IMAGE_REMOVED__", alt: "Giver detail 1" },
       { src: "__IMAGE_REMOVED__", alt: "Giver detail 2" }
+    ]
+  },  
+  {
+    id: "kundalini",
+    title: "Kundalini",
+    productInfo: { collection: "classic" },
+    thumb: "__IMAGE_REMOVED__",
+    alt: "Kundalini",
+    caption: "",
+    slides: [
+      { src: "__IMAGE_REMOVED__", alt: "Kundalini" },
+      { src: "__IMAGE_REMOVED__", alt: "Kundalini detail 1" }
+    ]
+  },
+  {
+    id: "mother",
+    title: "Mother",
+    productInfo: { collection: "classic" },
+    thumb: "__IMAGE_REMOVED__",
+    alt: "Mother",
+    caption: "",
+    slides: [
+      { src: "__IMAGE_REMOVED__", alt: "Mother" },
+      { src: "__IMAGE_REMOVED__", alt: "Mother detail 1" }
     ]
   }
 ];

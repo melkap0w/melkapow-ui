@@ -30,6 +30,21 @@
     return i;
   }
 
+  function setMultilineText(el, text) {
+    if (!el) return;
+
+    var raw = String(text || "");
+    raw = raw.replace(/<br\s*\/?>/gi, "\n").replace(/\\n/g, "\n");
+
+    var lines = raw.split(/\r?\n/);
+    el.textContent = "";
+
+    for (var i = 0; i < lines.length; i++) {
+      if (i) el.appendChild(document.createElement("br"));
+      el.appendChild(document.createTextNode(lines[i]));
+    }
+  }
+
   function buildArtPage() {
     console.log("✅ buildArtPage starting");
 
@@ -61,7 +76,7 @@
     }
 
     titleEl.textContent = art.title;
-    capEl.textContent = art.caption || "";
+    setMultilineText(capEl, art.caption || "");
 
     track.innerHTML = "";
     dotsWrap.innerHTML = "";
