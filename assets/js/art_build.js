@@ -497,8 +497,7 @@
 	    "Canvas Depth: 1.25″ (3.18 cm)",
       "Material: Polyester / Cotton blend",
 	    "Finish: Textured, fade-resistant canvas (OBA-free)",
-	    "Hardware: Mounting brackets included",
-	    "Origin: US / Canada / Europe / UK / Australia (varies)"
+	    "Hardware: Mounting brackets included"
 	  ];
 
 	  var STATIC_DESCRIPTION_LINES = {
@@ -506,47 +505,41 @@
 	      "Canvas Depth: 1.25″ (3.18 cm)",
         "Material: Polyester / Cotton blend",
 	      "Finish: Textured, fade-resistant canvas (OBA-free)",
-	      "Hardware: Mounting brackets included",
-	      "Origin: US / Canada / Europe / UK / Australia (varies on location)"
+	      "Hardware: Mounting brackets included"
 	    ],
 	    "framed-canvas": [
 	      "Canvas: Polyester / Cotton blend",
 	      "Frame thickness: 1.25″ (3.18 cm)",
 	      "Hardware: Hanging hardware attached",
-	      "Style: Floating frame effect",
-	      "Origin: Canada / UK / US"
+	      "Style: Floating frame effect"
 	    ],
 	    "canvas-frame": [
 	      "Frame: Pine",
 	      "Canvas: Polyester / cotton blend",
 	      "Frame thickness: 1.25″ (3.18 cm)",
 	      "Hardware: Hanging hardware attached",
-	      "Style: Floating frame effect",
-	      "Origin: Canada / UK / US"
+	      "Style: Floating frame effect"
 	    ],
 	    "gloss-metal-print": [
 	      "Technique: Dye-sublimation transfer (heat)",
 	      "Surface: Aluminum metal (corrosion resistant)",
 	      "Backing: MDF wood frame",
 	      "Coating: Protective layer for color fidelity",
-	      "Finish: Gloss for vivid depth",
-	      "Origin: US"
+	      "Finish: Gloss for vivid depth"
 	    ],
 	    "metal-print": [
 	      "Technique: Dye-sublimation transfer (heat)",
 	      "Surface: Aluminum metal (corrosion resistant)",
 	      "Backing: MDF wood frame",
 	      "Coating: Protective layer for color fidelity",
-	      "Finish: Gloss for vivid depth",
-	      "Origin: US"
+	      "Finish: Gloss for vivid depth"
 	    ],
 	    metal: [
 	      "Technique: Dye-sublimation transfer (heat)",
 	      "Surface: Aluminum metal (corrosion resistant)",
 	      "Backing: MDF wood frame",
 	      "Coating: Protective layer for color fidelity",
-	      "Finish: Gloss for vivid depth",
-	      "Origin: US"
+	      "Finish: Gloss for vivid depth"
 	    ]
 	  };
 
@@ -1143,6 +1136,11 @@
     var h = String(hash || "");
     if (!h.startsWith("#shop-")) return;
 
+    // Start loading ASAP so the first render can use cached catalog data (if present),
+    // and avoid a "stuck loading" state if the shared loader dispatches its update event
+    // before our local promise chain flips `shopCatalogStatus` to "ready".
+    loadShopCatalog({ timeoutMs: 15000, totalWaitMs: 90000, forceRefresh: true });
+
     var id = h.slice("#shop-".length);
     if (!id) return;
 
@@ -1152,9 +1150,6 @@
     var article = document.getElementById("shop-" + String(id));
     if (!article) return;
     populateArtArticle(article, art);
-
-    // If the user is viewing a shop detail page, make sure we're loading the latest catalog in the background.
-    loadShopCatalog({ timeoutMs: 15000, totalWaitMs: 90000, forceRefresh: true });
   }
 
   function handleHashChange() {
@@ -1168,6 +1163,10 @@
 
     // Keep rendered purchase boxes in sync when the shared catalog loader updates.
     window.addEventListener("melkapow:shop-catalog-updated", function () {
+      // If the shared loader has hydrated products into the global, treat it as ready so
+      // buildPurchaseBox() can render options during this refresh.
+      var map = window.MELKAPOW_PRODUCTS_BY_ART_ID;
+      if (map && typeof map === "object") shopCatalogStatus = "ready";
       refreshPurchaseBoxes();
     });
   }

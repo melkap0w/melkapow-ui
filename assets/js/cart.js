@@ -8,6 +8,7 @@
   var ESTIMATE_ZIP_KEY = "melkapow_cart_estimate_zip_v1";
   var ESTIMATE_STATE_KEY = "melkapow_cart_estimate_state_v1";
   var CART_DISCOUNT_CODE_KEY = "melkapow_cart_discount_code_v1";
+  var CART_DISCOUNT_PREVIEW_KEY = "melkapow_cart_discount_preview_v1";
 
   var estimateEls = null;
   var estimateInFlight = false;
@@ -138,6 +139,45 @@
     raw = raw.replace(/[^A-Z0-9_-]/g, "");
     if (raw.length > 20) raw = raw.slice(0, 20);
     return raw;
+  }
+
+  function normalizeDiscountPreviewState(raw) {
+    if (!raw || typeof raw !== "object") return null;
+
+    var code = normalizeDiscountCode(raw.code || raw.discountCode || "");
+    if (!code) return null;
+
+    var subtotalCents = parseInt(raw.subtotalCents, 10);
+    if (!isFinite(subtotalCents) || subtotalCents < 0) subtotalCents = 0;
+
+    var discountCents = parseInt(raw.discountCents, 10);
+    if (!isFinite(discountCents) || discountCents < 0) discountCents = 0;
+    if (discountCents > subtotalCents) discountCents = subtotalCents;
+
+    return {
+      code: code,
+      subtotalCents: subtotalCents,
+      discountCents: discountCents
+    };
+  }
+
+  function loadDiscountPreviewState() {
+    var fromSession = "";
+    try {
+      fromSession = String(window.sessionStorage.getItem(CART_DISCOUNT_PREVIEW_KEY) || "");
+    } catch (_) {
+      fromSession = "";
+    }
+    var normalizedSession = normalizeDiscountPreviewState(safeJsonParse(fromSession));
+    if (normalizedSession) return normalizedSession;
+
+    var fromLocal = "";
+    try {
+      fromLocal = String(window.localStorage.getItem(CART_DISCOUNT_PREVIEW_KEY) || "");
+    } catch (_) {
+      fromLocal = "";
+    }
+    return normalizeDiscountPreviewState(safeJsonParse(fromLocal));
   }
 
   function loadDiscountCode() {
@@ -718,6 +758,19 @@
 
     if (!amountEl) return;
 
+    // Keep Cart totals stable with discounts applied, even when estimate state is cleared
+    // during navigation (Cart -> Shipping) or other re-renders.
+    var previewDiscount = 0;
+    var discountCode = loadDiscountCode();
+    if (discountCode) {
+      var preview = loadDiscountPreviewState();
+      if (preview && preview.code === discountCode && parseInt(preview.subtotalCents, 10) === base) {
+        var d = parseInt(preview.discountCents, 10);
+        if (isFinite(d) && d > 0) previewDiscount = d;
+      }
+    }
+    if (previewDiscount > base) previewDiscount = base;
+
     var est = getEstimateForCart(cart);
     var ship = est ? parseInt(est.shippingCents, 10) : 0;
     var tax = est ? parseInt(est.taxCents, 10) : 0;
@@ -728,10 +781,14 @@
     if (!isFinite(discount)) discount = 0;
 
     if (est) {
+      if (previewDiscount > discount) discount = previewDiscount;
       if (!isFinite(total)) total = base + ship + tax - discount;
       amountEl.textContent = formatMoney(total);
     } else {
-      amountEl.textContent = formatMoney(base);
+      var discountApplied = previewDiscount;
+      var cartTotal = base - discountApplied;
+      if (cartTotal < 0) cartTotal = 0;
+      amountEl.textContent = formatMoney(cartTotal);
     }
     if (labelEl) labelEl.textContent = "Estimated total";
   }
@@ -775,15 +832,40 @@
     var it = item || {};
     var art = findArtById(it.artId);
 
+    function deriveThumbnailUrl(url) {
+      var raw = String(url || "").trim();
+      if (!raw) return "";
+
+      // Only rewrite local relative URLs; leave absolute CDN URLs alone.
+      if (/^https?:\/\//i.test(raw)) return "";
+
+      var cut = raw.length;
+      var q = raw.indexOf("?");
+      var h = raw.indexOf("#");
+      if (q !== -1 && q < cut) cut = q;
+      if (h !== -1 && h < cut) cut = h;
+      var base = raw.slice(0, cut);
+      var suffix = raw.slice(cut);
+
+      base = base.replace(/^\.\//, "");
+
+      if (/(^|\/)images\/thumbnails\//.test(base)) return base + suffix;
+
+      var thumbBase = base.replace(/(^|\/)images\/work\//, "$1__IMAGE_REMOVED__");
+      if (thumbBase !== base) return thumbBase + suffix;
+      return "";
+    }
+
     var fallback = String(it.thumb || (art && art.thumb) || "").trim();
     var primary = "";
 
     if (art && Array.isArray(art.slides) && art.slides.length) {
-      var preferred = art.slides.length > 1 ? art.slides[1] : art.slides[0];
-      if (preferred && preferred.src) primary = String(preferred.src || "").trim();
+      // Cart thumbs should be fast and small: prefer the main thumb, not large detail slides.
+      var slide0 = art.slides[0];
+      if (!fallback && slide0 && slide0.src) fallback = String(slide0.src || "").trim();
     }
 
-    if (!primary) primary = fallback;
+    primary = deriveThumbnailUrl(fallback) || fallback;
     if (!fallback) fallback = primary;
 
     return { primary: primary, fallback: fallback };
@@ -793,17 +875,30 @@
     var src = getCartThumbSources(item);
     if (!src.primary && !src.fallback) return null;
 
+    // Avoid broken-image icons in the cart UI.
+    var TRANSPARENT_PIXEL =
+      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
     var img = document.createElement("img");
     img.className = "cart-thumb";
     img.src = src.primary || src.fallback;
     img.alt = String((item && (item.title || item.artId)) || "Artwork");
-    img.loading = "lazy";
+    img.loading = "eager";
     img.decoding = "async";
 
     if (src.primary && src.fallback && src.primary !== src.fallback) {
       img.addEventListener("error", function onError() {
         img.removeEventListener("error", onError);
+        img.addEventListener("error", function onErrorFallback() {
+          img.removeEventListener("error", onErrorFallback);
+          img.src = TRANSPARENT_PIXEL;
+        });
         img.src = src.fallback;
+      });
+    } else {
+      img.addEventListener("error", function onErrorSingle() {
+        img.removeEventListener("error", onErrorSingle);
+        img.src = TRANSPARENT_PIXEL;
       });
     }
 

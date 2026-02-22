@@ -2,6 +2,11 @@ User-agent: *
 # Note: This cannot prevent saving/copying, but it asks compliant crawlers not to fetch images.
 Disallow: /__IMAGE_REMOVED__
 Disallow: /behind_scenes/
+Disallow: /__IMAGE_REMOVED__
+Disallow: /*.jpg$
+Disallow: /*.png$
+Disallow: /*.webp$
+
 
 # AI / dataset crawlers (best-effort; only respected by compliant bots)
 User-agent: GPTBot

@@ -5,6 +5,7 @@
   var LAST_SESSION_KEY = "melkapow_last_checkout_session_v1";
   var SHIPPING_FORM_KEY = "melkapow_checkout_shipping_form_v1";
   var SHIPPING_ESTIMATE_KEY = "melkapow_checkout_shipping_estimate_v1";
+  var LAST_SHIPPING_SNAPSHOT_KEY = "melkapow_last_checkout_shipping_snapshot_v1";
   var CHECKOUT_COUNTRIES_KEY = "melkapow_checkout_countries_v1";
   var CART_DISCOUNT_CODE_KEY = "melkapow_cart_discount_code_v1";
   var CART_DISCOUNT_PREVIEW_KEY = "melkapow_cart_discount_preview_v1";
@@ -12,6 +13,7 @@
   var CHECKOUT_ATTEMPT_KEY = "melkapow_checkout_attempt_v1";
   var CHECKOUT_RESULT_KEY = "melkapow_checkout_result_v1";
   var DISCOUNT_CODE_EVENT = "melkapow:discount-code-updated";
+  var CHECKOUT_STALE_ATTEMPT_MESSAGE = "Payment not completed. Please try checkout again.";
 
   function getApiBase() {
     var base = window.MELKAPOW_API_BASE;
@@ -285,11 +287,24 @@
   function loadCheckoutResultState() {
     var raw = safeJsonParse(storageGet(CHECKOUT_RESULT_KEY) || "");
     if (!raw || typeof raw !== "object") return null;
-    return {
+    var out = {
       status: normalizeSimpleText(raw.status || "", 32).toLowerCase(),
       ts: parseInt(raw.ts, 10) || 0,
       message: normalizeSimpleText(raw.message || "", 220)
     };
+    // Migration: older builds persisted the "stale attempt" warning as a failed result.
+    // Treat it as transient and clear it so it doesn't keep showing across pages/navigation.
+    if (out.status === "failed") {
+      var msgLc = String(out.message || "").trim().toLowerCase();
+      if (
+        msgLc.indexOf("payment attempt may not have completed") !== -1 ||
+        msgLc.indexOf("payment not completed. please try checkout again") === 0
+      ) {
+        clearCheckoutResultState();
+        return null;
+      }
+    }
+    return out;
   }
 
   function saveCheckoutResultState(next) {
@@ -932,6 +947,68 @@
     storageRemove(SHIPPING_ESTIMATE_KEY);
   }
 
+  function normalizeShippingSnapshot(raw) {
+    if (!raw || typeof raw !== "object") raw = {};
+
+    var countryCode = normalizeCountryCode(raw.country_code || raw.countryCode || "US") || "US";
+    var legacyName = splitFullName(raw.full_name || raw.fullName || "");
+    var firstNameRaw = pickOwnValue(raw, ["first_name", "firstName"]);
+    var lastNameRaw = pickOwnValue(raw, ["last_name", "lastName"]);
+    if (firstNameRaw == null) firstNameRaw = legacyName.firstName;
+    if (lastNameRaw == null) lastNameRaw = legacyName.lastName;
+    var firstName = normalizeSimpleText(firstNameRaw, 120);
+    var lastName = normalizeSimpleText(lastNameRaw, 120);
+    return {
+      first_name: firstName,
+      last_name: lastName,
+      full_name: joinFullName(firstName, lastName),
+      email: normalizeSimpleText(raw.email || "", 254),
+      address1: normalizeSimpleText(raw.address1 || "", 200),
+      address2: normalizeSimpleText(raw.address2 || "", 200),
+      city: normalizeSimpleText(raw.city || "", 120),
+      state_code: normalizeStateCode(raw.state_code || raw.stateCode || "", countryCode),
+      zip: normalizePostalCode(raw.zip || raw.postal_code || raw.postalCode || "", countryCode),
+      country_code: countryCode,
+      shipping_method_id: normalizeShippingMethodId(raw.shipping_method_id || raw.shippingMethodId || "")
+    };
+  }
+
+  function saveLastShippingSnapshot(sessionId) {
+    var sid = normalizeSimpleText(sessionId || "", 200);
+    if (!sid) return;
+
+    var form = loadShippingFormState();
+    if (!form || typeof form !== "object") return;
+    if (!normalizeSimpleText(form.full_name, 120)) return;
+    if (!normalizeSimpleText(form.address1, 200)) return;
+
+    try {
+      storageSet(
+        LAST_SHIPPING_SNAPSHOT_KEY,
+        JSON.stringify({
+          sessionId: sid,
+          ts: Date.now(),
+          shipping: form
+        })
+      );
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  function loadLastShippingSnapshot(sessionId) {
+    var sid = normalizeSimpleText(sessionId || "", 200);
+    var raw = safeJsonParse(storageGet(LAST_SHIPPING_SNAPSHOT_KEY) || "");
+    if (!raw || typeof raw !== "object") return null;
+
+    var storedSid = normalizeSimpleText(raw.session_id || raw.sessionId || "", 200);
+    if (sid && storedSid && storedSid !== sid) return null;
+
+    var ship = raw.shipping && typeof raw.shipping === "object" ? raw.shipping : null;
+    if (!ship) return null;
+    return normalizeShippingSnapshot(ship);
+  }
+
   function handleCheckoutReturn() {
     if (!("URLSearchParams" in window)) return;
 
@@ -952,6 +1029,7 @@
     if (state === "success") {
       var sid = String(params.get("session_id") || "").trim();
       if (sid) storageSet(LAST_SESSION_KEY, sid);
+      if (sid) saveLastShippingSnapshot(sid);
       clearShippingStepState();
       clearCheckoutAttemptState();
       saveCheckoutResultState({ status: "success", message: "Payment received." });
@@ -2069,10 +2147,12 @@
       var hasItems = !!(cart && Array.isArray(cart.items) && cart.items.length);
       var attemptState = loadCheckoutAttemptState();
       var resultState = loadCheckoutResultState();
+      var atShipping = window.location.hash === "#checkout-shipping";
       var now = Date.now();
+      var transientError = "";
 
       if (!hasItems) {
-        if (window.location.hash === "#checkout-shipping" && now - shippingStepMountedAt < 1200) {
+        if (atShipping && now - shippingStepMountedAt < 1200) {
           setStatus("Loading cart...", "");
           setTimeout(refreshStep, 250);
           return;
@@ -2081,27 +2161,41 @@
         saveShippingEstimateState(null);
         clearShippingOptions();
         renderSummary(cart, null);
-        setStatus("Your cart is empty.", "error");
+        if (atShipping) {
+          setStatus("Your cart is empty.", "error");
+        } else {
+          // Don't pre-fill an error on a hidden step; it can appear later even after cart has items.
+          setStatus("", "");
+        }
         setContinueEnabled();
-        if (window.location.hash === "#checkout-shipping") {
+        if (atShipping) {
           window.location.hash = "#cart";
         }
         return;
       }
 
-      if (window.location.hash === "#checkout-shipping" && !countriesLoadedFromApi) {
+      if (atShipping) {
+        var existing = String(statusEl.textContent || "").trim();
+        if (existing === "Your cart is empty." || existing === "Loading cart...") {
+          setStatus("", "");
+        }
+      }
+
+      if (atShipping && !countriesLoadedFromApi) {
         loadCheckoutCountries(false);
       }
 
-      if (window.location.hash === "#checkout-shipping" && attemptState) {
+      if (atShipping && attemptState) {
         var ageMs = now - (parseInt(attemptState.ts, 10) || 0);
         if ((attemptState.status === "starting" || attemptState.status === "redirecting") && ageMs > 15000) {
-          setStatus("Previous payment attempt may not have completed. Please try checkout again.", "error");
-          saveCheckoutResultState({
-            status: "failed",
-            message: "Previous payment attempt may not have completed. Please try checkout again."
-          });
+          transientError = CHECKOUT_STALE_ATTEMPT_MESSAGE;
           clearCheckoutAttemptState();
+        }
+      }
+
+      if (atShipping) {
+        if (transientError) {
+          setStatus(transientError, "error");
         } else if (resultState && resultState.status === "failed" && resultState.message) {
           setStatus(resultState.message, "error");
         } else if (resultState && resultState.status === "cancel") {
@@ -2140,19 +2234,22 @@
     renderSummary(getCart(), estimateState);
     renderShippingOptions(estimateState);
 
-    function onInputChange() {
-      var formState = readFormState();
-      saveShippingFormState(formState);
+      function onInputChange() {
+        var cart = getCart();
+        var formState = readFormState();
+        saveShippingFormState(formState);
 
-      if (estimateState && !estimateMatches(getCart(), formState, estimateState)) {
-        estimateState = null;
-        saveShippingEstimateState(null);
-        clearShippingOptions();
+        if (estimateState && !estimateMatches(cart, formState, estimateState)) {
+          estimateState = null;
+          saveShippingEstimateState(null);
+          clearShippingOptions();
+        }
+
+        // Keep summary stable (especially discount + estimated total) as inputs change.
+        renderSummary(cart, estimateState);
+        setStatus("", "");
+        setContinueEnabled();
       }
-
-      setStatus("", "");
-      setContinueEnabled();
-    }
 
     firstNameEl.addEventListener("input", onInputChange);
     lastNameEl.addEventListener("input", onInputChange);
@@ -2226,6 +2323,9 @@
         refreshStep();
       }
     });
+    window.addEventListener("hashchange", function () {
+      if (window.location.hash !== "#checkout-shipping") setStatus("", "");
+    });
 
     window.addEventListener("pageshow", function () {
       if (window.location.hash === "#checkout-shipping") {
@@ -2260,13 +2360,14 @@
     refreshStep();
   }
 
-  function wireReceipt() {
-    var receiptBox = document.getElementById("receiptBox");
-    var statusMsg = document.getElementById("receiptStatusMsg");
-    if (!receiptBox || !statusMsg) return;
+    function wireReceipt() {
+      var receiptBox = document.getElementById("receiptBox");
+      var statusMsg = document.getElementById("receiptStatusMsg");
+      if (!receiptBox || !statusMsg) return;
 
-    var loadingBox = document.getElementById("checkoutSuccessLoading");
-    var contentBox = document.getElementById("checkoutSuccessContent");
+      var emailNoteEl = document.getElementById("receiptEmailNote");
+      var loadingBox = document.getElementById("checkoutSuccessLoading");
+      var contentBox = document.getElementById("checkoutSuccessContent");
 
     var elNumber = document.getElementById("receiptNumber");
     var elDate = document.getElementById("receiptDate");
@@ -2284,16 +2385,53 @@
     var elTotal = document.getElementById("receiptTotal");
     var elPaymentDate = document.getElementById("receiptPaymentDate");
     var elPaymentMethod = document.getElementById("receiptPaymentMethod");
-    var elPaymentAmount = document.getElementById("receiptPaymentAmount");
+	    var elPaymentAmount = document.getElementById("receiptPaymentAmount");
+	
+	    var lastLoadedSession = "";
+	    var lastEmailedSession = "";
+	    var emailInFlight = false;
+	    var emailRetryTimerId = null;
+	    var emailRetrySessionId = "";
+	    var emailAttemptCountBySession = {};
 
-    var lastLoadedSession = "";
-    var lastEmailedSession = "";
-    var emailInFlight = false;
+	    function clearEmailRetry() {
+	      if (emailRetryTimerId) {
+	        clearTimeout(emailRetryTimerId);
+	        emailRetryTimerId = null;
+	      }
+	      emailRetrySessionId = "";
+	    }
 
-    function splitItemDescription(item) {
-      var it = item && typeof item === "object" ? item : {};
-      var raw = String(it.description || "").trim();
-      var title = String(it.title || "").trim();
+	    function scheduleEmailRetry(sessionId, apiBase, attempt) {
+	      var sid = String(sessionId || "").trim();
+	      if (!sid) return;
+	      clearEmailRetry();
+	      emailRetrySessionId = sid;
+	      var n = parseInt(attempt, 10) || 1;
+	      if (n < 1) n = 1;
+	      var delay = Math.min(15000, Math.round(900 * Math.pow(1.7, n - 1)));
+	      delay += Math.floor(Math.random() * 250);
+	      emailRetryTimerId = setTimeout(function () {
+	        emailRetryTimerId = null;
+	        if (window.location.hash !== "#checkout-success") return;
+	        emailInvoiceOnce(sid, apiBase);
+	      }, delay);
+	    }
+
+	    function isRetryableReceiptEmailError(status, msg) {
+	      var code = isFinite(status) ? parseInt(status, 10) : 0;
+	      var text = String(msg || "").toLowerCase();
+	      if (code === 0 || code === 429 || code === 500 || code === 502 || code === 503 || code === 504) return true;
+	      if (code === 400 && /payment isn't complete|payment isnt complete|not complete yet/.test(text)) return true;
+	      if (code === 400 && /payment intent is missing|customer email is missing/.test(text)) return true;
+	      if (/temporarily|timeout|timed out|unavailable|network|failed to fetch|connection/.test(text)) return true;
+	      return false;
+	    }
+	
+	    function splitItemDescription(item) {
+	      var it = item && typeof item === "object" ? item : {};
+	      var raw = String(it.description || "").trim();
+	      var title = String(it.title || "").trim();
       var details = String(it.details || "").trim();
 
       if ((!title || !details) && raw && raw.indexOf("—") >= 0) {
@@ -2363,20 +2501,43 @@
 
       var customer = r.customer && typeof r.customer === "object" ? r.customer : {};
       var shipping = r.shipping && typeof r.shipping === "object" ? r.shipping : {};
+      var activeSid = String(r.sessionId || storageGet(LAST_SESSION_KEY) || "").trim();
+      var shippingSnapshot = activeSid ? loadLastShippingSnapshot(activeSid) : null;
 
       var email = String(customer.email || "").trim();
 
-      var billingText = formatAddressBlock(String(customer.name || ""), customer.address);
+      var billingName = String(customer.name || "").trim();
+      if (shippingSnapshot && shippingSnapshot.full_name) {
+        var bNorm = normalizeSimpleText(billingName, 120).toLowerCase();
+        var snapNorm = normalizeSimpleText(shippingSnapshot.full_name, 120).toLowerCase();
+        if (!bNorm) {
+          billingName = shippingSnapshot.full_name;
+        } else if (snapNorm && snapNorm !== bNorm && snapNorm.indexOf(bNorm) === 0 && snapNorm.length > bNorm.length + 1) {
+          // Stripe sometimes returns only "First" in billing; prefer the full name we collected on the Shipping step.
+          billingName = shippingSnapshot.full_name;
+        }
+      }
+
+      var billingText = formatAddressBlock(billingName, customer.address);
       if (!billingText) billingText = formatAddressBlock(String(shipping.name || ""), shipping.address);
       if (email) billingText = joinNonEmpty([billingText, email], "\n");
       if (elBilling) elBilling.textContent = billingText || "--";
 
-      var billingSig = addressSignature(customer.address);
-      if (!billingSig && shipping && shipping.address) billingSig = addressSignature(shipping.address);
-
       var shippingText = formatAddressBlock(String(shipping.name || ""), shipping.address);
-      var shippingSig = addressSignature(shipping.address);
-      var showShipping = !!(shippingText && shippingSig && billingSig && shippingSig !== billingSig);
+      var showShipping = !!shippingText;
+
+      if (!showShipping && shippingSnapshot) {
+        var snapAddr = {
+          line1: shippingSnapshot.address1,
+          line2: shippingSnapshot.address2,
+          city: shippingSnapshot.city,
+          state: shippingSnapshot.state_code,
+          postal_code: shippingSnapshot.zip,
+          country: shippingSnapshot.country_code
+        };
+        shippingText = formatAddressBlock(String(shippingSnapshot.full_name || ""), snapAddr);
+        showShipping = !!shippingText;
+      }
 
       setHidden(elShippingBlock, !showShipping);
       if (elShipping) elShipping.textContent = showShipping ? shippingText : "";
@@ -2444,54 +2605,97 @@
 
       var payment = r.payment && typeof r.payment === "object" ? r.payment : {};
       if (elPaymentMethod) elPaymentMethod.textContent = formatPaymentLabel(payment) || "--";
-      if (elPaymentAmount) elPaymentAmount.textContent = isFinite(total) ? formatMoney(total, currency) : "--";
-    }
-
-    function emailInvoiceOnce(sessionId, apiBase) {
-      var sid = String(sessionId || "").trim();
-      var base = String(apiBase || "").trim();
-      if (!sid || !base || typeof fetch !== "function") return;
-      if (emailInFlight) return;
-      if (lastEmailedSession === sid) return;
-      lastEmailedSession = sid;
-      emailInFlight = true;
-
-      fetch(base + "/api/shop/checkout/session/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sid, force: false })
-      })
-        .then(function (res) {
-          if (res && res.ok) return;
-          return res
-            .json()
-            .catch(function () { return {}; })
-            .then(function (data) {
-              var msg = (data && data.detail) ? String(data.detail) : "Invoice email unavailable.";
-              throw new Error(msg);
-            });
+	      if (elPaymentAmount) elPaymentAmount.textContent = isFinite(total) ? formatMoney(total, currency) : "--";
+	    }
+	
+	      function emailInvoiceOnce(sessionId, apiBase) {
+	        var sid = String(sessionId || "").trim();
+	        var base = String(apiBase || "").trim();
+	        if (!sid || !base || typeof fetch !== "function") return;
+	        if (emailInFlight) return;
+	        if (emailRetryTimerId && emailRetrySessionId === sid) return;
+	        if (lastEmailedSession === sid) return;
+	        emailInFlight = true;
+	        var attempt = parseInt(emailAttemptCountBySession[sid], 10) || 0;
+	        attempt += 1;
+	        emailAttemptCountBySession[sid] = attempt;
+	
+	        fetch(base + "/api/shop/checkout/session/email", {
+	          method: "POST",
+	          headers: { "Content-Type": "application/json" },
+	          body: JSON.stringify({ session_id: sid, force: false })
         })
-        .catch(function () {
-          setStatus("Invoice email could not be sent automatically right now. If you do not receive it soon, please contact us.", "error");
-        })
-        .finally(function () {
-          emailInFlight = false;
-        });
-    }
+          .then(function (res) {
+            if (!res) throw new Error("Invoice email unavailable.");
+            return res
+              .json()
+              .catch(function () { return {}; })
+              .then(function (data) {
+                if (res.ok) return data || {};
+                var msg = (data && data.detail) ? String(data.detail) : "Invoice email unavailable.";
+                var err = new Error(msg);
+                err.status = res.status;
+                throw err;
+	              });
+	          })
+	          .then(function () {
+	            lastEmailedSession = sid;
+	            clearEmailRetry();
+	            if (emailNoteEl) {
+	              emailNoteEl.textContent = "An invoice has been emailed to the email address you provided.";
+	              emailNoteEl.hidden = false;
+	            }
+	          })
+	          .catch(function (err) {
+	            var msg = String((err && err.message) || "").trim() || "Invoice email unavailable.";
+	            var status = err && isFinite(err.status) ? parseInt(err.status, 10) : 0;
+	            if (window.console && typeof window.console.warn === "function") {
+	              window.console.warn("Receipt email failed:", err);
+	            }
+	
+	          // For common dev-misconfig errors, avoid scaring customers while still being clear.
+	          if (/receipt emails are disabled|email settings missing|smtp credentials missing|payments aren't enabled/i.test(msg)) {
+	            if (emailNoteEl) {
+	              emailNoteEl.textContent = "";
+	              emailNoteEl.hidden = true;
+	            }
+	            return;
+	          }
 
-    function refresh() {
-      var atSuccess = window.location.hash === "#checkout-success";
-      if (!atSuccess) {
-        setStatus("", "");
-        return;
-      }
+	          if (isRetryableReceiptEmailError(status, msg) && attempt < 7) {
+	            scheduleEmailRetry(sid, base, attempt + 1);
+	            if (emailNoteEl && /payment isn't complete|payment isnt complete|not complete yet/i.test(msg)) {
+	              emailNoteEl.textContent = "Confirming payment... we'll email your receipt shortly.";
+	              emailNoteEl.hidden = false;
+	            }
+	            return;
+	          }
 
-      var sessionId = String(storageGet(LAST_SESSION_KEY) || "").trim();
-      if (!sessionId) {
-        setHidden(receiptBox, true);
-        setStatus("Invoice details are unavailable. If you need help, contact us.", "error");
-        setLoading(false);
-        return;
+	            if (emailNoteEl) {
+	              emailNoteEl.textContent = "";
+	              emailNoteEl.hidden = true;
+	            }
+	          })
+	          .finally(function () {
+	            emailInFlight = false;
+	          });
+	      }
+	
+	    function refresh() {
+	      var atSuccess = window.location.hash === "#checkout-success";
+	      if (!atSuccess) {
+	        clearEmailRetry();
+	        setStatus("", "");
+	        return;
+	      }
+	
+	      var sessionId = String(storageGet(LAST_SESSION_KEY) || "").trim();
+	      if (emailRetrySessionId && emailRetrySessionId !== sessionId) clearEmailRetry();
+	      if (!sessionId) {
+	        setHidden(receiptBox, true);
+	        setStatus("Invoice details are unavailable. If you need help, contact us.", "error");
+	        setLoading(false);
+	        return;
       }
 
       if (lastLoadedSession === sessionId && !receiptBox.hidden) {
@@ -2500,6 +2704,11 @@
         return;
       }
       lastLoadedSession = sessionId;
+
+      if (emailNoteEl) {
+        emailNoteEl.textContent = "";
+        emailNoteEl.hidden = true;
+      }
 
       setLoading(true);
 
@@ -2601,16 +2810,26 @@
     refresh();
   }
 
-  function wireCartDiscount() {
-    var inputEl = document.getElementById("cartDiscountCode");
-    var applyBtn = document.getElementById("cartDiscountApplyBtn");
-    var statusEl = document.getElementById("cartDiscountStatus");
-    var itemsSubtotalEl = document.getElementById("cartSummaryItemsSubtotal");
-    var discountRowEl = document.getElementById("cartSummaryDiscountRow");
-    var discountLabelEl = document.getElementById("cartSummaryDiscountLabel");
-    var discountAmountEl = document.getElementById("cartSummaryDiscount");
-    var totalEl = document.getElementById("cartTotal");
-    if (!inputEl || !applyBtn || !statusEl) return;
+    function wireCartDiscount() {
+      var inputEl = document.getElementById("cartDiscountCode");
+      var applyBtn = document.getElementById("cartDiscountApplyBtn");
+      var statusEl = document.getElementById("cartDiscountStatus");
+      var itemsSubtotalEl = document.getElementById("cartSummaryItemsSubtotal");
+      var discountRowEl = document.getElementById("cartSummaryDiscountRow");
+      var discountLabelEl = document.getElementById("cartSummaryDiscountLabel");
+      var discountAmountEl = document.getElementById("cartSummaryDiscount");
+      var totalEl = document.getElementById("cartTotal");
+  
+      // Keep the Shipping step order summary in sync so Cart -> Shipping doesn't "jump"
+      // back to a pre-discount total before the Shipping step JS re-renders.
+      var checkoutShippingItemsSubtotalEl = document.getElementById("checkoutShippingItemsSubtotal");
+      var checkoutShippingShippingEl = document.getElementById("checkoutShippingSummaryShipping");
+      var checkoutShippingTaxEl = document.getElementById("checkoutShippingSummaryTax");
+      var checkoutShippingDiscountRowEl = document.getElementById("checkoutShippingSummaryDiscountRow");
+      var checkoutShippingDiscountLabelEl = document.getElementById("checkoutShippingSummaryDiscountLabel");
+      var checkoutShippingDiscountEl = document.getElementById("checkoutShippingSummaryDiscount");
+      var checkoutShippingTotalEl = document.getElementById("checkoutShippingSummaryTotal");
+      if (!inputEl || !applyBtn || !statusEl) return;
 
     if (applyBtn.__melkapowBound) return;
     applyBtn.__melkapowBound = true;
@@ -2646,11 +2865,11 @@
       return getCartSubtotalCents(getCart());
     }
 
-    function renderCartSummary(subtotalCents, discountCents, currency, discountCode) {
-      var cur = String(currency || "USD").trim().toUpperCase() || "USD";
-      var code = normalizeDiscountCode(discountCode || "");
-      var subtotal = parseInt(subtotalCents, 10);
-      if (!isFinite(subtotal) || subtotal < 0) subtotal = 0;
+      function renderCartSummary(subtotalCents, discountCents, currency, discountCode) {
+        var cur = String(currency || "USD").trim().toUpperCase() || "USD";
+        var code = normalizeDiscountCode(discountCode || "");
+        var subtotal = parseInt(subtotalCents, 10);
+        if (!isFinite(subtotal) || subtotal < 0) subtotal = 0;
 
       var discount = parseInt(discountCents, 10);
       if (!isFinite(discount) || discount < 0) discount = 0;
@@ -2674,12 +2893,38 @@
         }
       }
 
-      if (totalEl) {
-        var total = subtotal - discount;
-        if (total < 0) total = 0;
-        totalEl.textContent = formatMoney(total, cur);
+        if (totalEl) {
+          var total = subtotal - discount;
+          if (total < 0) total = 0;
+          totalEl.textContent = formatMoney(total, cur);
+        }
+  
+        // Mirror the same discount-aware subtotal/total into the Shipping step summary.
+        // Shipping/tax are intentionally shown as unknown until calculated.
+        if (checkoutShippingItemsSubtotalEl) {
+          checkoutShippingItemsSubtotalEl.textContent = formatMoney(subtotal, cur);
+        }
+        if (checkoutShippingShippingEl) checkoutShippingShippingEl.textContent = "--";
+        if (checkoutShippingTaxEl) checkoutShippingTaxEl.textContent = "--";
+        if (checkoutShippingDiscountRowEl && checkoutShippingDiscountEl) {
+          if (discount > 0) {
+            checkoutShippingDiscountRowEl.hidden = false;
+            checkoutShippingDiscountEl.textContent = "-" + formatMoney(discount, cur);
+            if (checkoutShippingDiscountLabelEl) {
+              checkoutShippingDiscountLabelEl.textContent = code ? ("Discount (" + code + ")") : "Discount";
+            }
+          } else {
+            checkoutShippingDiscountRowEl.hidden = true;
+            checkoutShippingDiscountEl.textContent = "—";
+            if (checkoutShippingDiscountLabelEl) checkoutShippingDiscountLabelEl.textContent = "Discount";
+          }
+        }
+        if (checkoutShippingTotalEl) {
+          var shipTotal = subtotal - discount;
+          if (shipTotal < 0) shipTotal = 0;
+          checkoutShippingTotalEl.textContent = formatMoney(shipTotal, cur);
+        }
       }
-    }
 
     function requestDiscountPreview(code, subtotalCents) {
       if (previewAbortController && typeof previewAbortController.abort === "function") {
@@ -2968,13 +3213,11 @@
       btn.disabled = false;
       btn.setAttribute("aria-disabled", "false");
       var attemptState = loadCheckoutAttemptState();
+      var transientError = "";
       if (attemptState) {
         var ageMs = Date.now() - (parseInt(attemptState.ts, 10) || 0);
         if ((attemptState.status === "starting" || attemptState.status === "redirecting") && ageMs > 15000) {
-          saveCheckoutResultState({
-            status: "failed",
-            message: "Previous payment attempt may not have completed. Please try checkout again."
-          });
+          transientError = CHECKOUT_STALE_ATTEMPT_MESSAGE;
           clearCheckoutAttemptState();
         }
       }
@@ -2983,6 +3226,8 @@
         setStatus(resultState.message, "error");
       } else if (resultState && resultState.status === "cancel") {
         setStatus("Payment was canceled. Your cart is still saved.", "");
+      } else if (transientError) {
+        setStatus(transientError, "error");
       } else {
         setStatus("", "");
       }
@@ -3008,6 +3253,9 @@
 
     window.addEventListener("hashchange", function () {
       if (window.location.hash === "#cart") refresh();
+    });
+    window.addEventListener("hashchange", function () {
+      if (window.location.hash !== "#cart") setStatus("", "");
     });
 
     window.addEventListener("pageshow", function () {
