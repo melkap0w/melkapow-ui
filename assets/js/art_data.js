@@ -66,7 +66,7 @@ window.MELKAPOW_ART = [
     thumb: "__IMAGE_REMOVED__",
     alt: "Home",
     caption: "What would you create if you could not speak.", // I've been looking for you my whole life.
-    slides: [
+    slides: [ 
       { src: "__IMAGE_REMOVED__", alt: "Home" },
       { src: "__IMAGE_REMOVED__", alt: "Home detail 1" },
       { src: "__IMAGE_REMOVED__", alt: "Home detail 2" },
