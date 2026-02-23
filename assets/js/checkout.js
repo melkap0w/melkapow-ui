@@ -2387,46 +2387,7 @@
     var elPaymentMethod = document.getElementById("receiptPaymentMethod");
 	    var elPaymentAmount = document.getElementById("receiptPaymentAmount");
 	
-	    var lastLoadedSession = "";
-	    var lastEmailedSession = "";
-	    var emailInFlight = false;
-	    var emailRetryTimerId = null;
-	    var emailRetrySessionId = "";
-	    var emailAttemptCountBySession = {};
-
-	    function clearEmailRetry() {
-	      if (emailRetryTimerId) {
-	        clearTimeout(emailRetryTimerId);
-	        emailRetryTimerId = null;
-	      }
-	      emailRetrySessionId = "";
-	    }
-
-	    function scheduleEmailRetry(sessionId, apiBase, attempt) {
-	      var sid = String(sessionId || "").trim();
-	      if (!sid) return;
-	      clearEmailRetry();
-	      emailRetrySessionId = sid;
-	      var n = parseInt(attempt, 10) || 1;
-	      if (n < 1) n = 1;
-	      var delay = Math.min(15000, Math.round(900 * Math.pow(1.7, n - 1)));
-	      delay += Math.floor(Math.random() * 250);
-	      emailRetryTimerId = setTimeout(function () {
-	        emailRetryTimerId = null;
-	        if (window.location.hash !== "#checkout-success") return;
-	        emailInvoiceOnce(sid, apiBase);
-	      }, delay);
-	    }
-
-	    function isRetryableReceiptEmailError(status, msg) {
-	      var code = isFinite(status) ? parseInt(status, 10) : 0;
-	      var text = String(msg || "").toLowerCase();
-	      if (code === 0 || code === 429 || code === 500 || code === 502 || code === 503 || code === 504) return true;
-	      if (code === 400 && /payment isn't complete|payment isnt complete|not complete yet/.test(text)) return true;
-	      if (code === 400 && /payment intent is missing|customer email is missing/.test(text)) return true;
-	      if (/temporarily|timeout|timed out|unavailable|network|failed to fetch|connection/.test(text)) return true;
-	      return false;
-	    }
+		    var lastLoadedSession = "";
 	
 	    function splitItemDescription(item) {
 	      var it = item && typeof item === "object" ? item : {};
@@ -2608,94 +2569,29 @@
 	      if (elPaymentAmount) elPaymentAmount.textContent = isFinite(total) ? formatMoney(total, currency) : "--";
 	    }
 	
-	      function emailInvoiceOnce(sessionId, apiBase) {
-	        var sid = String(sessionId || "").trim();
-	        var base = String(apiBase || "").trim();
-	        if (!sid || !base || typeof fetch !== "function") return;
-	        if (emailInFlight) return;
-	        if (emailRetryTimerId && emailRetrySessionId === sid) return;
-	        if (lastEmailedSession === sid) return;
-	        emailInFlight = true;
-	        var attempt = parseInt(emailAttemptCountBySession[sid], 10) || 0;
-	        attempt += 1;
-	        emailAttemptCountBySession[sid] = attempt;
+		      function showReceiptEmailNote() {
+		        if (!emailNoteEl) return;
+		        emailNoteEl.textContent = "Your receipt will be emailed automatically.";
+		        emailNoteEl.hidden = false;
+		      }
 	
-	        fetch(base + "/api/shop/checkout/session/email", {
-	          method: "POST",
-	          headers: { "Content-Type": "application/json" },
-	          body: JSON.stringify({ session_id: sid, force: false })
-        })
-          .then(function (res) {
-            if (!res) throw new Error("Invoice email unavailable.");
-            return res
-              .json()
-              .catch(function () { return {}; })
-              .then(function (data) {
-                if (res.ok) return data || {};
-                var msg = (data && data.detail) ? String(data.detail) : "Invoice email unavailable.";
-                var err = new Error(msg);
-                err.status = res.status;
-                throw err;
-	              });
-	          })
-	          .then(function () {
-	            lastEmailedSession = sid;
-	            clearEmailRetry();
-	            if (emailNoteEl) {
-	              emailNoteEl.textContent = "An invoice has been emailed to the email address you provided.";
-	              emailNoteEl.hidden = false;
-	            }
-	          })
-	          .catch(function (err) {
-	            var msg = String((err && err.message) || "").trim() || "Invoice email unavailable.";
-	            var status = err && isFinite(err.status) ? parseInt(err.status, 10) : 0;
-	            if (window.console && typeof window.console.warn === "function") {
-	              window.console.warn("Receipt email failed:", err);
-	            }
-	
-	          // For common dev-misconfig errors, avoid scaring customers while still being clear.
-	          if (/receipt emails are disabled|email settings missing|smtp credentials missing|payments aren't enabled/i.test(msg)) {
-	            if (emailNoteEl) {
-	              emailNoteEl.textContent = "";
-	              emailNoteEl.hidden = true;
-	            }
-	            return;
-	          }
-
-	          if (isRetryableReceiptEmailError(status, msg) && attempt < 7) {
-	            scheduleEmailRetry(sid, base, attempt + 1);
-	            if (emailNoteEl && /payment isn't complete|payment isnt complete|not complete yet/i.test(msg)) {
-	              emailNoteEl.textContent = "Confirming payment... we'll email your receipt shortly.";
-	              emailNoteEl.hidden = false;
-	            }
-	            return;
-	          }
-
-	            if (emailNoteEl) {
-	              emailNoteEl.textContent = "";
-	              emailNoteEl.hidden = true;
-	            }
-	          })
-	          .finally(function () {
-	            emailInFlight = false;
-	          });
-	      }
-	
-	    function refresh() {
-	      var atSuccess = window.location.hash === "#checkout-success";
-	      if (!atSuccess) {
-	        clearEmailRetry();
-	        setStatus("", "");
-	        return;
-	      }
-	
-	      var sessionId = String(storageGet(LAST_SESSION_KEY) || "").trim();
-	      if (emailRetrySessionId && emailRetrySessionId !== sessionId) clearEmailRetry();
-	      if (!sessionId) {
-	        setHidden(receiptBox, true);
-	        setStatus("Invoice details are unavailable. If you need help, contact us.", "error");
-	        setLoading(false);
-	        return;
+		    function refresh() {
+		      var atSuccess = window.location.hash === "#checkout-success";
+		      if (!atSuccess) {
+		        setStatus("", "");
+		        if (emailNoteEl) {
+		          emailNoteEl.textContent = "";
+		          emailNoteEl.hidden = true;
+		        }
+		        return;
+		      }
+		
+		      var sessionId = String(storageGet(LAST_SESSION_KEY) || "").trim();
+		      if (!sessionId) {
+		        setHidden(receiptBox, true);
+		        setStatus("Invoice details are unavailable. If you need help, contact us.", "error");
+		        setLoading(false);
+		        return;
       }
 
       if (lastLoadedSession === sessionId && !receiptBox.hidden) {
@@ -2775,16 +2671,16 @@
           });
       }
 
-      fetchInvoiceWithRetry(1)
-        .then(function (data) {
-          if (!data || !data.ok) throw new Error("Failed to load invoice.");
-          render(data);
-          emailInvoiceOnce(sessionId, apiBase);
-          if (data.partial) {
-            setStatus("Invoice loaded with limited details. Everything is saved and email confirmation is still being sent.", "");
-          } else {
-            setStatus("", "");
-          }
+	      fetchInvoiceWithRetry(1)
+	        .then(function (data) {
+	          if (!data || !data.ok) throw new Error("Failed to load invoice.");
+	          render(data);
+	          showReceiptEmailNote();
+	          if (data.partial) {
+	            setStatus("Invoice loaded with limited details. Everything is saved and email confirmation is still being sent.", "");
+	          } else {
+	            setStatus("", "");
+	          }
           setLoading(false);
         })
         .catch(function (err) {
