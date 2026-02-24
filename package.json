@@ -1,0 +1,13 @@
+{
+  "name": "melkapow-portfolio",
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "^1.44.0"
+  },
+  "scripts": {
+    "e2e": "playwright test",
+    "e2e:dev": "playwright test -g \"@dev\"",
+    "e2e:smoke": "playwright test -g \"@smoke\"",
+    "e2e:install": "playwright install"
+  }
+}

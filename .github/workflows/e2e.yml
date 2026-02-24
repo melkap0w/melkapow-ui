@@ -1,0 +1,118 @@
+name: E2E (Playwright)
+
+on:
+  pull_request:
+    branches: ["main", "dev"]
+  push:
+    branches: ["main", "dev"]
+  workflow_dispatch:
+    inputs:
+      api_base:
+        description: Optional override. Leave blank to auto-pick (main=prod, dev=dev).
+        required: false
+        default: ""
+      warmup_max_ms:
+        description: Optional override (ms). Leave blank for defaults (prod=45000, dev=90000).
+        required: false
+        default: ""
+
+jobs:
+  smoke:
+    name: Smoke (offline-safe)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright smoke tests
+        run: npm run e2e:smoke
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-smoke
+          path: playwright-report
+          retention-days: 7
+
+  deployed_api:
+    name: Deployed API warm-up + E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Resolve API base (main=prod, dev=dev)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            api_base="${{ github.event.inputs.api_base }}"
+            warmup_max_ms="${{ github.event.inputs.warmup_max_ms }}"
+
+            if [[ -n "${api_base}" ]]; then
+              echo "E2E_API_BASE=${api_base}" >> "$GITHUB_ENV"
+            elif [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+              echo "E2E_API_BASE=http://localhost:8000" >> "$GITHUB_ENV"
+            else
+              echo "E2E_API_BASE=http://localhost:8000" >> "$GITHUB_ENV"
+            fi
+
+            if [[ -n "${warmup_max_ms}" ]]; then
+              echo "E2E_WARMUP_MAX_MS=${warmup_max_ms}" >> "$GITHUB_ENV"
+            elif [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+              echo "E2E_WARMUP_MAX_MS=45000" >> "$GITHUB_ENV"
+            else
+              echo "E2E_WARMUP_MAX_MS=90000" >> "$GITHUB_ENV"
+            fi
+          elif [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            echo "E2E_API_BASE=http://localhost:8000" >> "$GITHUB_ENV"
+            echo "E2E_WARMUP_MAX_MS=45000" >> "$GITHUB_ENV"
+          else
+            echo "E2E_API_BASE=http://localhost:8000" >> "$GITHUB_ENV"
+            echo "E2E_WARMUP_MAX_MS=90000" >> "$GITHUB_ENV"
+          fi
+
+          echo "E2E_WARMUP_ENABLED=true" >> "$GITHUB_ENV"
+          echo "E2E_TEST_TIMEOUT_MS=180000" >> "$GITHUB_ENV"
+
+      - name: Run deployed API tests (includes warm-up)
+        run: npm run e2e:dev
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-deployed-api
+          path: playwright-report
+          retention-days: 7

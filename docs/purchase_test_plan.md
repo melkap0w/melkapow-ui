@@ -2,6 +2,69 @@
 
 This repo is a static frontend plus a FastAPI backend (`app/`) for shop + payments.
 
+## What “E2E” means here (3 layers)
+
+You’ll get the best confidence by running three tiers:
+
+### A) Smoke tests (fast, safe)
+
+Goal: “the site works” without relying on Stripe/Printful availability.
+
+- Backend: `GET /api/health` returns `{ ok: true }`
+- Frontend: Playwright smoke test that mocks the backend endpoints so no real orders/emails are sent:
+
+```bash
+npm i
+npm run e2e:install
+npm run e2e:smoke
+```
+
+### A2) Dev API warm-up + smoke (Render cold-start safe)
+
+Goal: prove the deployed **dev backend** is awake and can serve the shop catalog (read-only), while still driving the UI.
+
+This run does a targeted warm-up that polls `GET $E2E_API_BASE/api/health` for up to ~90 seconds (Render cold start),
+then opens the site and waits for at least 1 shop tile to render.
+
+```bash
+E2E_API_BASE="http://localhost:8000" npm run e2e:dev
+```
+
+Tuning knobs:
+
+- `E2E_WARMUP_MAX_MS=90000` (default)
+- `E2E_WARMUP_ATTEMPT_TIMEOUT_MS=8000` (default)
+- `E2E_WARMUP_ENABLED=false` (disable warm-up)
+
+CI: the GitHub Actions workflow `/.github/workflows/e2e.yml` exposes this as a manual job (`workflow_dispatch`).
+
+### B) True E2E (real integrations, slower)
+
+Goal: prove the full checkout + webhook pipeline works against real services.
+
+- Stripe in **test mode**: complete a real test checkout and confirm redirect back to `/#checkout-success`
+- Backend: confirm an order snapshot/event is stored (Firestore)
+- Printful: POST recorded real webhook payloads into `POST /api/printful/webhook` and confirm order/event updates + idempotency
+
+Safety knobs for staging/dev:
+
+- `EMAIL_OVERRIDE_TO="hello@example.com"` (redirect all outbound email)
+- `PRINTFUL_WRITE_ENABLED="false"` unless you explicitly want auto-submit to Printful
+- Keep `ALERT_EMAIL_ENABLED="false"` until you want alert spam during testing
+
+### C) Contract tests (integration safety)
+
+Goal: catch payload/response shape changes early so the frontend and webhooks don’t silently break.
+
+- Backend unit/contract suite:
+
+```bash
+cd app
+poetry run pytest -q
+```
+
+- Optional: import `postman/melkapow_pytest_http.postman_collection.json` into Postman for HTTP-level scenarios.
+
 ## Automated Tests (Backend)
 
 Run:

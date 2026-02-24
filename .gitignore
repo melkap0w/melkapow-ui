@@ -4,6 +4,12 @@ src/product_sales
 # Frontend build output
 dist/
 
+# Node / Playwright
+node_modules/
+.playwright/
+playwright-report/
+test-results/
+
 # Python caches
 __pycache__/
 *.py[cod]

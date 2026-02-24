@@ -2356,7 +2356,6 @@
       onInputChange();
     });
 
-    loadCheckoutCountries(false);
     refreshStep();
   }
 

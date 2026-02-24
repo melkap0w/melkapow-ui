@@ -1,5 +1,10 @@
 {
     "python-envs.defaultEnvManager": "ms-python.python:venv",
     "python-envs.pythonProjects": [],
-    "chatgpt.openOnStartup": true
+    "chatgpt.openOnStartup": true,
+
+    // Backend uses a src-layout package at app/src/app.
+    // Point VS Code at the backend venv + package root to avoid import errors in Problems view.
+    "python.defaultInterpreterPath": "${workspaceFolder}/app/.venv/bin/python",
+    "python.analysis.extraPaths": ["app/src"]
 }

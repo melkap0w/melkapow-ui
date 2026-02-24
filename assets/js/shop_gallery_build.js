@@ -75,10 +75,12 @@
     if (!wrap) return 0;
 
     if (wrap.getAttribute("data-skeleton") === "true" && wrap.children && wrap.children.length) {
+      wrap.setAttribute("data-ready", "false");
       return wrap.children.length;
     }
 
     wrap.setAttribute("data-skeleton", "true");
+    wrap.setAttribute("data-ready", "false");
     wrap.innerHTML = "";
 
     var count = calcShopSkeletonCount();
@@ -470,8 +472,11 @@
     wrap.innerHTML = "";
 
     if (!products || typeof products !== "object") {
+      wrap.setAttribute("data-ready", "false");
       return 0;
     }
+
+    wrap.setAttribute("data-ready", "true");
 
     var list = getArtList();
     var count = 0;
