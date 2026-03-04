@@ -96,18 +96,20 @@
     var collectionRaw = info && info.collection ? String(info.collection).trim().toLowerCase() : "";
     var collection = collectionRaw === "classic" || collectionRaw === "grandeur" ? collectionRaw : "grandeur";
 
-    var defaultDims = collection === "classic" ? '36" H x 48" W x 0.75" D' : '36" H x 38" W x 1.5" D';
-    var dims = info && info.dimensions ? String(info.dimensions).trim() : "";
-	    if (!dims) dims = defaultDims;
+	    var defaultDims = collection === "classic" ? '36" H x 48" W x 0.75" D' : '36" H x 38" W x 1.5" D';
+	    var dims = info && info.dimensions ? String(info.dimensions).trim() : "";
+		    if (!dims) dims = defaultDims;
 
-	    var collectionLabel = collection === "classic" ? "Classic Collection" : "Grandeur Collection";
-	    var specs = [
-	      { label: "Dimensions", value: dims },
-	      { label: "Material", value: "Gallery Canvas & Wood" },
-	      { label: "Content", value: "100% Cotton Duck" },
-	      { label: "Component", value: "Kiln dried stretcher" },
-	      { label: "Net Weight", value: "12 Ounces (343g) Primed & 6 Ounces (172g) Un-Primed" }
-	    ];
+		    var collectionLabel = collection === "classic" ? "Classic Collection" : "Grandeur Collection";
+		    var specs = [
+		      { label: "Media", value: "Acrylic" },
+		      { label: "Dimensions", value: dims },
+		   //   { label: "Canvas Depth", value: "1.5\u2033 (3.81 cm)" },
+		      { label: "Material", value: "Gallery Canvas & Wood" },
+		      { label: "Content", value: "100% Cotton Duck" },
+		      { label: "Component", value: "Kiln dried stretcher" },
+		      { label: "Net Weight", value: "12 Ounces (343g) Primed & 6 Ounces (172g) Un-Primed" }
+		    ];
 
     var box = document.createElement("div");
     box.className = "box purchase-box";

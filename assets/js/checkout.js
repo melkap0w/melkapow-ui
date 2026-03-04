@@ -359,15 +359,106 @@
     return out;
   }
 
+  var US_STATE_NAME_TO_CODE = {
+    ALABAMA: "AL",
+    ALASKA: "AK",
+    ARIZONA: "AZ",
+    ARKANSAS: "AR",
+    CALIFORNIA: "CA",
+    COLORADO: "CO",
+    CONNECTICUT: "CT",
+    DELAWARE: "DE",
+    FLORIDA: "FL",
+    GEORGIA: "GA",
+    HAWAII: "HI",
+    IDAHO: "ID",
+    ILLINOIS: "IL",
+    INDIANA: "IN",
+    IOWA: "IA",
+    KANSAS: "KS",
+    KENTUCKY: "KY",
+    LOUISIANA: "LA",
+    MAINE: "ME",
+    MARYLAND: "MD",
+    MASSACHUSETTS: "MA",
+    MICHIGAN: "MI",
+    MINNESOTA: "MN",
+    MISSISSIPPI: "MS",
+    MISSOURI: "MO",
+    MONTANA: "MT",
+    NEBRASKA: "NE",
+    NEVADA: "NV",
+    NEWHAMPSHIRE: "NH",
+    NEWJERSEY: "NJ",
+    NEWMEXICO: "NM",
+    NEWYORK: "NY",
+    NORTHCAROLINA: "NC",
+    NORTHDAKOTA: "ND",
+    OHIO: "OH",
+    OKLAHOMA: "OK",
+    OREGON: "OR",
+    PENNSYLVANIA: "PA",
+    RHODEISLAND: "RI",
+    SOUTHCAROLINA: "SC",
+    SOUTHDAKOTA: "SD",
+    TENNESSEE: "TN",
+    TEXAS: "TX",
+    UTAH: "UT",
+    VERMONT: "VT",
+    VIRGINIA: "VA",
+    WASHINGTON: "WA",
+    WESTVIRGINIA: "WV",
+    WISCONSIN: "WI",
+    WYOMING: "WY",
+
+    DISTRICTOFCOLUMBIA: "DC",
+    WASHINGTONDC: "DC",
+
+    AMERICANSAMOA: "AS",
+    GUAM: "GU",
+    NORTHERNMARIANAISLANDS: "MP",
+    PUERTORICO: "PR",
+    USVIRGINISLANDS: "VI",
+    VIRGINISLANDS: "VI",
+
+    ARMEDFORCESAMERICAS: "AA",
+    ARMEDFORCESEUROPE: "AE",
+    ARMEDFORCESPACIFIC: "AP"
+  };
+
+  var US_STATE_CODE_SET = (function () {
+    var out = {};
+    var hasOwn = Object.prototype.hasOwnProperty;
+    for (var k in US_STATE_NAME_TO_CODE) {
+      if (!hasOwn.call(US_STATE_NAME_TO_CODE, k)) continue;
+      out[US_STATE_NAME_TO_CODE[k]] = true;
+    }
+    // Military "states" commonly used for USPS addresses.
+    out.AA = true;
+    out.AE = true;
+    out.AP = true;
+    return out;
+  })();
+
   function normalizeStateCode(value, countryCode) {
     var raw = String(value || "").trim();
     if (!raw) return "";
 
     var country = normalizeCountryCode(countryCode || "US") || "US";
     if (country === "US") {
-      raw = raw.toUpperCase().replace(/[^A-Z]/g, "");
-      if (raw.length > 2) raw = raw.slice(0, 2);
-      return raw;
+      var letters = raw.toUpperCase().replace(/[^A-Z]/g, "");
+      if (!letters) return "";
+      if (letters.length === 2) return letters;
+
+      // Handle full state names (e.g., "Pennsylvania" -> "PA") and common variants.
+      var mapped = US_STATE_NAME_TO_CODE[letters];
+      if (mapped) return mapped;
+
+      // Handle "NY - New York" / "CA California" styles by trusting a valid prefix.
+      var prefix = letters.slice(0, 2);
+      if (US_STATE_CODE_SET[prefix]) return prefix;
+
+      return "";
     }
 
     raw = raw.replace(/[^A-Za-z0-9 .'\-]/g, "");
@@ -1455,6 +1546,7 @@
 
       if (countryCode === "US") {
         if (stateCode.length < 2) return "Enter your 2-letter state code (e.g., CA).";
+        if (!US_STATE_CODE_SET[stateCode]) return "Enter a valid 2-letter state code (e.g., CA).";
         var zipDigits = zip.replace(/\D/g, "");
         if (zipDigits.length < 5) return "Enter a valid ZIP code.";
       } else if (zip.length < 3) {
@@ -2891,12 +2983,27 @@
       var subtotalCents = getCartSubtotal();
       var requestKey = code ? (code + "|" + String(subtotalCents)) : "";
       if (!code) {
+        var hadExisting = false;
+        if (showStatus) {
+          var existingCode = loadDiscountCode();
+          if (existingCode) {
+            hadExisting = true;
+          } else {
+            var existingPreview = loadDiscountPreviewState();
+            if (existingPreview && existingPreview.code) hadExisting = true;
+          }
+        }
+
         if (persist) saveDiscountCodeWithoutEcho("");
         clearDiscountPreviewState();
         lastPreviewRequestKey = "";
         renderCartSummary(subtotalCents, 0, "USD", "");
-        if (showStatus) setStatus("Discount code cleared.", "");
-        else setStatus("", "");
+        if (showStatus) {
+          if (hadExisting) setStatus("Discount code cleared.", "");
+          else setStatus("Enter a discount code.", "");
+        } else {
+          setStatus("", "");
+        }
         return Promise.resolve(null);
       }
 

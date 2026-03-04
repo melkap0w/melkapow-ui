@@ -1,6 +1,5 @@
 # Melkapow Portfolio
-
-Built using HTML, CSS, and JavaScript. 
+ HTML, CSS, Python and JavaScript. 
 
 ---
 

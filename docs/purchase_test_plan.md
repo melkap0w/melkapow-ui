@@ -2,6 +2,11 @@
 
 This repo is a static frontend plus a FastAPI backend (`app/`) for shop + payments.
 
+Related docs:
+
+- `docs/system_process.md` (system overview, IDs, API contracts, Firestore model, event flows, ops runbooks)
+- `app/ORDER_EVENT_SYSTEM.md` (deep dive on the Firestore snapshot + events + outbox model)
+
 ## What “E2E” means here (3 layers)
 
 You’ll get the best confidence by running three tiers:

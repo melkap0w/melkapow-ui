@@ -318,6 +318,13 @@
 				return;
 			}
 
+			// Don't close the article when the user is selecting text.
+			try {
+				var selection = window.getSelection ? window.getSelection() : null;
+				if (selection && !selection.isCollapsed && String(selection.toString() || '').trim())
+					return;
+			} catch (e) {}
+
 			$main._hide(true);
 		});
 

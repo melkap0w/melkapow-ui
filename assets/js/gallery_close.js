@@ -43,26 +43,109 @@
     return isFinite(idx) && idx >= 0 ? idx : 0;
   }
 
+  function getSliderImages(slider) {
+    if (!slider) return [];
+    return slider.querySelectorAll(".slides img");
+  }
+
+  function isImageLoaded(img) {
+    if (!img) return false;
+    return !!(img.complete && img.naturalWidth > 0 && img.naturalHeight > 0);
+  }
+
+  function clearForcedVisibility(slider) {
+    var imgs = getSliderImages(slider);
+    for (var i = 0; i < imgs.length; i++) {
+      var img = imgs[i];
+      if (!img) continue;
+      if (img.getAttribute("data-force-visible") !== "true") continue;
+      img.removeAttribute("data-force-visible");
+      img.style.opacity = "";
+      img.style.transform = "";
+      img.style.zIndex = "";
+    }
+  }
+
+  function setForceVisible(img, enabled) {
+    if (!img) return;
+    if (enabled) {
+      img.setAttribute("data-force-visible", "true");
+      img.style.opacity = "1";
+      img.style.transform = "translateX(0)";
+      img.style.zIndex = "2";
+      return;
+    }
+    if (img.getAttribute("data-force-visible") !== "true") return;
+    img.removeAttribute("data-force-visible");
+    img.style.opacity = "";
+    img.style.transform = "";
+    img.style.zIndex = "";
+  }
+
+  function releaseForceVisible(img) {
+    if (!img) return;
+    if (img.getAttribute("data-force-visible") !== "true") return;
+
+    // Fade out the previous slide on top of the next one to avoid blank flashes.
+    img.style.zIndex = "2";
+    img.style.opacity = "0";
+    img.style.transform = "translateX(10px)";
+
+    window.setTimeout(function () {
+      setForceVisible(img, false);
+    }, 320);
+  }
+
   function loadSliderImage(slider, index) {
-    if (!slider) return;
-    var imgs = slider.querySelectorAll(".slides img");
-    if (!imgs || index < 0 || index >= imgs.length) return;
-    loadImgFromData(imgs[index]);
+    var imgs = getSliderImages(slider);
+    if (!imgs || index < 0 || index >= imgs.length) return null;
+    var img = imgs[index];
+    loadImgFromData(img);
+    return img;
   }
 
   function wireLazySlider(slider) {
     if (!slider || slider.getAttribute("data-lazy-wired") === "true") return;
     slider.setAttribute("data-lazy-wired", "true");
+    slider.__melkapowActiveSlideIndex = getCheckedSlideIndex(slider);
 
     slider.addEventListener("change", function (e) {
       var target = e && e.target;
       if (!(target instanceof HTMLInputElement)) return;
       if (target.type !== "radio" || !target.checked) return;
 
+      clearForcedVisibility(slider);
+
       var raw = target.getAttribute("data-slide-index");
       var idx = parseInt(raw, 10);
       if (!isFinite(idx) || idx < 0) idx = 0;
-      loadSliderImage(slider, idx);
+
+      var prevIdx = parseInt(slider.__melkapowActiveSlideIndex, 10);
+      if (!isFinite(prevIdx) || prevIdx < 0) prevIdx = idx;
+      slider.__melkapowActiveSlideIndex = idx;
+
+      var prevImg = loadSliderImage(slider, prevIdx);
+      var nextImg = loadSliderImage(slider, idx);
+
+      // Preload adjacent slides so navigation doesn't flash a blank frame.
+      loadSliderImage(slider, idx + 1);
+      loadSliderImage(slider, idx - 1);
+
+      if (!nextImg || !prevImg || nextImg === prevImg) return;
+      if (isImageLoaded(nextImg)) return;
+
+      // Keep the previous slide visible until the next image has loaded.
+      setForceVisible(prevImg, true);
+
+      var cleaned = false;
+      function cleanup() {
+        if (cleaned) return;
+        cleaned = true;
+        releaseForceVisible(prevImg);
+      }
+
+      nextImg.addEventListener("load", cleanup, { once: true });
+      nextImg.addEventListener("error", cleanup, { once: true });
     });
   }
 
@@ -89,7 +172,10 @@
       for (var i = 0; i < sliders.length; i++) {
         var slider = sliders[i];
         wireLazySlider(slider);
-        loadSliderImage(slider, getCheckedSlideIndex(slider));
+        var idx = getCheckedSlideIndex(slider);
+        slider.__melkapowActiveSlideIndex = idx;
+        loadSliderImage(slider, idx);
+        loadSliderImage(slider, idx + 1);
       }
       return;
     }

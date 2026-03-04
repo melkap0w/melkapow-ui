@@ -34,7 +34,7 @@ window.MELKAPOW_ART = [
   {
     id: "eye",
     title: "What lives within",
-    productInfo: { collection: "classic" },
+    productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Deep within",
     caption: "I see you, do you see me?",
@@ -48,10 +48,10 @@ window.MELKAPOW_ART = [
   {
     id: "birthoflife",
     title: "Birth of life",
-    productInfo: { collection: "classic" },
+    productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Birth of life",
-    caption: "When life meets creation.",
+    caption: "Where source converges with creation.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Birth of life" },
       { src: "__IMAGE_REMOVED__", alt: "Birth of life detail 1" },
@@ -79,7 +79,7 @@ window.MELKAPOW_ART = [
     productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Lost in translation",
-    caption: "Trapped in between layers of dimensions.",
+    caption: "Trapped in between fractured realities",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Lost main" },
       { src: "__IMAGE_REMOVED__", alt: "Lost detail 1" },
@@ -94,7 +94,7 @@ window.MELKAPOW_ART = [
     productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Weaving",
-    caption: "Layered creation and expansion.",
+    caption: "Creation weaves into living form.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Weaving" },
       { src: "__IMAGE_REMOVED__", alt: "Weaving detail 1" },
@@ -120,10 +120,10 @@ window.MELKAPOW_ART = [
   {
     id: "purge",
     title: "Purge",
-    productInfo: { collection: "classic" },
+    productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Purge",
-    caption: "This piece is still unraveling. <br>Currently in progress.",
+    caption: "The one who haunts, I see you.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Purge" }
     ]
@@ -131,10 +131,10 @@ window.MELKAPOW_ART = [
   {
     id: "strip_raw",
     title: "Stripped Raw",
-    productInfo: { collection: "classic" },
+    productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Strip Raw",
-    caption: "Stripped Raw of the fundamentals.",
+    caption: "Stripped Raw of everything you ever were.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Strip Raw" }
     ]
@@ -142,10 +142,10 @@ window.MELKAPOW_ART = [
   {
     id: "shadows_lie",
     title: "Shadows Lie",
-    productInfo: { collection: "classic" },
+    productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Hidden Shadows",
-    caption: "What hides in plain sight.",
+    caption: "What hides in color.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Hidden Shadows" },
       { src: "__IMAGE_REMOVED__", alt: "Hidden Shadows detail 1" },     
@@ -155,7 +155,7 @@ window.MELKAPOW_ART = [
   {
     id: "giver",
     title: "Giver",
-    productInfo: { collection: "classic" },
+    productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Giver",
     caption: "Can you receive what is given.",
@@ -168,10 +168,10 @@ window.MELKAPOW_ART = [
   {
     id: "kundalini",
     title: "Kundalini",
-    productInfo: { collection: "classic" },
+    productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Kundalini",
-    caption: "",
+    caption: "What forms beneath breathes life.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Kundalini" },
       { src: "__IMAGE_REMOVED__", alt: "Kundalini detail 1" }
@@ -180,10 +180,10 @@ window.MELKAPOW_ART = [
   {
     id: "mother",
     title: "Mother",
-    productInfo: { collection: "classic" },
+    productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Mother",
-    caption: "",
+    caption: "Tear into the womb of creation.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Mother" },
       { src: "__IMAGE_REMOVED__", alt: "Mother detail 1" }

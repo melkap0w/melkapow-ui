@@ -573,8 +573,14 @@
     return id === "metal-print" || id === "gloss-metal-print" || id === "metal";
   }
 
+  function isCanvasFinishId(finishId) {
+    var id = mapFinishId(finishId);
+    return id === "canvas" || id === "stretched-canvas" || id === "framed-canvas" || id === "canvas-frame";
+  }
+
   function resolveCollectionHeading(art, finish) {
     if (finish && isMetalFinishId(finish.id)) return "Metal Collection";
+    if (finish && isCanvasFinishId(finish.id)) return "Canvas Wrap Collection";
     return resolveArtCollectionLabel(art);
   }
 
