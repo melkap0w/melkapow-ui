@@ -128,6 +128,11 @@ jobs:
           echo "E2E_WARMUP_ENABLED=true" >> "$GITHUB_ENV"
           echo "E2E_TEST_TIMEOUT_MS=180000" >> "$GITHUB_ENV"
 
+      - name: Debug API health
+        run: |
+          echo "Testing API health endpoint..."
+          curl -v --max-time 20 http://localhost:8000/api/health || true    
+
       - name: Run deployed API tests (includes warm-up)
         run: npm run e2e:dev
 
