@@ -110,7 +110,7 @@ export default async function globalSetup(_config: FullConfig): Promise<void> {
     return;
   }
 
-  const maxWaitMs = envInt("E2E_WARMUP_MAX_MS", 90_000);
+  const maxWaitMs = envInt("E2E_WARMUP_MAX_MS", 180_000);
   const attemptTimeoutMs = envInt("E2E_WARMUP_ATTEMPT_TIMEOUT_MS", 8_000);
 
   console.log(`[warmup] Render cold-start warm-up: apiBase=${apiBase} maxWaitMs=${maxWaitMs}`);

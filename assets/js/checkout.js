@@ -1358,6 +1358,12 @@
     var activeEstimateReqId = 0;
     var estimateAbortController = null;
     var estimateTimeoutId = null;
+    var checkoutInFlight = false;
+    var checkoutReqSeq = 0;
+    var activeCheckoutReqId = 0;
+    var checkoutAbortController = null;
+    var checkoutTimeoutId = null;
+    var continueBtnDefaultText = String(continueBtn.textContent || "");
     var countryFetchPromise = null;
     var countriesLoadedFromApi = false;
     var shippingStepMountedAt = Date.now();
@@ -1805,14 +1811,41 @@
       );
       var methodReady = !needsMethod || !!selectedMethodId;
 
-      var enabled = hasItems && validForm && isShopEnabled() && !estimateInFlight;
+      var enabled = hasItems && validForm && isShopEnabled() && !estimateInFlight && !checkoutInFlight;
       if (hasFreshEstimate && !methodReady) enabled = false;
       continueBtn.disabled = !enabled;
       continueBtn.setAttribute("aria-disabled", enabled ? "false" : "true");
 
-      var calcEnabled = hasItems && isShopEnabled() && !estimateInFlight;
+      var calcEnabled = hasItems && isShopEnabled() && !estimateInFlight && !checkoutInFlight;
       calculateBtn.disabled = !calcEnabled;
       calculateBtn.setAttribute("aria-disabled", calcEnabled ? "false" : "true");
+    }
+
+    function cancelActiveCheckout() {
+      if (!checkoutInFlight && !activeCheckoutReqId && !checkoutAbortController) return;
+
+      activeCheckoutReqId = 0;
+      checkoutInFlight = false;
+
+      if (checkoutTimeoutId) {
+        clearTimeout(checkoutTimeoutId);
+        checkoutTimeoutId = null;
+      }
+
+      if (checkoutAbortController && typeof checkoutAbortController.abort === "function") {
+        try {
+          checkoutAbortController.abort();
+        } catch (_) {
+          // ignore
+        }
+      }
+      checkoutAbortController = null;
+
+      // If the user navigates away mid-request, don't keep showing "stale attempt" errors later.
+      clearCheckoutAttemptState();
+
+      continueBtn.textContent = continueBtnDefaultText;
+      setContinueEnabled();
     }
 
     function normalizeEstimateResponse(data, cart, formState) {
@@ -2184,11 +2217,30 @@
       saveCheckoutAttemptState({ status: "starting", message: "Starting checkout..." });
 
       var apiBase = getApiBase();
-      var controller = typeof AbortController === "function" ? new AbortController() : null;
-      var timeoutId = null;
-      if (controller) {
-        timeoutId = setTimeout(function () {
-          try { controller.abort(); } catch (_) { /* ignore */ }
+      var reqId = ++checkoutReqSeq;
+      activeCheckoutReqId = reqId;
+      checkoutInFlight = true;
+
+      if (checkoutAbortController && typeof checkoutAbortController.abort === "function") {
+        try {
+          checkoutAbortController.abort();
+        } catch (_) {
+          // ignore
+        }
+      }
+
+      checkoutAbortController = typeof AbortController === "function" ? new AbortController() : null;
+      var checkoutTimedOut = false;
+
+      if (checkoutTimeoutId) {
+        clearTimeout(checkoutTimeoutId);
+        checkoutTimeoutId = null;
+      }
+
+      if (checkoutAbortController) {
+        checkoutTimeoutId = setTimeout(function () {
+          checkoutTimedOut = true;
+          try { checkoutAbortController.abort(); } catch (_) { /* ignore */ }
         }, 45000);
       }
 
@@ -2196,13 +2248,14 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
-        signal: controller ? controller.signal : undefined
+        signal: checkoutAbortController ? checkoutAbortController.signal : undefined
       })
         .then(function (res) {
           return res
             .json()
             .catch(function () { return {}; })
             .then(function (data) {
+              if (reqId !== activeCheckoutReqId) return null;
               if (!res.ok) {
                 var msg = (data && data.detail) ? String(data.detail) : "Checkout failed.";
                 throw new Error(msg);
@@ -2211,24 +2264,53 @@
             });
         })
         .then(function (data) {
+          if (reqId !== activeCheckoutReqId) return null;
           var url = data && data.url ? String(data.url) : "";
           if (!url) throw new Error("Checkout URL missing.");
+          if (window.location.hash !== "#checkout-shipping") {
+            clearCheckoutAttemptState();
+            return null;
+          }
           setStatus("Redirecting...", "");
           saveCheckoutAttemptState({ status: "redirecting", message: "Redirecting to payment..." });
           window.location.assign(url);
         })
         .catch(function (err) {
+          if (reqId !== activeCheckoutReqId) return null;
+
           var msg = err && err.message ? String(err.message) : "";
-          if (err && err.name === "AbortError") msg = "Checkout timed out. Please try again.";
+          if (err && err.name === "AbortError") {
+            if (!checkoutTimedOut) {
+              clearCheckoutAttemptState();
+              return null;
+            }
+            msg = "Checkout timed out. Please try again.";
+          }
           if (/failed to fetch|networkerror|load failed|err_connection/i.test(msg)) {
             msg = "Cannot reach the shop server at " + apiBase + ".";
           }
+
+          // If the user left the shipping step, don't surface an error out of context.
+          if (window.location.hash !== "#checkout-shipping") {
+            clearCheckoutAttemptState();
+            return null;
+          }
+
           saveCheckoutAttemptState({ status: "failed", message: msg || "Checkout failed." });
           saveCheckoutResultState({ status: "failed", message: msg || "Checkout failed." });
           setStatus(msg || "Checkout failed.", "error");
         })
         .finally(function () {
-          if (timeoutId) clearTimeout(timeoutId);
+          if (reqId !== activeCheckoutReqId) return;
+
+          if (checkoutTimeoutId) {
+            clearTimeout(checkoutTimeoutId);
+            checkoutTimeoutId = null;
+          }
+          checkoutInFlight = false;
+          activeCheckoutReqId = 0;
+          checkoutAbortController = null;
+
           continueBtn.textContent = originalText;
           setContinueEnabled();
         });
@@ -2416,7 +2498,10 @@
       }
     });
     window.addEventListener("hashchange", function () {
-      if (window.location.hash !== "#checkout-shipping") setStatus("", "");
+      if (window.location.hash !== "#checkout-shipping") {
+        cancelActiveCheckout();
+        setStatus("", "");
+      }
     });
 
     window.addEventListener("pageshow", function () {

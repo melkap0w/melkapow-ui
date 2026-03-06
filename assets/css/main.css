@@ -3588,6 +3588,11 @@ input.estimate-state-input {
   overflow: hidden;
 }
 
+/* Portrait artworks: use a taller frame so portrait pieces don't look tiny in detail view. */
+.art-slider.is-portrait .slides {
+  aspect-ratio: 4 / 5;
+}
+
 /* Fill the frame, but keep full image visible */
 .art-slider .slides img {
   width: 100%;
@@ -3651,6 +3656,17 @@ input.estimate-state-input {
 
 .art-slider .nav label:hover {
   opacity: 0.6;
+}
+
+/* While waiting for the next slide image to load, keep arrows responsive but indicate progress. */
+.art-slider.is-loading .nav label,
+.art-slider.is-loading .nav label:hover {
+  opacity: 0.35;
+  cursor: progress;
+}
+
+.art-slider.is-loading .slides {
+  cursor: progress;
 }
 
 /* Caption under art image */
@@ -3975,11 +3991,20 @@ input.estimate-state-input {
     margin-right: auto;
   }
 
+  /* Portrait: slightly narrower + taller to better match portrait compositions. */
+  .art-slider.is-portrait {
+    max-width: 640px;
+  }
+
   /* keep a consistent frame size */
   .art-slider .slides {
     width: 100%;
     aspect-ratio: 4 / 3; /* standard */
     max-height: 460px; /* slightly smaller on desktop */
+  }
+
+  .art-slider.is-portrait .slides {
+    max-height: min(80vh, 640px);
   }
 
   /* keep images contained, never cropped */

@@ -140,16 +140,16 @@ window.MELKAPOW_ART = [
     ]
   },
   {
-    id: "shadows_lie",
-    title: "Shadows Lie",
+    id: "war_within",
+    title: "The war within",
     productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
-    alt: "Hidden Shadows",
+    alt: "War within",
     caption: "What hides in color.",
     slides: [
-      { src: "__IMAGE_REMOVED__", alt: "Hidden Shadows" },
-      { src: "__IMAGE_REMOVED__", alt: "Hidden Shadows detail 1" },     
-       { src: "__IMAGE_REMOVED__", alt: "Hidden Shadows detail 2" }
+      { src: "__IMAGE_REMOVED__", alt: "War within" },
+      { src: "__IMAGE_REMOVED__", alt: "War within detail 1" },     
+       { src: "__IMAGE_REMOVED__", alt: "War within detail 2" }
     ]
   },
   {
@@ -187,6 +187,43 @@ window.MELKAPOW_ART = [
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Mother" },
       { src: "__IMAGE_REMOVED__", alt: "Mother detail 1" }
+    ]
+  },
+  {
+    id: "nowayout",
+    title: "No Way Out",
+    productInfo: { collection: "grandeur" },
+    // Use the full-res work image as the thumb source so the UI can fall back
+    // gracefully even if a dedicated thumbnail hasn't been generated yet.
+    thumb: "__IMAGE_REMOVED__",
+    alt: "No Way Out",
+    slides: [
+      { src: "__IMAGE_REMOVED__", alt: "No Way Out" },
+      { src: "__IMAGE_REMOVED__", alt: "No Way Out detail 1" }
+    ]
+  },
+  {
+    id: "transition",
+    title: "Transition",
+    productInfo: { collection: "grandeur" },
+    thumb: "__IMAGE_REMOVED__",
+    alt: "Transition",
+    slides: [
+      { src: "__IMAGE_REMOVED__", alt: "Transition" },
+      { src: "__IMAGE_REMOVED__", alt: "Transition detail 1" },
+      { src: "__IMAGE_REMOVED__", alt: "Transition detail 2" }
+    ]
+  },
+  {
+    id: "whatbecomes",
+    title: "What Becomes",
+    productInfo: { collection: "grandeur" },
+    thumb: "__IMAGE_REMOVED__",
+    alt: "What Becomes",
+    slides: [
+      { src: "__IMAGE_REMOVED__", alt: "What Becomes" },
+      { src: "__IMAGE_REMOVED__", alt: "What Becomes detail 1" },
+      { src: "__IMAGE_REMOVED__", alt: "What Becomes detail 2" }
     ]
   }
 ];

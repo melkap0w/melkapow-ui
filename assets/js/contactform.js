@@ -6,7 +6,11 @@
     ok: false,
     hadError: false,
     errorShown: false,
-    lastError: null
+    lastError: null,
+    autoRetryCount: 0,
+    autoRetryLimit: 2,
+    autoRetryLocked: false,
+    lastAutoRetryAt: 0
   };
 
   var TURNSTILE_SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
@@ -105,6 +109,7 @@
   function scheduleTurnstileWatchdog(form) {
     clearTurnstileWatchdog();
     if (!form) return;
+    if (turnstileState.autoRetryLocked) return;
 
     turnstileWatchdogId = setTimeout(function () {
       if (window.location.hash !== "#contact") return;
@@ -126,7 +131,7 @@
         }
       }
 
-      rerenderTurnstile(form);
+      autoRetryTurnstile(form, "watchdog");
     }, 12000);
   }
 
@@ -135,6 +140,9 @@
     turnstileState.hadError = false;
     turnstileState.errorShown = false;
     turnstileState.lastError = null;
+    turnstileState.autoRetryCount = 0;
+    turnstileState.autoRetryLocked = false;
+    turnstileState.lastAutoRetryAt = 0;
   }
 
   function getTurnstileContainer(form) {
@@ -290,6 +298,7 @@
     try {
       turnstileWidgetId = window.turnstile.render(container, {
         sitekey: sitekey,
+        retry: "never",
         callback: window.melkapowTurnstileOk,
         "error-callback": window.melkapowTurnstileError,
         "expired-callback": window.melkapowTurnstileExpired
@@ -311,6 +320,9 @@
       return;
     }
 
+    // If we've already retried and it's still failing, stop the auto loop.
+    if (turnstileState.autoRetryLocked) return;
+
     var tries = 0;
     var maxTries = 20;
 
@@ -328,11 +340,80 @@
     setTimeout(attempt, 200);
   }
 
+  function lockAutoRetries(form) {
+    turnstileState.autoRetryLocked = true;
+    clearTurnstileWatchdog();
+
+    var rawCode = turnstileState.lastError ? String(turnstileState.lastError) : "";
+    var codeNum = parseInt(rawCode, 10);
+    var suffix = rawCode ? " (" + rawCode + ")" : "";
+    var sitekey = "";
+    try {
+      var container = getTurnstileContainer(form);
+      sitekey = container ? String(container.getAttribute("data-sitekey") || "").trim() : "";
+    } catch (_) {}
+
+    if (isFinite(codeNum) && codeNum === 110200) {
+      setStatus(
+        "Captcha error" +
+          suffix +
+          ". This domain isn't authorized for this Turnstile widget" +
+          (sitekey ? " (sitekey " + sitekey + ")" : "") +
+          ". Add " +
+          location.hostname +
+          " to the widget's allowed hostnames (exact match; no https://, no path; no wildcards), then refresh. Auto-retry paused."
+      );
+    } else {
+      setStatus(
+        "Captcha error" +
+          suffix +
+          ". Auto-retry paused. Leave the Contact page and come back (or refresh) to try again."
+      );
+    }
+
+    // Keep the current widget visible so the user can see the error state.
+    // We only stop our own rerender loop.
+    if (form && window.location.hash === "#contact") {
+      try { observeTurnstileFrames(getTurnstileContainer(form)); } catch (_) {}
+    }
+  }
+
+  function autoRetryTurnstile(form, reason) {
+    if (!form) return;
+    if (window.location.hash !== "#contact") return;
+    if (!isTurnstileConfigured(form)) return;
+    if (turnstileState.autoRetryLocked) return;
+
+    var limit = parseInt(turnstileState.autoRetryLimit, 10);
+    if (!isFinite(limit) || limit < 0) limit = 0;
+
+    if ((parseInt(turnstileState.autoRetryCount, 10) || 0) >= limit) {
+      lockAutoRetries(form);
+      return;
+    }
+
+    var now = Date.now ? Date.now() : new Date().getTime();
+    var last = parseInt(turnstileState.lastAutoRetryAt, 10) || 0;
+    // Avoid rapid loops if the error callback fires repeatedly.
+    if (now - last < 900) return;
+    turnstileState.lastAutoRetryAt = now;
+
+    turnstileState.autoRetryCount = (parseInt(turnstileState.autoRetryCount, 10) || 0) + 1;
+
+    // Always render fresh; Turnstile can get stuck in a verifying loop.
+    rerenderTurnstile(form);
+
+    // Keep one watchdog per attempt (and stop once we hit the limit).
+    if (turnstileState.autoRetryCount < limit) scheduleTurnstileWatchdog(form);
+  }
+
   window.melkapowTurnstileOk = function () {
     turnstileState.ok = true;
     turnstileState.hadError = false;
     turnstileState.lastError = null;
     turnstileState.errorShown = false;
+    turnstileState.autoRetryCount = 0;
+    turnstileState.autoRetryLocked = false;
     clearTurnstileWatchdog();
     setStatus("");
   };
@@ -342,25 +423,44 @@
     turnstileState.hadError = true;
     var codeText = code ? String(code) : "";
     turnstileState.lastError = codeText || "error";
+    var codeNum = parseInt(codeText, 10);
 
     if (!turnstileState.errorShown) {
       turnstileState.errorShown = true;
       var suffix = codeText ? " (" + codeText + ")" : "";
+      var sitekey = "";
+      try {
+        var form = document.getElementById("contactForm");
+        var container = form ? getTurnstileContainer(form) : null;
+        sitekey = container ? String(container.getAttribute("data-sitekey") || "").trim() : "";
+      } catch (_) {}
       setStatus(
         "Captcha error" +
           suffix +
-          ". If this is an invalid domain issue, add " +
+          ". If this is a domain authorization issue, add " +
           location.hostname +
-          " to your Turnstile allowed hostnames."
+          " to the Turnstile widget's allowed hostnames" +
+          (sitekey ? " (sitekey " + sitekey + ")" : "") +
+          " and refresh."
       );
-
-      if (window.location.hash === "#contact") {
-        setTimeout(function () {
-          if (window.location.hash !== "#contact") return;
-          rerenderTurnstile(document.getElementById("contactForm"));
-        }, 800);
-      }
     }
+
+    // 110xxx are configuration errors (e.g. 110200 = domain not authorized).
+    // Retrying won't fix config issues, so stop immediately and leave the error visible
+    // until the user navigates away (or explicitly resets).
+    if (isFinite(codeNum) && Math.floor(codeNum / 1000) === 110) {
+      lockAutoRetries(document.getElementById("contactForm"));
+      return true;
+    }
+
+    if (window.location.hash === "#contact") {
+      setTimeout(function () {
+        if (window.location.hash !== "#contact") return;
+        autoRetryTurnstile(document.getElementById("contactForm"), "error");
+      }, 900);
+    }
+
+    return true;
   };
 
   window.melkapowTurnstileExpired = function () {

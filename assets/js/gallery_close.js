@@ -53,6 +53,58 @@
     return !!(img.complete && img.naturalWidth > 0 && img.naturalHeight > 0);
   }
 
+  function setSliderLoading(slider, enabled) {
+    if (!slider) return;
+    if (enabled) {
+      slider.classList.add("is-loading");
+      slider.setAttribute("aria-busy", "true");
+      return;
+    }
+    slider.classList.remove("is-loading");
+    slider.removeAttribute("aria-busy");
+  }
+
+  function maybeMarkSliderPortrait(slider, img) {
+    if (!slider || !img) return;
+    if (slider.getAttribute("data-orientation")) return;
+
+    function apply() {
+      if (slider.getAttribute("data-orientation")) return;
+      var w = img.naturalWidth || 0;
+      var h = img.naturalHeight || 0;
+      // Ignore the 1x1 placeholder GIF.
+      if (w < 2 || h < 2) return;
+
+      var isPortrait = h > w;
+      if (isPortrait) slider.classList.add("is-portrait");
+      slider.setAttribute("data-orientation", isPortrait ? "portrait" : "landscape");
+    }
+
+    // Try immediately for already-loaded images, but still wire a load handler
+    // when the element is still showing the placeholder.
+    apply();
+    if (slider.getAttribute("data-orientation")) return;
+
+    if (img.getAttribute("data-orientation-wired") === "true") return;
+    img.setAttribute("data-orientation-wired", "true");
+
+    img.addEventListener(
+      "load",
+      function () {
+        img.removeAttribute("data-orientation-wired");
+        apply();
+      },
+      { once: true }
+    );
+    img.addEventListener(
+      "error",
+      function () {
+        img.removeAttribute("data-orientation-wired");
+      },
+      { once: true }
+    );
+  }
+
   function clearForcedVisibility(slider) {
     var imgs = getSliderImages(slider);
     for (var i = 0; i < imgs.length; i++) {
@@ -101,6 +153,7 @@
     if (!imgs || index < 0 || index >= imgs.length) return null;
     var img = imgs[index];
     loadImgFromData(img);
+    maybeMarkSliderPortrait(slider, img);
     return img;
   }
 
@@ -109,11 +162,94 @@
     slider.setAttribute("data-lazy-wired", "true");
     slider.__melkapowActiveSlideIndex = getCheckedSlideIndex(slider);
 
+    // Labels toggle the target radio immediately, which can make it look like
+    // navigation "did nothing" while we keep the previous slide visible during
+    // image loads. Intercept nav clicks and only advance once the target image
+    // has loaded so the visible slide and the checked radio stay in sync.
+    slider.addEventListener(
+      "click",
+      function (e) {
+        var target = e && e.target;
+        if (!(target instanceof Element)) return;
+
+        var label = target.closest("label");
+        if (!label) return;
+
+        var nav = label.closest(".nav");
+        if (!nav || !slider.contains(nav)) return;
+
+        var forId = label.getAttribute("for") || label.htmlFor || "";
+        if (!forId) return;
+
+        var input = document.getElementById(forId);
+        if (!(input instanceof HTMLInputElement)) return;
+        if (input.type !== "radio") return;
+        if (!slider.contains(input)) return;
+
+        // Swallow repeated clicks while we wait for the target image to load.
+        if (slider.classList.contains("is-loading")) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+
+        var raw = input.getAttribute("data-slide-index");
+        var idx = parseInt(raw, 10);
+        if (!isFinite(idx) || idx < 0) idx = 0;
+
+        var img = loadSliderImage(slider, idx);
+        loadSliderImage(slider, idx + 1);
+        loadSliderImage(slider, idx - 1);
+
+        if (!img || isImageLoaded(img)) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        var token = (parseInt(slider.__melkapowNavToken, 10) || 0) + 1;
+        slider.__melkapowNavToken = token;
+        setSliderLoading(slider, true);
+
+        var cleaned = false;
+        function navigate() {
+          if (cleaned) return;
+          cleaned = true;
+          if ((parseInt(slider.__melkapowNavToken, 10) || 0) !== token) return;
+
+          setSliderLoading(slider, false);
+
+          input.checked = true;
+          try {
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+          } catch (_) {
+            try { input.click(); } catch (_) {}
+          }
+        }
+
+        img.addEventListener("load", navigate, { once: true });
+        img.addEventListener("error", navigate, { once: true });
+
+        // If it finished loading before we wired listeners (cache), navigate now.
+        if (isImageLoaded(img)) {
+          navigate();
+          return;
+        }
+
+        // Fail-safe: never leave the slider stuck if the browser doesn't fire load/error.
+        window.setTimeout(function () {
+          if ((parseInt(slider.__melkapowNavToken, 10) || 0) !== token) return;
+          setSliderLoading(slider, false);
+        }, 20000);
+      },
+      true
+    );
+
     slider.addEventListener("change", function (e) {
       var target = e && e.target;
       if (!(target instanceof HTMLInputElement)) return;
       if (target.type !== "radio" || !target.checked) return;
 
+      setSliderLoading(slider, false);
       clearForcedVisibility(slider);
 
       var raw = target.getAttribute("data-slide-index");
@@ -186,8 +322,19 @@
   }
 
   function resetSliderToFirst(section) {
-    var radios = section.querySelectorAll('input[type="radio"]');
-    for (var i = 0; i < radios.length; i++) radios[i].checked = (i === 0);
+    if (!section) return;
+
+    var sliders = section.querySelectorAll(".art-slider");
+    for (var s = 0; s < sliders.length; s++) {
+      var slider = sliders[s];
+      setSliderLoading(slider, false);
+      clearForcedVisibility(slider);
+      slider.__melkapowNavToken = 0;
+      slider.__melkapowActiveSlideIndex = 0;
+
+      var radios = slider.querySelectorAll('input[type="radio"]');
+      for (var i = 0; i < radios.length; i++) radios[i].checked = (i === 0);
+    }
   }
 
   function resetNonActiveArtSliders() {

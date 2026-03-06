@@ -38,7 +38,7 @@ E2E_API_BASE="http://localhost:8000" npm run e2e:dev
 Tuning knobs:
 
 - `E2E_WARMUP_MAX_MS=90000` (default)
-- `E2E_WARMUP_ATTEMPT_TIMEOUT_MS=8000` (default)
+- `E2E_WARMUP_ATTEMPT_TIMEOUT_MS=180000` (default)
 - `E2E_WARMUP_ENABLED=false` (disable warm-up)
 
 CI: the GitHub Actions workflow `/.github/workflows/e2e.yml` exposes this as a manual job (`workflow_dispatch`).

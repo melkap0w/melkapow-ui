@@ -90,6 +90,10 @@
 			// Activate article.
 			$article.addClass('active');
 
+			// Articles can scroll internally (overflow-y). Always reset the article scroll
+			// so navigating back to a page doesn't reopen at a stale scroll position.
+			$article.scrollTop(0);
+
 			// Unlock.
 			locked = false;
 
@@ -125,6 +129,9 @@
 				setTimeout(function() {
 
 					$article.addClass('active');
+
+					// Reset internal scroll position (articles can use overflow scrolling).
+					$article.scrollTop(0);
 
 					// Window stuff.
 					$window
@@ -162,6 +169,9 @@
 				setTimeout(function() {
 
 					$article.addClass('active');
+
+					// Reset internal scroll position (articles can use overflow scrolling).
+					$article.scrollTop(0);
 
 					// Window stuff.
 					$window

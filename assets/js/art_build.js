@@ -928,15 +928,8 @@
 
       setPurchaseStatus(status, "Added to cart.");
 
-      // Reset controls back to defaults for the next add.
+      // Reset quantity for the next add (keep the user's type/size selection).
       qty.value = "1";
-      if (defaultFinish) {
-        finishSelect.value = defaultFinish.id;
-        setSizeOptions(defaultFinish);
-      } else {
-        finishSelect.value = "";
-        setSizeOptions(null);
-      }
     });
 
     box.appendChild(form);
@@ -1079,6 +1072,29 @@
       if (article.getAttribute("data-rendered") !== "true") continue;
 
       var existing = article.querySelector(".purchase-box");
+
+      // Preserve any in-progress user selections across catalog refreshes.
+      // The shared catalog loader can update in the background while a user is interacting
+      // with the dropdowns; re-rendering without restoring state makes it look like their
+      // selection "didn't stick" (e.g. selecting Metal but snapping back to Canvas).
+      var prevFinishId = "";
+      var prevSizeId = "";
+      var prevQty = "";
+      if (existing) {
+        try {
+          var prevFinishEl = existing.querySelector(".purchase-select-finish");
+          if (prevFinishEl && typeof prevFinishEl.value === "string") prevFinishId = prevFinishEl.value;
+        } catch (_) {}
+        try {
+          var prevSizeEl = existing.querySelector(".purchase-select-size");
+          if (prevSizeEl && typeof prevSizeEl.value === "string") prevSizeId = prevSizeEl.value;
+        } catch (_) {}
+        try {
+          var prevQtyEl = existing.querySelector(".purchase-qty");
+          if (prevQtyEl && typeof prevQtyEl.value === "string") prevQty = prevQtyEl.value;
+        } catch (_) {}
+      }
+
       if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
 
       var next = buildPurchaseBox(art);
@@ -1087,6 +1103,36 @@
       var actions = article.querySelector("ul.actions");
       if (actions && actions.parentNode) actions.parentNode.insertBefore(next, actions);
       else article.appendChild(next);
+
+      // Restore selection state when the option still exists in the refreshed catalog.
+      try {
+        var qtyEl = next.querySelector(".purchase-qty");
+        if (qtyEl && prevQty) qtyEl.value = String(prevQty);
+      } catch (_) {}
+
+      var finishEl = null;
+      try { finishEl = next.querySelector(".purchase-select-finish"); } catch (_) { finishEl = null; }
+      if (finishEl && prevFinishId) {
+        try {
+          finishEl.value = String(prevFinishId);
+          if (String(finishEl.value || "") === String(prevFinishId || "")) {
+            try {
+              finishEl.dispatchEvent(new Event("change", { bubbles: true }));
+            } catch (_) {
+              var ev = document.createEvent("Event");
+              ev.initEvent("change", true, true);
+              finishEl.dispatchEvent(ev);
+            }
+          }
+        } catch (_) {}
+      }
+
+      try {
+        var sizeEl = next.querySelector(".purchase-select-size");
+        if (sizeEl && prevSizeId && String(sizeEl.value || "") !== String(prevSizeId || "")) {
+          sizeEl.value = String(prevSizeId);
+        }
+      } catch (_) {}
     }
   }
 
