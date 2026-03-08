@@ -171,7 +171,7 @@ window.MELKAPOW_ART = [
     productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Kundalini",
-    caption: "What forms beneath breathes life.",
+    caption: "What forms beneath breathes.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Kundalini" },
       { src: "__IMAGE_REMOVED__", alt: "Kundalini detail 1" }
@@ -183,7 +183,7 @@ window.MELKAPOW_ART = [
     productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Mother",
-    caption: "Tear into the womb of creation.",
+    caption: "Womb of creation.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Mother" },
       { src: "__IMAGE_REMOVED__", alt: "Mother detail 1" }
@@ -197,6 +197,7 @@ window.MELKAPOW_ART = [
     // gracefully even if a dedicated thumbnail hasn't been generated yet.
     thumb: "__IMAGE_REMOVED__",
     alt: "No Way Out",
+    caption: "Fractured between realities",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "No Way Out" },
       { src: "__IMAGE_REMOVED__", alt: "No Way Out detail 1" }
@@ -208,6 +209,7 @@ window.MELKAPOW_ART = [
     productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "Transition",
+    caption: "This piece is still unraveling.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "Transition" },
       { src: "__IMAGE_REMOVED__", alt: "Transition detail 1" },
@@ -220,6 +222,7 @@ window.MELKAPOW_ART = [
     productInfo: { collection: "grandeur" },
     thumb: "__IMAGE_REMOVED__",
     alt: "What Becomes",
+    caption: "This piece is still unraveling.",
     slides: [
       { src: "__IMAGE_REMOVED__", alt: "What Becomes" },
       { src: "__IMAGE_REMOVED__", alt: "What Becomes detail 1" },

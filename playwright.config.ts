@@ -28,7 +28,7 @@ export default defineConfig({
   },
   webServer: startWebServer
     ? {
-        command: `python3 -m http.server ${port} --bind 127.0.0.1`,
+        command: `node scripts/static-server.js --port ${port} --bind 127.0.0.1`,
         url: baseURL,
         reuseExistingServer: !process.env.CI,
         timeout: 60_000,

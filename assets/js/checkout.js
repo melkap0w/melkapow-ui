@@ -13,7 +13,6 @@
   var CHECKOUT_ATTEMPT_KEY = "melkapow_checkout_attempt_v1";
   var CHECKOUT_RESULT_KEY = "melkapow_checkout_result_v1";
   var DISCOUNT_CODE_EVENT = "melkapow:discount-code-updated";
-  var CHECKOUT_STALE_ATTEMPT_MESSAGE = "Payment not completed. Please try checkout again.";
 
   function getApiBase() {
     var base = window.MELKAPOW_API_BASE;
@@ -1822,8 +1821,6 @@
     }
 
     function cancelActiveCheckout() {
-      if (!checkoutInFlight && !activeCheckoutReqId && !checkoutAbortController) return;
-
       activeCheckoutReqId = 0;
       checkoutInFlight = false;
 
@@ -1845,6 +1842,7 @@
       clearCheckoutAttemptState();
 
       continueBtn.textContent = continueBtnDefaultText;
+      setStatus("", "");
       setContinueEnabled();
     }
 
@@ -2323,7 +2321,6 @@
       var resultState = loadCheckoutResultState();
       var atShipping = window.location.hash === "#checkout-shipping";
       var now = Date.now();
-      var transientError = "";
 
       if (!hasItems) {
         if (atShipping && now - shippingStepMountedAt < 1200) {
@@ -2362,15 +2359,17 @@
       if (atShipping && attemptState) {
         var ageMs = now - (parseInt(attemptState.ts, 10) || 0);
         if ((attemptState.status === "starting" || attemptState.status === "redirecting") && ageMs > 15000) {
-          transientError = CHECKOUT_STALE_ATTEMPT_MESSAGE;
           clearCheckoutAttemptState();
+          // Don't leave users stuck seeing "Redirecting…" after they navigated back.
+          var txt = String(statusEl.textContent || "").trim().toLowerCase();
+          if (txt === "redirecting..." || txt === "starting checkout..." || txt === "starting checkout…") {
+            setStatus("", "");
+          }
         }
       }
 
       if (atShipping) {
-        if (transientError) {
-          setStatus(transientError, "error");
-        } else if (resultState && resultState.status === "failed" && resultState.message) {
+        if (resultState && resultState.status === "failed" && resultState.message) {
           setStatus(resultState.message, "error");
         } else if (resultState && resultState.status === "cancel") {
           setStatus("Payment was canceled. Your cart is still saved.", "");
@@ -2500,12 +2499,15 @@
     window.addEventListener("hashchange", function () {
       if (window.location.hash !== "#checkout-shipping") {
         cancelActiveCheckout();
-        setStatus("", "");
       }
     });
 
     window.addEventListener("pageshow", function () {
       if (window.location.hash === "#checkout-shipping") {
+        // If the user returns via back/forward (often BFCache), the page can restore
+        // the pre-redirect UI ("Redirecting…" with disabled buttons). Reset it so the
+        // user can keep editing shipping without being stuck in a phantom redirect.
+        cancelActiveCheckout();
         shippingStepMountedAt = Date.now();
         refreshStep();
       }
@@ -3300,11 +3302,9 @@
       btn.disabled = false;
       btn.setAttribute("aria-disabled", "false");
       var attemptState = loadCheckoutAttemptState();
-      var transientError = "";
       if (attemptState) {
         var ageMs = Date.now() - (parseInt(attemptState.ts, 10) || 0);
         if ((attemptState.status === "starting" || attemptState.status === "redirecting") && ageMs > 15000) {
-          transientError = CHECKOUT_STALE_ATTEMPT_MESSAGE;
           clearCheckoutAttemptState();
         }
       }
@@ -3313,8 +3313,6 @@
         setStatus(resultState.message, "error");
       } else if (resultState && resultState.status === "cancel") {
         setStatus("Payment was canceled. Your cart is still saved.", "");
-      } else if (transientError) {
-        setStatus(transientError, "error");
       } else {
         setStatus("", "");
       }

@@ -48,10 +48,12 @@ Melkapow is:
     - DEV: write disabled
     - PROD: write enabled
   - You can still run read-only catalog/estimates without enabling writes.
+  - One-switch DEV testing: `MELKAPOW_DEV_E2E=true` (forces Printful writes + draft orders + Firestore + shipment emails).
 - Safety knobs (recommended in DEV):
   - `EMAIL_OVERRIDE_TO` to redirect all outbound mail to a safe inbox
-  - `PRINTFUL_SUBMIT_CONFIRM=false` to create **draft** Printful orders (not submitted to fulfillment)
-  - `ALERT_EMAIL_ENABLED=false` until you want alert spam during testing
+  - `PRINTFUL_SUBMIT_CONFIRM=false` to create **draft** Printful orders (not submitted to fulfillment). (In DEV, this is the default when unset; you can also use `MELKAPOW_DEV_E2E=true` as a one-switch profile.)
+  - `SHIPMENT_EMAIL_ENABLED=true` to send shipment milestone/tracking emails (this is enabled automatically in `MELKAPOW_DEV_E2E=true`)
+  - `ALERT_EMAIL_ENABLED=false` until you want alert spam during testing (alerts default to true in PROD when unset)
 
 ### High-level architecture diagram
 

@@ -123,11 +123,11 @@ test.describe("@smoke frontend purchase flow (mocked API)", () => {
       );
     });
 
-    await page.route("**/api/shop/estimate", async (route) => {
-      await route.fulfill(
-        json({
-          ok: true,
-          currency: "USD",
+	    await page.route("**/api/shop/estimate", async (route) => {
+	      await route.fulfill(
+	        json({
+	          ok: true,
+	          currency: "USD",
           shippingOptions: [
             {
               shippingMethodId: "STANDARD",
@@ -136,19 +136,19 @@ test.describe("@smoke frontend purchase flow (mocked API)", () => {
               deliveryEstimate: { minDays: 5, maxDays: 8 },
             },
           ],
-          selectedShippingMethodId: "STANDARD",
-          selectedShippingMethodName: "Standard",
-          shippingCents: 695,
-          taxCents: 0,
-          taxProvider: "stub",
-          discountCents: 0,
-          discountCode: "",
-          totalCents: 4195,
-          deliveryEstimate: { minDays: 5, maxDays: 8 },
-          ts: isoNow(),
-        }),
-      );
-    });
+	          selectedShippingMethodId: "STANDARD",
+	          selectedShippingMethodName: "Standard",
+	          shippingCents: 695,
+	          taxCents: 320,
+	          taxProvider: "stub",
+	          discountCents: 0,
+	          discountCode: "",
+	          totalCents: 4515,
+	          deliveryEstimate: { minDays: 5, maxDays: 8 },
+	          ts: isoNow(),
+	        }),
+	      );
+	    });
 
     await page.route("**/api/shop/checkout", async (route) => {
       const origin = new URL(route.request().url()).origin;
@@ -156,10 +156,10 @@ test.describe("@smoke frontend purchase flow (mocked API)", () => {
       await route.fulfill(json({ ok: true, url }));
     });
 
-    await page.route("**/api/shop/checkout/session**", async (route) => {
-      await route.fulfill(
-        json({
-          ok: true,
+	    await page.route("**/api/shop/checkout/session**", async (route) => {
+	      await route.fulfill(
+	        json({
+	          ok: true,
           sessionId,
           orderNumber: "MKP-TEST",
           created: isoNow(),
@@ -180,20 +180,20 @@ test.describe("@smoke frontend purchase flow (mocked API)", () => {
             {
               description: 'What lives within — Fine Art Paper · 8" x 10"',
               quantity: 1,
-              amountCents: 3500,
-              currency: "USD",
+              unitAmountCents: 3500,
+              amountTotalCents: 3500,
             },
           ],
-          subtotalCents: 3500,
-          shippingCents: 695,
-          taxCents: 0,
-          discountCents: 0,
-          totalCents: 4195,
-          payment: { type: "card", brand: "visa", last4: "4242" },
-        }),
-      );
-    });
-  });
+	          amountSubtotalCents: 3500,
+	          amountShippingCents: 695,
+	          amountTaxCents: 320,
+	          amountDiscountCents: 0,
+	          amountTotalCents: 4515,
+	          payment: { type: "card", brand: "visa", last4: "4242" },
+	        }),
+	      );
+	    });
+	  });
 
   test("site loads, gallery renders, cart + checkout success flow works", async ({ page }) => {
     await page.goto("/");
@@ -237,14 +237,21 @@ test.describe("@smoke frontend purchase flow (mocked API)", () => {
     await page.locator("#checkoutShippingLastName").fill("Buyer");
     await page.locator("#checkoutShippingEmail").fill("buyer@example.com");
     await page.locator("#checkoutShippingAddress1").fill("123 Test St");
-    await page.locator("#checkoutShippingCity").fill("San Francisco");
-    await page.locator("#checkoutShippingState").fill("CA");
-    await page.locator("#checkoutShippingPostal").fill("94107");
+	    await page.locator("#checkoutShippingCity").fill("San Francisco");
+	    await page.locator("#checkoutShippingState").fill("CA");
+	    await page.locator("#checkoutShippingPostal").fill("94107");
 
-    await expect(page.locator("#checkoutShippingContinueBtn")).toBeEnabled();
-    await page.locator("#checkoutShippingContinueBtn").click();
-    await page.waitForURL(/#checkout-success$/);
+	    await expect(page.locator("#checkoutShippingCalculateBtn")).toBeEnabled();
+	    await page.locator("#checkoutShippingCalculateBtn").click();
+	    await expect(page.locator("#checkoutShippingSummaryTax")).toContainText("$3.20");
+	    await expect(page.locator("#checkoutShippingSummaryTotal")).toContainText("$45.15");
 
-    await expect(page.locator("#receiptNumber")).toContainText("MKP-TEST");
-  });
+	    await expect(page.locator("#checkoutShippingContinueBtn")).toBeEnabled();
+	    await page.locator("#checkoutShippingContinueBtn").click();
+	    await page.waitForURL(/#checkout-success$/);
+
+	    await expect(page.locator("#receiptNumber")).toContainText("MKP-TEST");
+	    await expect(page.locator("#receiptTax")).toContainText("$3.20");
+	    await expect(page.locator("#receiptTotal")).toContainText("$45.15");
+	  });
 });
