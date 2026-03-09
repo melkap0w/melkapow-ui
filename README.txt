@@ -21,10 +21,21 @@ Used for article transitions, animations, and responsive behavior.
   - `POST /api/contact` (email + Turnstile)
   - `GET /api/shop/catalog` (Printful product options)
 
-### **Icons**
-- **Font Awesome 6.5.0 (CDN)**  
-  Social and brand icons used in header/footer navigation.
 
-```html
-<link rel="stylesheet"
- href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+### High-level architecture diagram
+```text
+Browser (Static site: example.com / preview)
+  |
+  |  (catalog, estimate, checkout, receipt)
+  v
+FastAPI (api-dev / api)
+  |\
+  | \--> Stripe API (create checkout session)
+  |      |
+  |      +--> Stripe Checkout (redirect)
+  |      |
+  |      +--> Stripe webhook --> POST /api/stripe/webhook (signed)
+  |
+  \--> Printful API (catalog, estimate-costs, shipping/rates, create order)
+         |
+         +--> Printful webhook --> POST /api/printful/webhook (token + optional signature)

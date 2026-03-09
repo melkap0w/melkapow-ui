@@ -834,6 +834,10 @@
       setSizeOptions(selected ? finishById[selected] : null);
     });
 
+    sizeSelect.addEventListener("change", function () {
+      setPurchaseStatus(status, "");
+    });
+
     if (defaultFinish) {
       finishSelect.value = defaultFinish.id;
       setSizeOptions(defaultFinish);
@@ -855,6 +859,9 @@
     qty.id = qtyId;
     qty.name = "qty";
     qty.className = "purchase-qty";
+    qty.addEventListener("input", function () {
+      setPurchaseStatus(status, "");
+    });
 
     fieldQty.appendChild(qtyLabel);
     fieldQty.appendChild(qty);
@@ -928,7 +935,8 @@
 
       setPurchaseStatus(status, "Added to cart.");
 
-      // Reset quantity for the next add (keep the user's type/size selection).
+      // Reset size/quantity for the next add (keep the user's type selection).
+      sizeSelect.value = "";
       qty.value = "1";
     });
 
@@ -1057,6 +1065,27 @@
     article.appendChild(actions);
 
     if (closeEl) article.appendChild(closeEl);
+  }
+
+  function resetPurchaseSelections(article) {
+    if (!article) return;
+    var box = article.querySelector(".purchase-box");
+    if (!box) return;
+
+    try {
+      var sizeEl = box.querySelector(".purchase-select-size");
+      if (sizeEl && typeof sizeEl.value === "string") sizeEl.value = "";
+    } catch (_) {}
+
+    try {
+      var qtyEl = box.querySelector(".purchase-qty");
+      if (qtyEl && typeof qtyEl.value === "string") qtyEl.value = "1";
+    } catch (_) {}
+
+    try {
+      var statusEl = box.querySelector(".purchase-status");
+      if (statusEl) setPurchaseStatus(statusEl, "");
+    } catch (_) {}
   }
 
   function refreshPurchaseBoxes() {
@@ -1204,13 +1233,30 @@
     populateArtArticle(article, art);
   }
 
+  var lastHash = "";
+
   function handleHashChange() {
-    ensureRenderedForHash(window.location.hash || "");
+    var nextHash = window.location.hash || "";
+
+    // Reset size/qty when navigating away from a shop item so users don't come back
+    // thinking the previous selection was added to cart.
+    var prevHash = lastHash;
+    lastHash = nextHash;
+    if (prevHash && prevHash !== nextHash && String(prevHash).startsWith("#shop-")) {
+      var id = String(prevHash).slice("#shop-".length);
+      if (id) {
+        var article = document.getElementById("shop-" + String(id));
+        resetPurchaseSelections(article);
+      }
+    }
+
+    ensureRenderedForHash(nextHash);
   }
 
   function init() {
+    lastHash = window.location.hash || "";
     buildArtArticles();
-    ensureRenderedForHash(window.location.hash || "");
+    ensureRenderedForHash(lastHash);
     window.addEventListener("hashchange", handleHashChange, true);
 
     // Keep rendered purchase boxes in sync when the shared catalog loader updates.

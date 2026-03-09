@@ -717,9 +717,9 @@
     return out;
   }
 
-  function selectShippingOption(options, preferredId, fallbackDelivery) {
-    var opts = Array.isArray(options) ? options : [];
-    if (!opts.length) return null;
+	  function selectShippingOption(options, preferredId, fallbackDelivery) {
+	    var opts = Array.isArray(options) ? options : [];
+	    if (!opts.length) return null;
 
     var preferredToken = shippingMethodToken(preferredId);
     if (preferredToken) {
@@ -743,20 +743,60 @@
       if (tok3 === "standard") return opts[k];
     }
 
-    return opts[0];
-  }
+	    return opts[0];
+	  }
 
-  function normalizeEstimateState(raw) {
-    if (!raw || typeof raw !== "object") return null;
+	  function normalizeTaxBreakdown(value) {
+	    var list = Array.isArray(value) ? value : [];
+	    if (!list.length) return [];
 
-    var currency = pickOwnValue(raw, ["currency"]);
-    var shippingCents = pickOwnValue(raw, ["shippingCents", "shipping_cents"]);
-    var taxCents = pickOwnValue(raw, ["taxCents", "tax_cents"]);
-    var taxProvider = pickOwnValue(raw, ["taxProvider", "tax_provider"]);
-    var stripeTaxCalculationId = pickOwnValue(raw, ["stripeTaxCalculationId", "stripe_tax_calculation_id"]);
-    var discountCents = pickOwnValue(raw, ["discountCents", "discount_cents"]);
-    var discountCode = pickOwnValue(raw, ["discountCode", "discount_code"]);
-    var totalCents = pickOwnValue(raw, ["totalCents", "total_cents", "total"]);
+	    var out = [];
+	    for (var i = 0; i < list.length; i++) {
+	      var row = list[i];
+	      if (!row || typeof row !== "object") continue;
+	      var label = normalizeSimpleText(row.label || row.name || "", 160);
+	      if (!label) continue;
+	      var amountCents = parseInt(row.amountCents != null ? row.amountCents : row.amount_cents, 10);
+	      if (!isFinite(amountCents)) {
+	        amountCents = parseInt(row.amount, 10);
+	      }
+	      if (!isFinite(amountCents) || amountCents < 0) continue;
+	      out.push({ label: label, amountCents: amountCents });
+	    }
+
+	    function taxLineRank(label) {
+	      var l = String(label || "").toLowerCase();
+	      if (l.indexOf("sales tax") >= 0) return 0;
+	      if (l.indexOf("retail delivery fee") >= 0) return 1;
+	      return 2;
+	    }
+
+	    out.sort(function (a, b) {
+	      var ra = taxLineRank(a && a.label);
+	      var rb = taxLineRank(b && b.label);
+	      if (ra !== rb) return ra - rb;
+	      var la = String(a.label || "").toLowerCase();
+	      var lb = String(b.label || "").toLowerCase();
+	      if (la < lb) return -1;
+	      if (la > lb) return 1;
+	      return (a.amountCents || 0) - (b.amountCents || 0);
+	    });
+
+	    return out;
+	  }
+
+	  function normalizeEstimateState(raw) {
+	    if (!raw || typeof raw !== "object") return null;
+
+	    var currency = pickOwnValue(raw, ["currency"]);
+	    var shippingCents = pickOwnValue(raw, ["shippingCents", "shipping_cents"]);
+	    var taxCents = pickOwnValue(raw, ["taxCents", "tax_cents"]);
+	    var taxBreakdown = pickOwnValue(raw, ["taxBreakdown", "tax_breakdown"]);
+	    var taxProvider = pickOwnValue(raw, ["taxProvider", "tax_provider"]);
+	    var stripeTaxCalculationId = pickOwnValue(raw, ["stripeTaxCalculationId", "stripe_tax_calculation_id"]);
+	    var discountCents = pickOwnValue(raw, ["discountCents", "discount_cents"]);
+	    var discountCode = pickOwnValue(raw, ["discountCode", "discount_code"]);
+	    var totalCents = pickOwnValue(raw, ["totalCents", "total_cents", "total"]);
     var shippingOptions = pickOwnValue(raw, ["shippingOptions", "shipping_options"]);
     var selectedShippingMethodId = pickOwnValue(raw, ["selectedShippingMethodId", "selected_shipping_method_id", "shippingMethodId", "shipping_method_id"]);
     var selectedShippingMethodName = pickOwnValue(raw, ["selectedShippingMethodName", "selected_shipping_method_name", "shippingMethodName", "shipping_method_name"]);
@@ -764,15 +804,16 @@
 
     var out = {
       cartSig: String(raw.cartSig || ""),
-      formSig: String(raw.formSig || ""),
-      currency: String(currency || "USD").trim().toUpperCase() || "USD",
-      shippingCents: parseInt(shippingCents, 10) || 0,
-      taxCents: parseInt(taxCents, 10) || 0,
-      taxProvider: normalizeSimpleText(taxProvider || "", 32).toLowerCase(),
-      stripeTaxCalculationId: normalizeSimpleText(stripeTaxCalculationId || "", 120),
-      discountCents: parseInt(discountCents, 10) || 0,
-      discountCode: normalizeDiscountCode(discountCode || ""),
-      totalCents: parseInt(totalCents, 10),
+	      formSig: String(raw.formSig || ""),
+	      currency: String(currency || "USD").trim().toUpperCase() || "USD",
+	      shippingCents: parseInt(shippingCents, 10) || 0,
+	      taxCents: parseInt(taxCents, 10) || 0,
+	      taxBreakdown: normalizeTaxBreakdown(taxBreakdown),
+	      taxProvider: normalizeSimpleText(taxProvider || "", 32).toLowerCase(),
+	      stripeTaxCalculationId: normalizeSimpleText(stripeTaxCalculationId || "", 120),
+	      discountCents: parseInt(discountCents, 10) || 0,
+	      discountCode: normalizeDiscountCode(discountCode || ""),
+	      totalCents: parseInt(totalCents, 10),
       shippingOptions: normalizeShippingOptions(shippingOptions),
       selectedShippingMethodId: normalizeShippingMethodId(selectedShippingMethodId || ""),
       selectedShippingMethodName: normalizeShippingMethodName(selectedShippingMethodName || ""),
@@ -1123,6 +1164,9 @@
       clearShippingStepState();
       clearCheckoutAttemptState();
       saveCheckoutResultState({ status: "success", message: "Payment received." });
+      // A discount code is cart-scoped state; clear it after a successful purchase so the next
+      // shopping session starts clean.
+      saveDiscountCode("");
       if (window.MELKAPOW_CART && typeof window.MELKAPOW_CART.clear === "function") {
         window.MELKAPOW_CART.clear();
       }
@@ -1247,14 +1291,15 @@
     var shippingMethodOptionsEl = document.getElementById("checkoutShippingMethodOptions");
     var shippingMethodHintEl = document.getElementById("checkoutShippingMethodHint");
 
-    var statusEl = document.getElementById("checkoutShippingStatus");
-    var itemsSubtotalEl = document.getElementById("checkoutShippingItemsSubtotal");
-    var shippingSummaryEl = document.getElementById("checkoutShippingSummaryShipping");
-    var taxSummaryEl = document.getElementById("checkoutShippingSummaryTax");
-    var discountRowEl = document.getElementById("checkoutShippingSummaryDiscountRow");
-    var discountLabelEl = document.getElementById("checkoutShippingSummaryDiscountLabel");
-    var discountEl = document.getElementById("checkoutShippingSummaryDiscount");
-    var totalSummaryEl = document.getElementById("checkoutShippingSummaryTotal");
+	    var statusEl = document.getElementById("checkoutShippingStatus");
+	    var itemsSubtotalEl = document.getElementById("checkoutShippingItemsSubtotal");
+	    var shippingSummaryEl = document.getElementById("checkoutShippingSummaryShipping");
+	    var taxSummaryEl = document.getElementById("checkoutShippingSummaryTax");
+	    var taxBreakdownEl = document.getElementById("checkoutShippingTaxBreakdown");
+	    var discountRowEl = document.getElementById("checkoutShippingSummaryDiscountRow");
+	    var discountLabelEl = document.getElementById("checkoutShippingSummaryDiscountLabel");
+	    var discountEl = document.getElementById("checkoutShippingSummaryDiscount");
+	    var totalSummaryEl = document.getElementById("checkoutShippingSummaryTotal");
 
     if (
       !firstNameEl || !lastNameEl || !emailEl || !address1El || !address2El || !cityEl || !stateEl || !postalEl || !countryEl ||
@@ -1466,8 +1511,8 @@
       return countryFetchPromise;
     }
 
-    function setDiscountCents(cents, currency, discountCode) {
-      if (!discountRowEl || !discountEl) return;
+	    function setDiscountCents(cents, currency, discountCode) {
+	      if (!discountRowEl || !discountEl) return;
       var code = normalizeDiscountCode(discountCode || "");
       var n = parseInt(cents, 10);
       if (!isFinite(n) || !n) {
@@ -1478,15 +1523,53 @@
       }
       discountRowEl.hidden = false;
       discountEl.textContent = "-" + formatMoney(Math.abs(n), currency);
-      if (discountLabelEl) {
-        discountLabelEl.textContent = code ? ("Discount (" + code + ")") : "Discount";
-      }
-    }
+	      if (discountLabelEl) {
+	        discountLabelEl.textContent = code ? ("Discount (" + code + ")") : "Discount";
+	      }
+	    }
 
-    function readFormState() {
-      var countryCode = normalizeCountryCode(countryEl.value || "US") || "US";
-      var firstName = normalizeSimpleText(firstNameEl.value, 120);
-      var lastName = normalizeSimpleText(lastNameEl.value, 120);
+	    function renderTaxBreakdown(estimate, currency) {
+	      if (!taxBreakdownEl) return;
+	      taxBreakdownEl.innerHTML = "";
+	      taxBreakdownEl.hidden = true;
+
+	      var est = estimate && typeof estimate === "object" ? estimate : null;
+	      if (!est) return;
+	      var rows = Array.isArray(est.taxBreakdown) ? est.taxBreakdown : [];
+	      if (!rows.length) return;
+
+	      taxBreakdownEl.hidden = false;
+	      for (var i = 0; i < rows.length; i++) {
+	        var row = rows[i] || {};
+	        var label = normalizeSimpleText(row.label || row.name || "", 160);
+	        var amountCents = parseInt(row.amountCents != null ? row.amountCents : row.amount, 10);
+	        if (!label) continue;
+	        if (!isFinite(amountCents) || amountCents < 0) continue;
+
+	        var r = document.createElement("div");
+	        r.className = "estimate-row estimate-row-sub";
+
+	        var left = document.createElement("span");
+	        left.textContent = label;
+
+	        var right = document.createElement("span");
+	        right.className = "estimate-amount";
+	        right.textContent = formatMoney(amountCents, currency);
+
+	        r.appendChild(left);
+	        r.appendChild(right);
+	        taxBreakdownEl.appendChild(r);
+	      }
+
+	      if (!taxBreakdownEl.childNodes.length) {
+	        taxBreakdownEl.hidden = true;
+	      }
+	    }
+
+	    function readFormState() {
+	      var countryCode = normalizeCountryCode(countryEl.value || "US") || "US";
+	      var firstName = normalizeSimpleText(firstNameEl.value, 120);
+	      var lastName = normalizeSimpleText(lastNameEl.value, 120);
       return {
         first_name: firstName,
         last_name: lastName,
@@ -1619,16 +1702,17 @@
         shippingSummaryEl.textContent = "--";
       }
 
-      if (est && isFinite(taxCents)) {
-        taxSummaryEl.textContent = formatMoney(taxCents, currency);
-      } else {
-        taxSummaryEl.textContent = "--";
-      }
+	      if (est && isFinite(taxCents)) {
+	        taxSummaryEl.textContent = formatMoney(taxCents, currency);
+	      } else {
+	        taxSummaryEl.textContent = "--";
+	      }
 
-      setDiscountCents(discountCents, currency, discountCode);
+	      renderTaxBreakdown(est, currency);
+	      setDiscountCents(discountCents, currency, discountCode);
 
-      if (!isFinite(totalCents)) {
-        totalCents = computedTotal;
+	      if (!isFinite(totalCents)) {
+	        totalCents = computedTotal;
       } else if (totalCents > computedTotal) {
         // Keep checkout summary stable: subtotal (+shipping/tax) - discount.
         totalCents = computedTotal;
@@ -1850,14 +1934,15 @@
       var currencyRaw = pickOwnValue(data, ["currency"]);
       var shippingOptionsRaw = pickOwnValue(data, ["shippingOptions", "shipping_options"]);
       var selectedShippingMethodIdRaw = pickOwnValue(data, ["selectedShippingMethodId", "selected_shipping_method_id", "shippingMethodId", "shipping_method_id"]);
-      var selectedShippingMethodNameRaw = pickOwnValue(data, ["selectedShippingMethodName", "selected_shipping_method_name", "shippingMethodName", "shipping_method_name"]);
-      var shippingCentsRaw = pickOwnValue(data, ["shippingCents", "shipping_cents"]);
-      var taxCentsRaw = pickOwnValue(data, ["taxCents", "tax_cents"]);
-      var taxProviderRaw = pickOwnValue(data, ["taxProvider", "tax_provider"]);
-      var stripeTaxCalculationIdRaw = pickOwnValue(data, ["stripeTaxCalculationId", "stripe_tax_calculation_id"]);
-      var discountCentsRaw = pickOwnValue(data, ["discountCents", "discount_cents"]);
-      var discountCodeRaw = pickOwnValue(data, ["discountCode", "discount_code"]);
-      var totalCentsRaw = pickOwnValue(data, ["totalCents", "total_cents", "total"]);
+	      var selectedShippingMethodNameRaw = pickOwnValue(data, ["selectedShippingMethodName", "selected_shipping_method_name", "shippingMethodName", "shipping_method_name"]);
+	      var shippingCentsRaw = pickOwnValue(data, ["shippingCents", "shipping_cents"]);
+	      var taxCentsRaw = pickOwnValue(data, ["taxCents", "tax_cents"]);
+	      var taxBreakdownRaw = pickOwnValue(data, ["taxBreakdown", "tax_breakdown"]);
+	      var taxProviderRaw = pickOwnValue(data, ["taxProvider", "tax_provider"]);
+	      var stripeTaxCalculationIdRaw = pickOwnValue(data, ["stripeTaxCalculationId", "stripe_tax_calculation_id"]);
+	      var discountCentsRaw = pickOwnValue(data, ["discountCents", "discount_cents"]);
+	      var discountCodeRaw = pickOwnValue(data, ["discountCode", "discount_code"]);
+	      var totalCentsRaw = pickOwnValue(data, ["totalCents", "total_cents", "total"]);
       var deliveryEstimateRaw = pickOwnValue(data, ["deliveryEstimate", "delivery_estimate"]);
 
       var currency = String(currencyRaw || "USD").trim().toUpperCase() || "USD";
@@ -1918,17 +2003,18 @@
         deliveryEstimateRaw || (selectedOption && selectedOption.deliveryEstimate)
       );
 
-      return normalizeEstimateState({
-        cartSig: cartSignature(cart),
-        formSig: formSignature(formState),
-        currency: currency,
-        shippingCents: shippingCents,
-        taxCents: taxCents,
-        taxProvider: taxProvider,
-        stripeTaxCalculationId: stripeTaxCalculationId,
-        discountCents: discountCents,
-        discountCode: discountCode,
-        totalCents: totalCents,
+	      return normalizeEstimateState({
+	        cartSig: cartSignature(cart),
+	        formSig: formSignature(formState),
+	        currency: currency,
+	        shippingCents: shippingCents,
+	        taxCents: taxCents,
+	        taxBreakdown: taxBreakdownRaw,
+	        taxProvider: taxProvider,
+	        stripeTaxCalculationId: stripeTaxCalculationId,
+	        discountCents: discountCents,
+	        discountCode: discountCode,
+	        totalCents: totalCents,
         shippingOptions: shippingOptions,
         selectedShippingMethodId: selectedShippingMethodId,
         selectedShippingMethodName: selectedShippingMethodName,
@@ -2371,8 +2457,6 @@
       if (atShipping) {
         if (resultState && resultState.status === "failed" && resultState.message) {
           setStatus(resultState.message, "error");
-        } else if (resultState && resultState.status === "cancel") {
-          setStatus("Payment was canceled. Your cart is still saved.", "");
         }
       }
 
@@ -2493,6 +2577,8 @@
     window.addEventListener("hashchange", function () {
       if (window.location.hash === "#checkout-shipping") {
         shippingStepMountedAt = Date.now();
+        // The cart shows the "Payment was canceled" message; don't repeat it on Shipping.
+        setStatus("", "");
         refreshStep();
       }
     });
@@ -2509,6 +2595,7 @@
         // user can keep editing shipping without being stuck in a phantom redirect.
         cancelActiveCheckout();
         shippingStepMountedAt = Date.now();
+        setStatus("", "");
         refreshStep();
       }
     });
@@ -2558,6 +2645,7 @@
     var elShippingAmt = document.getElementById("receiptShippingAmount");
     var elTaxRow = document.getElementById("receiptTaxRow");
     var elTax = document.getElementById("receiptTax");
+    var elTaxBreakdown = document.getElementById("receiptTaxBreakdown");
     var elDiscountRow = document.getElementById("receiptDiscountRow");
     var elDiscount = document.getElementById("receiptDiscount");
     var elTotal = document.getElementById("receiptTotal");
@@ -2734,6 +2822,39 @@
       var taxCents = parseInt(r.amountTaxCents, 10) || 0;
       setHidden(elTaxRow, false);
       if (elTax) elTax.textContent = formatMoney(taxCents, currency);
+
+      if (elTaxBreakdown) {
+        elTaxBreakdown.innerHTML = "";
+        elTaxBreakdown.hidden = true;
+
+        var breakdown = normalizeTaxBreakdown(r.taxBreakdown || r.tax_breakdown);
+        if (breakdown && breakdown.length) {
+          elTaxBreakdown.hidden = false;
+          for (var tb = 0; tb < breakdown.length; tb++) {
+            var row = breakdown[tb] || {};
+            var label = String(row.label || "").trim();
+            var cents = parseInt(row.amountCents, 10);
+            if (!label || !isFinite(cents) || cents <= 0) continue;
+
+            var div = document.createElement("div");
+            div.className = "receipt-summary-row receipt-summary-row-sub";
+
+            var left = document.createElement("span");
+            left.textContent = label;
+            div.appendChild(left);
+
+            var right = document.createElement("span");
+            right.className = "receipt-mono";
+            right.textContent = formatMoney(cents, currency);
+            div.appendChild(right);
+
+            elTaxBreakdown.appendChild(div);
+          }
+          if (!elTaxBreakdown.childNodes.length) {
+            elTaxBreakdown.hidden = true;
+          }
+        }
+      }
 
       var discCents = parseInt(r.amountDiscountCents, 10) || 0;
       setHidden(elDiscountRow, !discCents);
@@ -3333,6 +3454,8 @@
       }
 
       setStatus("", "");
+      clearCheckoutResultState();
+      clearCheckoutAttemptState();
       window.location.hash = "#checkout-shipping";
     });
 
