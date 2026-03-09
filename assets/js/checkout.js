@@ -40,6 +40,46 @@
     return !!(getApiBase() && typeof fetch === "function");
   }
 
+  var shopPrewarmStarted = false;
+
+  function prewarmShopBackend() {
+    if (shopPrewarmStarted) return;
+    if (!isShopEnabled()) return;
+    var apiBase = getApiBase();
+    if (!apiBase) return;
+    shopPrewarmStarted = true;
+
+    var controller = typeof AbortController === "function" ? new AbortController() : null;
+    var timeoutId = null;
+    if (controller) {
+      timeoutId = setTimeout(function () {
+        try { controller.abort(); } catch (_) { /* ignore */ }
+      }, 8000);
+    }
+
+    fetch(apiBase + "/api/health", {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+      cache: "no-store",
+      signal: controller ? controller.signal : undefined
+    })
+      .catch(function () { /* ignore */ })
+      .finally(function () {
+        if (timeoutId) clearTimeout(timeoutId);
+      });
+  }
+
+  function maybePrewarmShopBackend() {
+    var hash = String(window.location.hash || "");
+    if (hash === "#shop" || hash === "#cart" || hash === "#checkout-shipping" || hash === "#checkout-success") {
+      prewarmShopBackend();
+    }
+  }
+
+  window.addEventListener("hashchange", maybePrewarmShopBackend);
+  window.addEventListener("pageshow", maybePrewarmShopBackend);
+  maybePrewarmShopBackend();
+
   function storageSet(key, value) {
     try {
       window.sessionStorage.setItem(key, value);
@@ -3130,11 +3170,13 @@
         }
       }
       previewAbortController = typeof AbortController === "function" ? new AbortController() : null;
+      var timedOut = false;
       var timeoutId = null;
       if (previewAbortController) {
         timeoutId = setTimeout(function () {
+          timedOut = true;
           try { previewAbortController.abort(); } catch (_) { /* ignore */ }
-        }, 12000);
+        }, 25000);
       }
 
       var reqId = ++previewReqSeq;
@@ -3154,6 +3196,12 @@
       }
 
       return fetch(apiBase + "/api/shop/discount/preview", fetchOpts)
+        .catch(function (err) {
+          if (timedOut && err && err.name === "AbortError") {
+            throw new Error("Discount validation timed out. Please try again in a moment.");
+          }
+          throw err;
+        })
         .then(function (res) {
           return res
             .json()
@@ -3282,7 +3330,10 @@
           return data;
         })
         .catch(function (err) {
-          if (err && err.name === "AbortError") return null;
+          if (err && err.name === "AbortError") {
+            if (showStatus) setStatus("", "");
+            return null;
+          }
 
           var msg = err && err.message ? String(err.message) : "Discount validation failed.";
           if (/failed to fetch|networkerror|load failed|err_connection/i.test(msg)) {
