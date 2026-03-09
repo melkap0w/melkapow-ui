@@ -458,6 +458,10 @@
 		                    <span>Items subtotal</span>
 		                    <span id="checkoutShippingItemsSubtotal" class="estimate-amount">$0.00</span>
 		                  </div>
+		                  <div id="checkoutShippingSummaryDiscountRow" class="estimate-row" hidden>
+		                    <span id="checkoutShippingSummaryDiscountLabel">Discount</span>
+		                    <span id="checkoutShippingSummaryDiscount" class="estimate-amount">—</span>
+		                  </div>
 		                  <div class="estimate-row">
 		                    <span>Shipping</span>
 		                    <span id="checkoutShippingSummaryShipping" class="estimate-amount">--</span>
@@ -467,10 +471,6 @@
 		                    <span id="checkoutShippingSummaryTax" class="estimate-amount">--</span>
 		                  </div>
 		                  <div id="checkoutShippingTaxBreakdown" aria-label="Tax breakdown" hidden></div>
-		                  <div id="checkoutShippingSummaryDiscountRow" class="estimate-row" hidden>
-		                    <span id="checkoutShippingSummaryDiscountLabel">Discount</span>
-		                    <span id="checkoutShippingSummaryDiscount" class="estimate-amount">—</span>
-		                  </div>
 		                  <div class="estimate-row estimate-row-total">
 		                    <span>Estimated total</span>
 		                    <span id="checkoutShippingSummaryTotal" class="estimate-amount">$0.00</span>
@@ -554,6 +554,10 @@
 			                <span>Subtotal</span>
 			                <span id="receiptSubtotal" class="receipt-mono">—</span>
 			              </div>
+		              <div id="receiptDiscountRow" class="receipt-summary-row" hidden>
+		                <span>Discount</span>
+		                <span id="receiptDiscount" class="receipt-mono">—</span>
+		              </div>
 		              <div id="receiptShippingRow" class="receipt-summary-row" hidden>
 		                <span>Shipping</span>
 		                <span id="receiptShippingAmount" class="receipt-mono">—</span>
@@ -563,10 +567,6 @@
 		                <span id="receiptTax" class="receipt-mono">—</span>
 		              </div>
 		              <div id="receiptTaxBreakdown" aria-label="Tax breakdown" hidden></div>
-		              <div id="receiptDiscountRow" class="receipt-summary-row" hidden>
-		                <span>Discount</span>
-		                <span id="receiptDiscount" class="receipt-mono">—</span>
-		              </div>
 				              <div class="receipt-summary-row receipt-summary-total">
 				                <span>Amount paid</span>
 				                <span id="receiptTotal" class="receipt-mono">—</span>
