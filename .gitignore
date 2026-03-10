@@ -9,6 +9,7 @@ node_modules/
 .playwright/
 playwright-report/
 test-results/
+.npm-cache/
 
 # Python caches
 __pycache__/

@@ -822,9 +822,9 @@
 	    return opts[0];
 	  }
 
-	  function normalizeTaxBreakdown(value) {
-	    var list = Array.isArray(value) ? value : [];
-	    if (!list.length) return [];
+		  function normalizeTaxBreakdown(value) {
+		    var list = Array.isArray(value) ? value : [];
+		    if (!list.length) return [];
 
 	    var out = [];
 	    for (var i = 0; i < list.length; i++) {
@@ -840,12 +840,15 @@
 	      out.push({ label: label, amountCents: amountCents });
 	    }
 
-	    function taxLineRank(label) {
-	      var l = String(label || "").toLowerCase();
-	      if (l.indexOf("sales tax") >= 0) return 0;
-	      if (l.indexOf("retail delivery fee") >= 0) return 1;
-	      return 2;
-	    }
+		    function taxLineRank(label) {
+		      var l = String(label || "").toLowerCase();
+		      if (l.indexOf("sales tax") >= 0) return 0;
+		      if (l.indexOf("vat") >= 0) return 1;
+		      if (l.indexOf("gst") >= 0) return 1;
+		      if (l.indexOf("hst") >= 0) return 1;
+		      if (l.indexOf("retail delivery fee") >= 0) return 2;
+		      return 3;
+		    }
 
 	    out.sort(function (a, b) {
 	      var ra = taxLineRank(a && a.label);
@@ -858,11 +861,24 @@
 	      return (a.amountCents || 0) - (b.amountCents || 0);
 	    });
 
-	    return out;
-	  }
+		    return out;
+		  }
 
-	  function normalizeEstimateState(raw) {
-	    if (!raw || typeof raw !== "object") return null;
+		  function pickPrimaryTaxLabel(breakdown) {
+		    var rows = normalizeTaxBreakdown(breakdown);
+		    if (!rows.length) return "Tax";
+		    for (var i = 0; i < rows.length; i++) {
+		      var label = String((rows[i] && rows[i].label) || "").trim();
+		      if (!label) continue;
+		      var lower = label.toLowerCase();
+		      if (lower === "tax" || lower === "taxes") continue;
+		      return label;
+		    }
+		    return "Tax";
+		  }
+
+		  function normalizeEstimateState(raw) {
+		    if (!raw || typeof raw !== "object") return null;
 
 	    var currency = pickOwnValue(raw, ["currency"]);
 	    var shippingCents = pickOwnValue(raw, ["shippingCents", "shipping_cents"]);
@@ -1367,15 +1383,15 @@
     var shippingMethodOptionsEl = document.getElementById("checkoutShippingMethodOptions");
     var shippingMethodHintEl = document.getElementById("checkoutShippingMethodHint");
 
-	    var statusEl = document.getElementById("checkoutShippingStatus");
-	    var itemsSubtotalEl = document.getElementById("checkoutShippingItemsSubtotal");
-	    var shippingSummaryEl = document.getElementById("checkoutShippingSummaryShipping");
-	    var taxSummaryEl = document.getElementById("checkoutShippingSummaryTax");
-	    var taxBreakdownEl = document.getElementById("checkoutShippingTaxBreakdown");
-	    var discountRowEl = document.getElementById("checkoutShippingSummaryDiscountRow");
-	    var discountLabelEl = document.getElementById("checkoutShippingSummaryDiscountLabel");
-	    var discountEl = document.getElementById("checkoutShippingSummaryDiscount");
-	    var totalSummaryEl = document.getElementById("checkoutShippingSummaryTotal");
+		    var statusEl = document.getElementById("checkoutShippingStatus");
+		    var itemsSubtotalEl = document.getElementById("checkoutShippingItemsSubtotal");
+		    var shippingSummaryEl = document.getElementById("checkoutShippingSummaryShipping");
+		    var taxSummaryEl = document.getElementById("checkoutShippingSummaryTax");
+		    var taxLabelEl = document.getElementById("checkoutShippingSummaryTaxLabel");
+		    var discountRowEl = document.getElementById("checkoutShippingSummaryDiscountRow");
+		    var discountLabelEl = document.getElementById("checkoutShippingSummaryDiscountLabel");
+		    var discountEl = document.getElementById("checkoutShippingSummaryDiscount");
+		    var totalSummaryEl = document.getElementById("checkoutShippingSummaryTotal");
 
     if (
       !firstNameEl || !lastNameEl || !emailEl || !address1El || !address2El || !cityEl || !stateEl || !postalEl || !countryEl ||
@@ -1587,9 +1603,9 @@
       return countryFetchPromise;
     }
 
-	    function setDiscountCents(cents, currency, discountCode) {
-	      if (!discountRowEl || !discountEl) return;
-      var code = normalizeDiscountCode(discountCode || "");
+		    function setDiscountCents(cents, currency, discountCode) {
+		      if (!discountRowEl || !discountEl) return;
+	      var code = normalizeDiscountCode(discountCode || "");
       var n = parseInt(cents, 10);
       if (!isFinite(n) || !n) {
         discountRowEl.hidden = true;
@@ -1601,48 +1617,10 @@
       discountEl.textContent = "-" + formatMoney(Math.abs(n), currency);
 	      if (discountLabelEl) {
 	        discountLabelEl.textContent = code ? ("Discount (" + code + ")") : "Discount";
-	      }
-	    }
+		      }
+		    }
 
-	    function renderTaxBreakdown(estimate, currency) {
-	      if (!taxBreakdownEl) return;
-	      taxBreakdownEl.innerHTML = "";
-	      taxBreakdownEl.hidden = true;
-
-	      var est = estimate && typeof estimate === "object" ? estimate : null;
-	      if (!est) return;
-	      var rows = Array.isArray(est.taxBreakdown) ? est.taxBreakdown : [];
-	      if (!rows.length) return;
-
-	      taxBreakdownEl.hidden = false;
-	      for (var i = 0; i < rows.length; i++) {
-	        var row = rows[i] || {};
-	        var label = normalizeSimpleText(row.label || row.name || "", 160);
-	        var amountCents = parseInt(row.amountCents != null ? row.amountCents : row.amount, 10);
-	        if (!label) continue;
-	        if (!isFinite(amountCents) || amountCents < 0) continue;
-
-	        var r = document.createElement("div");
-	        r.className = "estimate-row estimate-row-sub";
-
-	        var left = document.createElement("span");
-	        left.textContent = label;
-
-	        var right = document.createElement("span");
-	        right.className = "estimate-amount";
-	        right.textContent = formatMoney(amountCents, currency);
-
-	        r.appendChild(left);
-	        r.appendChild(right);
-	        taxBreakdownEl.appendChild(r);
-	      }
-
-	      if (!taxBreakdownEl.childNodes.length) {
-	        taxBreakdownEl.hidden = true;
-	      }
-	    }
-
-	    function readFormState() {
+		    function readFormState() {
 	      var countryCode = normalizeCountryCode(countryEl.value || "US") || "US";
 	      var firstName = normalizeSimpleText(firstNameEl.value, 120);
 	      var lastName = normalizeSimpleText(lastNameEl.value, 120);
@@ -1778,14 +1756,16 @@
         shippingSummaryEl.textContent = "--";
       }
 
-	      if (est && isFinite(taxCents)) {
-	        taxSummaryEl.textContent = formatMoney(taxCents, currency);
-	      } else {
-	        taxSummaryEl.textContent = "--";
-	      }
+		      if (est && isFinite(taxCents)) {
+		        taxSummaryEl.textContent = formatMoney(taxCents, currency);
+		      } else {
+		        taxSummaryEl.textContent = "--";
+		      }
 
-	      renderTaxBreakdown(est, currency);
-	      setDiscountCents(discountCents, currency, discountCode);
+		      if (taxLabelEl) {
+		        taxLabelEl.textContent = est ? pickPrimaryTaxLabel(est.taxBreakdown) : "Tax";
+		      }
+		      setDiscountCents(discountCents, currency, discountCode);
 
 	      if (!isFinite(totalCents)) {
 	        totalCents = computedTotal;
@@ -2717,13 +2697,13 @@
     var elShipping = document.getElementById("receiptShipping");
     var elItemsBody = document.getElementById("receiptItemsBody");
     var elSubtotal = document.getElementById("receiptSubtotal");
-    var elShippingRow = document.getElementById("receiptShippingRow");
-    var elShippingAmt = document.getElementById("receiptShippingAmount");
-    var elTaxRow = document.getElementById("receiptTaxRow");
-    var elTax = document.getElementById("receiptTax");
-    var elTaxBreakdown = document.getElementById("receiptTaxBreakdown");
-    var elDiscountRow = document.getElementById("receiptDiscountRow");
-    var elDiscount = document.getElementById("receiptDiscount");
+	    var elShippingRow = document.getElementById("receiptShippingRow");
+	    var elShippingAmt = document.getElementById("receiptShippingAmount");
+	    var elTaxRow = document.getElementById("receiptTaxRow");
+	    var elTaxLabel = document.getElementById("receiptTaxLabel");
+	    var elTax = document.getElementById("receiptTax");
+	    var elDiscountRow = document.getElementById("receiptDiscountRow");
+	    var elDiscount = document.getElementById("receiptDiscount");
     var elTotal = document.getElementById("receiptTotal");
     var elPaymentDate = document.getElementById("receiptPaymentDate");
     var elPaymentMethod = document.getElementById("receiptPaymentMethod");
@@ -2895,44 +2875,12 @@
       setHidden(elShippingRow, false);
       if (elShippingAmt) elShippingAmt.textContent = formatMoney(shipCents, currency);
 
-      var taxCents = parseInt(r.amountTaxCents, 10) || 0;
-      setHidden(elTaxRow, false);
-      if (elTax) elTax.textContent = formatMoney(taxCents, currency);
+	      var taxCents = parseInt(r.amountTaxCents, 10) || 0;
+	      setHidden(elTaxRow, false);
+	      if (elTaxLabel) elTaxLabel.textContent = pickPrimaryTaxLabel(r.taxBreakdown || r.tax_breakdown);
+	      if (elTax) elTax.textContent = formatMoney(taxCents, currency);
 
-      if (elTaxBreakdown) {
-        elTaxBreakdown.innerHTML = "";
-        elTaxBreakdown.hidden = true;
-
-        var breakdown = normalizeTaxBreakdown(r.taxBreakdown || r.tax_breakdown);
-        if (breakdown && breakdown.length) {
-          elTaxBreakdown.hidden = false;
-          for (var tb = 0; tb < breakdown.length; tb++) {
-            var row = breakdown[tb] || {};
-            var label = String(row.label || "").trim();
-            var cents = parseInt(row.amountCents, 10);
-            if (!label || !isFinite(cents) || cents <= 0) continue;
-
-            var div = document.createElement("div");
-            div.className = "receipt-summary-row receipt-summary-row-sub";
-
-            var left = document.createElement("span");
-            left.textContent = label;
-            div.appendChild(left);
-
-            var right = document.createElement("span");
-            right.className = "receipt-mono";
-            right.textContent = formatMoney(cents, currency);
-            div.appendChild(right);
-
-            elTaxBreakdown.appendChild(div);
-          }
-          if (!elTaxBreakdown.childNodes.length) {
-            elTaxBreakdown.hidden = true;
-          }
-        }
-      }
-
-      var discCents = parseInt(r.amountDiscountCents, 10) || 0;
+	      var discCents = parseInt(r.amountDiscountCents, 10) || 0;
       setHidden(elDiscountRow, !discCents);
       if (elDiscount) elDiscount.textContent = "-" + formatMoney(Math.abs(discCents), currency);
 
