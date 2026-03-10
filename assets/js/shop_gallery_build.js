@@ -194,19 +194,39 @@
   function fetchWithTimeout(url, options, timeoutMs) {
     if (typeof fetch !== "function") return Promise.reject(new Error("fetch-unavailable"));
 
+    var opts = options && typeof options === "object" ? options : {};
+    var externalSignal = opts.signal;
+
     var controller = typeof AbortController === "function" ? new AbortController() : null;
     var timer = null;
+    var externalAbortHandler = null;
     if (controller) {
+      if (externalSignal) {
+        try {
+          if (externalSignal.aborted) {
+            controller.abort();
+          } else if (typeof externalSignal.addEventListener === "function") {
+            externalAbortHandler = function () {
+              try { controller.abort(); } catch (_) { /* ignore */ }
+            };
+            externalSignal.addEventListener("abort", externalAbortHandler, { once: true });
+          }
+        } catch (_) {
+          // ignore
+        }
+      }
       timer = setTimeout(function () {
         try { controller.abort(); } catch (_) { /* ignore */ }
       }, Math.max(500, parseInt(timeoutMs, 10) || SHOP_CATALOG_TIMEOUT_MS));
     }
 
-    var opts = options && typeof options === "object" ? options : {};
     if (controller) opts.signal = controller.signal;
 
     return fetch(url, opts).finally(function () {
       if (timer) clearTimeout(timer);
+      if (externalAbortHandler && externalSignal && typeof externalSignal.removeEventListener === "function") {
+        try { externalSignal.removeEventListener("abort", externalAbortHandler); } catch (_) { /* ignore */ }
+      }
     });
   }
 
@@ -285,7 +305,6 @@
 
   var shopStatusEl = null;
   var shopCatalogHasNetworkResult = false;
-  var shopNetworkLoadStarted = false;
   var shopNudgeTimerId = null;
 
   function clearShopNudgeTimer() {
@@ -302,7 +321,8 @@
     var state = {
       status: "idle", // "idle" | "loading" | "ready" | "failed"
       promise: null,
-      lastError: ""
+      lastError: "",
+      cancelController: null
     };
 
     function hydrateFromCache(apiBase) {
@@ -327,6 +347,7 @@
       var forceRefresh = !!options.forceRefresh;
       var timeoutMs = parseInt(options.timeoutMs, 10) || SHOP_CATALOG_TIMEOUT_MS;
       var totalWaitMs = parseInt(options.totalWaitMs, 10) || SHOP_CATALOG_TOTAL_WAIT_MS;
+      var shouldContinue = typeof options.shouldContinue === "function" ? options.shouldContinue : null;
 
       hydrateFromCache(apiBase);
 
@@ -340,6 +361,12 @@
 
       if (state.promise) return state.promise;
 
+      if (state.cancelController && typeof state.cancelController.abort === "function") {
+        try { state.cancelController.abort(); } catch (_) { /* ignore */ }
+      }
+      state.cancelController = typeof AbortController === "function" ? new AbortController() : null;
+      var cancelController = state.cancelController;
+
       var start = Date.now();
       var attempt = 0;
       var delayMs = 750;
@@ -351,12 +378,29 @@
         return Date.now() - start < totalWaitMs;
       }
 
+      function canceled() {
+        return !!(cancelController && cancelController.signal && cancelController.signal.aborted);
+      }
+
+      function active() {
+        if (canceled()) return false;
+        if (!shouldContinue) return true;
+        try { return !!shouldContinue(); } catch (_) { return true; }
+      }
+
       function fetchOnce() {
+        if (!active()) {
+          state.status = hadExisting ? "ready" : "idle";
+          state.lastError = "";
+          return Promise.resolve(hadExisting ? existing : null);
+        }
+
         attempt += 1;
         return fetchWithTimeout(apiBase + "/api/shop/catalog", {
           method: "GET",
           headers: { "Accept": "application/json" },
-          cache: "no-store"
+          cache: "no-store",
+          signal: cancelController ? cancelController.signal : undefined
         }, timeoutMs)
           .then(function (res) {
             if (!res.ok) {
@@ -382,6 +426,12 @@
           })
           .catch(function (err) {
             var status = err && err.status ? parseInt(err.status, 10) : 0;
+
+            if (canceled() || !active()) {
+              state.status = hadExisting ? "ready" : "idle";
+              state.lastError = "";
+              return null;
+            }
 
             // Non-retriable 4xx (except 429 rate limit).
             if (status && status < 500 && status !== 429) {
@@ -415,6 +465,7 @@
 
       var promise = fetchOnce().finally(function () {
         state.promise = null;
+        if (state.cancelController === cancelController) state.cancelController = null;
         if (window.MELKAPOW_SHOP_CATALOG_PROMISE === promise) window.MELKAPOW_SHOP_CATALOG_PROMISE = null;
       });
 
@@ -435,6 +486,10 @@
       hydrateFromCache: function () { return hydrateFromCache(getApiBase()); },
       load: load,
       warm: warm,
+      cancel: function () {
+        if (!state.cancelController || typeof state.cancelController.abort !== "function") return;
+        try { state.cancelController.abort(); } catch (_) { /* ignore */ }
+      },
       getStatus: function () { return state.status; },
       getLastError: function () { return state.lastError; }
     };
@@ -553,17 +608,27 @@
     var loader = ensureShopCatalogLoader();
     loader.hydrateFromCache();
 
+    function isShopHash(hash) {
+      return String(hash || "").indexOf("#shop") === 0;
+    }
+
+    window.addEventListener("hashchange", function () {
+      if (!isShopHash(window.location.hash)) loader.cancel();
+    }, true);
+
     if (!isShopEnabled()) {
       if (shopStatusEl) shopStatusEl.textContent = "Shop temporarily unavailable.";
       return;
     }
 
     function startNetworkLoad() {
-      if (shopNetworkLoadStarted) return;
-      shopNetworkLoadStarted = true;
-
       loader
-        .load({ timeoutMs: SHOP_CATALOG_TIMEOUT_MS, totalWaitMs: SHOP_CATALOG_TOTAL_WAIT_MS, forceRefresh: true })
+        .load({
+          timeoutMs: SHOP_CATALOG_TIMEOUT_MS,
+          totalWaitMs: SHOP_CATALOG_TOTAL_WAIT_MS,
+          forceRefresh: true,
+          shouldContinue: function () { return isShopHash(window.location.hash); }
+        })
         .then(function (products) {
           clearShopNudgeTimer();
 
@@ -586,7 +651,6 @@
           var cached = window.MELKAPOW_PRODUCTS_BY_ART_ID;
           if (cached && typeof cached === "object") return;
           if (shopStatusEl && window.location.hash === "#shop") shopStatusEl.textContent = "Shop temporarily unavailable.";
-          shopNetworkLoadStarted = false; // allow retry on next open
         });
     }
 

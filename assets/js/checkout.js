@@ -40,21 +40,40 @@
     return !!(getApiBase() && typeof fetch === "function");
   }
 
-  var shopPrewarmStarted = false;
+  var shopPrewarmOk = false;
+  var shopPrewarmInFlight = false;
+  var shopPrewarmAttempts = 0;
+	  var shopPrewarmStartedAt = 0;
+	  var shopPrewarmDelayMs = 750;
+	  var shopPrewarmTimerId = null;
 
-  function prewarmShopBackend() {
-    if (shopPrewarmStarted) return;
-    if (!isShopEnabled()) return;
-    var apiBase = getApiBase();
-    if (!apiBase) return;
-    shopPrewarmStarted = true;
+	  function prewarmShopBackend() {
+	    if (shopPrewarmOk) return;
+	    if (shopPrewarmInFlight) return;
+	    if (!isShopEnabled()) return;
+	    var apiBase = getApiBase();
+	    if (!apiBase) return;
+
+    var now = Date.now ? Date.now() : +new Date();
+    if (!shopPrewarmStartedAt) shopPrewarmStartedAt = now;
+	    // Render cold starts can take a while; retry warmup for a bounded window.
+	    if (now - shopPrewarmStartedAt > 90000) return;
+	    if (shopPrewarmAttempts >= 8) return;
+
+	    if (shopPrewarmTimerId) {
+	      clearTimeout(shopPrewarmTimerId);
+	      shopPrewarmTimerId = null;
+	    }
+
+	    shopPrewarmInFlight = true;
+	    shopPrewarmAttempts += 1;
 
     var controller = typeof AbortController === "function" ? new AbortController() : null;
     var timeoutId = null;
     if (controller) {
       timeoutId = setTimeout(function () {
         try { controller.abort(); } catch (_) { /* ignore */ }
-      }, 8000);
+      }, shopPrewarmAttempts >= 5 ? 20000 : (shopPrewarmAttempts >= 3 ? 12000 : 8000));
     }
 
     fetch(apiBase + "/api/health", {
@@ -63,9 +82,26 @@
       cache: "no-store",
       signal: controller ? controller.signal : undefined
     })
+      .then(function (res) {
+        if (res && res.ok) shopPrewarmOk = true;
+      })
       .catch(function () { /* ignore */ })
       .finally(function () {
         if (timeoutId) clearTimeout(timeoutId);
+        shopPrewarmInFlight = false;
+        if (shopPrewarmOk) return;
+
+        var now2 = Date.now ? Date.now() : +new Date();
+        if (!shopPrewarmStartedAt) shopPrewarmStartedAt = now2;
+        if (now2 - shopPrewarmStartedAt > 90000) return;
+
+        if (shopPrewarmTimerId) return;
+        var wait = shopPrewarmDelayMs;
+        shopPrewarmDelayMs = Math.min(5000, Math.round(shopPrewarmDelayMs * 1.6));
+        shopPrewarmTimerId = setTimeout(function () {
+          shopPrewarmTimerId = null;
+          prewarmShopBackend();
+        }, Math.max(250, wait | 0));
       });
   }
 
@@ -3162,6 +3198,10 @@
       }
 
     function requestDiscountPreview(code, subtotalCents) {
+      var options = arguments.length > 2 && arguments[2] && typeof arguments[2] === "object" ? arguments[2] : {};
+      var timeoutMs = parseInt(options.timeoutMs, 10);
+      if (!isFinite(timeoutMs) || timeoutMs < 3000) timeoutMs = 25000;
+
       if (previewAbortController && typeof previewAbortController.abort === "function") {
         try {
           previewAbortController.abort();
@@ -3176,7 +3216,7 @@
         timeoutId = setTimeout(function () {
           timedOut = true;
           try { previewAbortController.abort(); } catch (_) { /* ignore */ }
-        }, 25000);
+        }, timeoutMs);
       }
 
       var reqId = ++previewReqSeq;
@@ -3196,12 +3236,14 @@
       }
 
       return fetch(apiBase + "/api/shop/discount/preview", fetchOpts)
-        .catch(function (err) {
-          if (timedOut && err && err.name === "AbortError") {
-            throw new Error("Discount validation timed out. Please try again in a moment.");
-          }
-          throw err;
-        })
+	        .catch(function (err) {
+	          if (timedOut && err && err.name === "AbortError") {
+	            var timeoutErr = new Error("Checkout server is warming up. Please try again in a moment.");
+	            timeoutErr.isTimeout = true;
+	            throw timeoutErr;
+	          }
+	          throw err;
+	        })
         .then(function (res) {
           return res
             .json()
@@ -3291,8 +3333,42 @@
 
       if (showStatus) setStatus("Applying discount...", "");
       setApplyBusy(true);
+      if (showStatus) prewarmShopBackend();
 
-      return requestDiscountPreview(code, subtotalCents)
+      var didRetry = false;
+
+      function isRetryablePreviewError(err, msg) {
+        if (!err) return false;
+        if (err.name === "AbortError") return false;
+        if (err.isTimeout) return true;
+        var text = String(msg || "");
+        return /timed out/i.test(text) || /failed to fetch|networkerror|load failed|err_connection/i.test(text);
+      }
+
+      function wait(ms) {
+        return new Promise(function (resolve) {
+          setTimeout(resolve, Math.max(0, ms | 0));
+        });
+      }
+
+      function attempt(timeoutMs) {
+        return requestDiscountPreview(code, subtotalCents, { timeoutMs: timeoutMs });
+      }
+
+      return attempt(25000)
+        .catch(function (err) {
+          if (!showStatus) throw err;
+          if (didRetry) throw err;
+          var msg = err && err.message ? String(err.message) : "";
+          if (!isRetryablePreviewError(err, msg)) throw err;
+
+	          didRetry = true;
+	          setStatus("Warming up the checkout server… retrying.", "");
+	          prewarmShopBackend();
+	          return wait(1200).then(function () {
+	            return attempt(60000);
+	          });
+	        })
         .then(function (data) {
           if (!data) return null;
 
@@ -3368,15 +3444,19 @@
       applyCode(inputEl.value, { showStatus: true, persist: true });
     });
 
-    inputEl.addEventListener("keydown", function (e) {
-      if (!e || e.key !== "Enter") return;
-      e.preventDefault();
-      applyCode(inputEl.value, { showStatus: true, persist: true });
-    });
+	    inputEl.addEventListener("keydown", function (e) {
+	      if (!e || e.key !== "Enter") return;
+	      e.preventDefault();
+	      applyCode(inputEl.value, { showStatus: true, persist: true });
+	    });
 
-    inputEl.addEventListener("blur", function () {
-      inputEl.value = normalizeDiscountCode(inputEl.value);
-    });
+	    inputEl.addEventListener("focus", function () {
+	      prewarmShopBackend();
+	    });
+
+	    inputEl.addEventListener("blur", function () {
+	      inputEl.value = normalizeDiscountCode(inputEl.value);
+	    });
 
     window.addEventListener(DISCOUNT_CODE_EVENT, function () {
       if (suppressDiscountEvent) {
