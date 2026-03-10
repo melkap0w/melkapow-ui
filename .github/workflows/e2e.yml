@@ -12,7 +12,11 @@ on:
         required: false
         default: ""
       warmup_max_ms:
-        description: Optional override (ms). Leave blank for defaults (prod=45000, dev=90000).
+        description: Optional override (ms). Leave blank for defaults (prod=45000, dev=180000).
+        required: false
+        default: ""
+      warmup_attempt_timeout_ms:
+        description: Optional per-attempt timeout (ms). Leave blank for defaults (prod=8000, dev=20000).
         required: false
         default: ""
 
@@ -25,6 +29,9 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.58.2-jammy
       options: --ipc=host
     timeout-minutes: 15
+    env:
+      # Avoid flaky IPv6-first DNS resolution in CI.
+      NODE_OPTIONS: --dns-result-order=ipv4first
 
     steps:
       - name: Checkout
@@ -56,6 +63,9 @@ jobs:
       options: --ipc=host
     timeout-minutes: 20
     if: github.event_name != 'pull_request'
+    env:
+      # Avoid flaky IPv6-first DNS resolution in CI.
+      NODE_OPTIONS: --dns-result-order=ipv4first
 
     steps:
       - name: Checkout
@@ -75,6 +85,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             api_base="${{ github.event.inputs.api_base }}"
             warmup_max_ms="${{ github.event.inputs.warmup_max_ms }}"
+            warmup_attempt_timeout_ms="${{ github.event.inputs.warmup_attempt_timeout_ms }}"
 
             if [[ -n "${api_base}" ]]; then
               echo "E2E_API_BASE=${api_base}" >> "$GITHUB_ENV"
@@ -89,14 +100,24 @@ jobs:
             elif [[ "${GITHUB_REF_NAME}" == "main" ]]; then
               echo "E2E_WARMUP_MAX_MS=45000" >> "$GITHUB_ENV"
             else
-              echo "E2E_WARMUP_MAX_MS=90000" >> "$GITHUB_ENV"
+              echo "E2E_WARMUP_MAX_MS=180000" >> "$GITHUB_ENV"
+            fi
+
+            if [[ -n "${warmup_attempt_timeout_ms}" ]]; then
+              echo "E2E_WARMUP_ATTEMPT_TIMEOUT_MS=${warmup_attempt_timeout_ms}" >> "$GITHUB_ENV"
+            elif [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+              echo "E2E_WARMUP_ATTEMPT_TIMEOUT_MS=8000" >> "$GITHUB_ENV"
+            else
+              echo "E2E_WARMUP_ATTEMPT_TIMEOUT_MS=20000" >> "$GITHUB_ENV"
             fi
           elif [[ "${GITHUB_REF_NAME}" == "main" ]]; then
             echo "E2E_API_BASE=http://localhost:8000" >> "$GITHUB_ENV"
             echo "E2E_WARMUP_MAX_MS=45000" >> "$GITHUB_ENV"
+            echo "E2E_WARMUP_ATTEMPT_TIMEOUT_MS=8000" >> "$GITHUB_ENV"
           else
             echo "E2E_API_BASE=http://localhost:8000" >> "$GITHUB_ENV"
-            echo "E2E_WARMUP_MAX_MS=90000" >> "$GITHUB_ENV"
+            echo "E2E_WARMUP_MAX_MS=180000" >> "$GITHUB_ENV"
+            echo "E2E_WARMUP_ATTEMPT_TIMEOUT_MS=20000" >> "$GITHUB_ENV"
           fi
 
           echo "E2E_WARMUP_ENABLED=true" >> "$GITHUB_ENV"
@@ -105,7 +126,8 @@ jobs:
       - name: Debug API health
         run: |
           echo "Testing API health endpoint..."
-          curl -v --max-time 20 http://localhost:8000/api/health || true
+          echo "E2E_API_BASE=${E2E_API_BASE}"
+          curl -v --connect-timeout 5 --max-time 25 "${E2E_API_BASE}/api/health" || true
 
       - name: Run deployed API tests (includes warm-up)
         run: npm run e2e:dev
