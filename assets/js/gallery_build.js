@@ -28,7 +28,10 @@
 
     var file = basename(raw);
     if (!file) return raw;
-    return THUMB_DIR + file;
+    var out = THUMB_DIR + file;
+    var versioned = window.melkapowVersionedAssetUrl;
+    if (typeof versioned === "function") out = versioned(out);
+    return out;
   }
 
   function bindPortraitClass(img) {
@@ -59,6 +62,11 @@
         (art && (art.thumb || (art.slides && art.slides[0] && art.slides[0].src))) || ""
       ).trim();
       var thumbSrc = toThumbUrl(fullThumbSrc);
+      var versioned = window.melkapowVersionedAssetUrl;
+      if (typeof versioned === "function") {
+        fullThumbSrc = versioned(fullThumbSrc);
+        if (thumbSrc) thumbSrc = versioned(thumbSrc);
+      }
 
       var a = document.createElement("a");
       a.className = "gallery-item";

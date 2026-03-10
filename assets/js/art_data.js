@@ -30,6 +30,12 @@ window.MELKAPOW_PRODUCTS_DEFAULT = {
   ]
 };
 
+function melkapowVersionedImageUrl(url) {
+  var versioned = window.melkapowVersionedAssetUrl;
+  if (typeof versioned === "function") return versioned(url);
+  return String(url || "").trim();
+}
+
 window.MELKAPOW_ART = [
   {
     id: "eye",
@@ -230,3 +236,17 @@ window.MELKAPOW_ART = [
     ]
   }
 ];
+
+window.MELKAPOW_ART = window.MELKAPOW_ART.map(function (art) {
+  var next = Object.assign({}, art || {});
+  next.thumb = melkapowVersionedImageUrl(next.thumb);
+
+  var slides = Array.isArray(next.slides) ? next.slides : [];
+  next.slides = slides.map(function (slide) {
+    var out = Object.assign({}, slide || {});
+    out.src = melkapowVersionedImageUrl(out.src);
+    return out;
+  });
+
+  return next;
+});

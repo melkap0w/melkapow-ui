@@ -1495,6 +1495,7 @@
     var estimateAbortController = null;
     var estimateTimeoutId = null;
     var checkoutInFlight = false;
+    var checkoutStartPending = false;
     var checkoutReqSeq = 0;
     var activeCheckoutReqId = 0;
     var checkoutAbortController = null;
@@ -1950,12 +1951,12 @@
       );
       var methodReady = !needsMethod || !!selectedMethodId;
 
-      var enabled = hasItems && validForm && isShopEnabled() && !estimateInFlight && !checkoutInFlight;
+      var enabled = hasItems && validForm && isShopEnabled() && !estimateInFlight && !checkoutInFlight && !checkoutStartPending;
       if (hasFreshEstimate && !methodReady) enabled = false;
       continueBtn.disabled = !enabled;
       continueBtn.setAttribute("aria-disabled", enabled ? "false" : "true");
 
-      var calcEnabled = hasItems && isShopEnabled() && !estimateInFlight && !checkoutInFlight;
+      var calcEnabled = hasItems && isShopEnabled() && !estimateInFlight && !checkoutInFlight && !checkoutStartPending;
       calculateBtn.disabled = !calcEnabled;
       calculateBtn.setAttribute("aria-disabled", calcEnabled ? "false" : "true");
     }
@@ -1963,6 +1964,7 @@
     function cancelActiveCheckout() {
       activeCheckoutReqId = 0;
       checkoutInFlight = false;
+      checkoutStartPending = false;
 
       if (checkoutTimeoutId) {
         clearTimeout(checkoutTimeoutId);
@@ -2311,6 +2313,19 @@
     }
 
     function startCheckout(currentEstimate) {
+      checkoutStartPending = false;
+
+      if (checkoutInFlight) {
+        setContinueEnabled();
+        return Promise.resolve();
+      }
+
+      if (window.location.hash !== "#checkout-shipping") {
+        clearCheckoutAttemptState();
+        setContinueEnabled();
+        return Promise.resolve();
+      }
+
       var cart = getCart();
       var rawCartItems = cart && Array.isArray(cart.items) ? cart.items : [];
       var items = buildCheckoutItems(cart);
@@ -2619,10 +2634,24 @@
     });
 
     continueBtn.addEventListener("click", function () {
+      if (estimateInFlight || checkoutInFlight || checkoutStartPending) {
+        return;
+      }
+
+      checkoutStartPending = true;
+      setContinueEnabled();
+
       runEstimate({ force: false, showValidationErrors: true, normalizeInputs: true })
         .then(function (freshEstimate) {
           if (!freshEstimate) return;
+          if (window.location.hash !== "#checkout-shipping") return;
           return startCheckout(freshEstimate);
+        })
+        .finally(function () {
+          if (!checkoutInFlight) {
+            checkoutStartPending = false;
+            setContinueEnabled();
+          }
         });
     });
 
@@ -2710,6 +2739,8 @@
 	    var elPaymentAmount = document.getElementById("receiptPaymentAmount");
 	
 		    var lastLoadedSession = "";
+        var receiptLoadInFlight = false;
+        var receiptLoadingSession = "";
 	
 	    function splitItemDescription(item) {
 	      var it = item && typeof item === "object" ? item : {};
@@ -2922,6 +2953,9 @@
         setLoading(false);
         return;
       }
+      if (receiptLoadInFlight && receiptLoadingSession === sessionId) {
+        return;
+      }
       lastLoadedSession = sessionId;
 
       if (emailNoteEl) {
@@ -2939,6 +2973,8 @@
         return;
       }
 
+      receiptLoadInFlight = true;
+      receiptLoadingSession = sessionId;
       setHidden(receiptBox, true);
       setStatus("", "");
 
@@ -3015,6 +3051,12 @@
             setStatus("Invoice details are unavailable right now. Please check your email for a receipt.", "error");
           }
           setLoading(false);
+        })
+        .finally(function () {
+          if (receiptLoadingSession === sessionId) {
+            receiptLoadInFlight = false;
+            receiptLoadingSession = "";
+          }
         });
     }
 

@@ -257,28 +257,28 @@
 
 				          <div id="cartOrderSummary" class="box checkout-estimate cart-order-summary">
 				            <p class="estimate-title">Order Summary</p>
-				            <div class="estimate-breakdown">
-				              <div class="estimate-row">
-				                <span>Items subtotal</span>
-				                <span id="cartSummaryItemsSubtotal" class="estimate-amount">$0.00</span>
-				              </div>
-					              <div id="cartSummaryDiscountRow" class="estimate-row" hidden>
-					                <span id="cartSummaryDiscountLabel">Discount</span>
-					                <span id="cartSummaryDiscount" class="estimate-amount">—</span>
+					            <div class="estimate-breakdown">
+					              <div class="estimate-row">
+					                <span>Items subtotal</span>
+					                <span id="cartSummaryItemsSubtotal" class="estimate-amount">$0.00</span>
 					              </div>
-				              <div class="estimate-row">
-				                <span>Shipping</span>
-				                <span class="estimate-amount">Calculated on next screen</span>
-				              </div>
-				              <div class="estimate-row">
-				                <span>Tax</span>
-				                <span class="estimate-amount">Calculated on next screen</span>
-				              </div>
-				              <div class="estimate-row estimate-row-total">
-				                <span id="cartTotalLabel">Estimated total</span>
-				                <span id="cartTotal" class="estimate-amount">$0.00</span>
-				              </div>
-				            </div>
+					              <div class="estimate-row">
+					                <span>Shipping</span>
+					                <span class="estimate-amount">Calculated on next screen</span>
+					              </div>
+					              <div class="estimate-row">
+					                <span>Tax</span>
+					                <span class="estimate-amount">Calculated on next screen</span>
+					              </div>
+						              <div id="cartSummaryDiscountRow" class="estimate-row" hidden>
+						                <span id="cartSummaryDiscountLabel">Discount</span>
+						                <span id="cartSummaryDiscount" class="estimate-amount">—</span>
+						              </div>
+					              <div class="estimate-row estimate-row-total">
+					                <span id="cartTotalLabel">Estimated total</span>
+					                <span id="cartTotal" class="estimate-amount">$0.00</span>
+					              </div>
+					            </div>
 				            <div class="cart-discount">
 				              <label for="cartDiscountCode" class="cart-discount-label">Discount Code<br /></label>
 				              <div class="cart-discount-controls">
@@ -453,28 +453,28 @@
 
 		              <div class="box checkout-shipping-panel checkout-shipping-summary-panel">
 		                <h3 class="checkout-shipping-heading">Order Summary</h3>
-		                <div class="estimate-breakdown checkout-shipping-breakdown">
-		                  <div class="estimate-row">
-		                    <span>Items subtotal</span>
-		                    <span id="checkoutShippingItemsSubtotal" class="estimate-amount">$0.00</span>
-		                  </div>
-		                  <div id="checkoutShippingSummaryDiscountRow" class="estimate-row" hidden>
-		                    <span id="checkoutShippingSummaryDiscountLabel">Discount</span>
-		                    <span id="checkoutShippingSummaryDiscount" class="estimate-amount">—</span>
-		                  </div>
-		                  <div class="estimate-row">
-		                    <span>Shipping</span>
-		                    <span id="checkoutShippingSummaryShipping" class="estimate-amount">--</span>
-		                  </div>
+			                <div class="estimate-breakdown checkout-shipping-breakdown">
 			                  <div class="estimate-row">
-			                    <span id="checkoutShippingSummaryTaxLabel">Tax</span>
-			                    <span id="checkoutShippingSummaryTax" class="estimate-amount">--</span>
+			                    <span>Items subtotal</span>
+			                    <span id="checkoutShippingItemsSubtotal" class="estimate-amount">$0.00</span>
 			                  </div>
-			                  <div class="estimate-row estimate-row-total">
-			                    <span>Estimated total</span>
-			                    <span id="checkoutShippingSummaryTotal" class="estimate-amount">$0.00</span>
+			                  <div class="estimate-row">
+			                    <span>Shipping</span>
+			                    <span id="checkoutShippingSummaryShipping" class="estimate-amount">--</span>
 			                  </div>
-		                </div>
+				                  <div class="estimate-row">
+				                    <span id="checkoutShippingSummaryTaxLabel">Tax</span>
+				                    <span id="checkoutShippingSummaryTax" class="estimate-amount">--</span>
+				                  </div>
+			                  <div id="checkoutShippingSummaryDiscountRow" class="estimate-row" hidden>
+			                    <span id="checkoutShippingSummaryDiscountLabel">Discount</span>
+			                    <span id="checkoutShippingSummaryDiscount" class="estimate-amount">—</span>
+			                  </div>
+				                  <div class="estimate-row estimate-row-total">
+				                    <span>Estimated total</span>
+				                    <span id="checkoutShippingSummaryTotal" class="estimate-amount">$0.00</span>
+				                  </div>
+			                </div>
 		              </div>
 		            </div>
 		          </div>
@@ -548,27 +548,27 @@
 	              </table>
 	            </div>
 
-			            <div class="receipt-summary" aria-label="Totals">
-			              <div class="receipt-summary-row">
-			                <span>Subtotal</span>
-			                <span id="receiptSubtotal" class="receipt-mono">—</span>
+				            <div class="receipt-summary" aria-label="Totals">
+				              <div class="receipt-summary-row">
+				                <span>Subtotal</span>
+				                <span id="receiptSubtotal" class="receipt-mono">—</span>
+				              </div>
+			              <div id="receiptShippingRow" class="receipt-summary-row" hidden>
+			                <span>Shipping</span>
+			                <span id="receiptShippingAmount" class="receipt-mono">—</span>
 			              </div>
-		              <div id="receiptDiscountRow" class="receipt-summary-row" hidden>
-		                <span>Discount</span>
-		                <span id="receiptDiscount" class="receipt-mono">—</span>
-		              </div>
-		              <div id="receiptShippingRow" class="receipt-summary-row" hidden>
-		                <span>Shipping</span>
-		                <span id="receiptShippingAmount" class="receipt-mono">—</span>
-		              </div>
-			              <div id="receiptTaxRow" class="receipt-summary-row" hidden>
-			                <span id="receiptTaxLabel">Tax</span>
-			                <span id="receiptTax" class="receipt-mono">—</span>
+				              <div id="receiptTaxRow" class="receipt-summary-row" hidden>
+				                <span id="receiptTaxLabel">Tax</span>
+				                <span id="receiptTax" class="receipt-mono">—</span>
+				              </div>
+			              <div id="receiptDiscountRow" class="receipt-summary-row" hidden>
+			                <span>Discount</span>
+			                <span id="receiptDiscount" class="receipt-mono">—</span>
 			              </div>
-					              <div class="receipt-summary-row receipt-summary-total">
-					                <span>Amount paid</span>
-					                <span id="receiptTotal" class="receipt-mono">—</span>
-					              </div>
+						              <div class="receipt-summary-row receipt-summary-total">
+						                <span>Amount paid</span>
+						                <span id="receiptTotal" class="receipt-mono">—</span>
+						              </div>
 				            </div>
 
 			            <div id="receiptPayment" class="receipt-payment" aria-label="Payment details">
@@ -1112,6 +1112,7 @@
 			    <!-- custom scripts -->
 					    <script src="assets/js/failure_reporting.js?v=20260218-3" defer></script>
 					    <script src="assets/js/image_protect.js?v=20260203-1" defer></script>
+					    <script src="assets/js/asset_version.js?v=20260310-1" defer></script>
 					    <script src="assets/js/art_data.js?v=20260304-2" defer></script>
 					    <script src="assets/js/cart.js?v=20260219-2" defer></script>
 																    <script src="assets/js/checkout.js?v=20260309-1" defer></script>

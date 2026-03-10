@@ -23,6 +23,11 @@
     try { img.loading = "eager"; } catch (_) {}
 
     var fallback = img.getAttribute("data-fallback-src");
+    var versioned = window.melkapowVersionedAssetUrl;
+    if (typeof versioned === "function") {
+      src = versioned(src);
+      if (fallback) fallback = versioned(fallback);
+    }
     if (fallback) {
       img.addEventListener("error", function onError() {
         img.removeEventListener("error", onError);
@@ -281,7 +286,10 @@
 
     var file = basename(raw);
     if (!file) return raw;
-    return THUMB_DIR + file;
+    var out = THUMB_DIR + file;
+    var versioned = window.melkapowVersionedAssetUrl;
+    if (typeof versioned === "function") out = versioned(out);
+    return out;
   }
 
   function getShopProductForArt(shopMap, art) {
