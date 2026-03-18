@@ -8,14 +8,13 @@ rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
 # Copy only the static site, not backend/tests.
-for f in index.html art.html favicon.ico robots.txt _headers CNAME; do
+for f in index.html art.html robots.txt _headers CNAME; do
   if [ -f "$ROOT_DIR/$f" ]; then
     cp "$ROOT_DIR/$f" "$OUT_DIR/"
   fi
 done
 
 cp -R "$ROOT_DIR/assets" "$OUT_DIR/"
-cp -R "$ROOT_DIR/images" "$OUT_DIR/"
 
 # Generate the runtime API base config into the build output.
 MELKAPOW_FRONTEND_OUT_ROOT="$OUT_DIR" bash "$ROOT_DIR/scripts/generate-runtime-config.sh"
@@ -26,4 +25,3 @@ if [ ! -f "$OUT_DIR/index.html" ]; then
 fi
 
 echo "Frontend build output ready: $OUT_DIR"
-
